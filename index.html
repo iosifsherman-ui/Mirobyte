@@ -77,6 +77,7 @@
 </head>
 <body class="text-emerald-100 min-h-screen flex flex-col justify-between selection:bg-emerald-800 selection:text-white">
 
+  <!-- Header Section -->
   <header class="border-b border-bank-border bg-bank-dark/95 backdrop-blur-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
       
@@ -108,8 +109,10 @@
   <!-- Notification Toast Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
+  <!-- Main Content Layout -->
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
 
+    <!-- Auth Section (Login & Registration) -->
     <section id="authSection" class="max-w-md mx-auto my-6 sm:my-10 bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden guilloche-border">
       <div class="text-center mb-6 relative">
         <div class="w-14 h-14 mx-auto mb-3 rounded-2xl ring-2 ring-bank-gold/60 p-2 bg-black flex items-center justify-center">
@@ -141,7 +144,10 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-emerald-500/60 text-xs">
               <i class="fa-solid fa-lock"></i>
             </span>
-            <input type="password" id="inputPassword" required autocomplete="current-password" placeholder="••••••••••••" class="w-full bg-bank-dark border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-9 pr-3 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
+            <input type="password" id="inputPassword" required autocomplete="current-password" placeholder="••••••••••••" class="w-full bg-bank-dark border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-9 pr-10 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
+            <button type="button" onclick="togglePasswordVisibility('inputPassword', 'eyeAuth')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500/60 hover:text-bank-gold transition-colors">
+              <i id="eyeAuth" class="fa-solid fa-eye text-xs"></i>
+            </button>
           </div>
         </div>
 
@@ -151,6 +157,7 @@
       </form>
     </section>
 
+    <!-- App Container (Authenticated) -->
     <div id="appContainer" class="hidden space-y-6">
       
       <!-- Top Navigation Tabs -->
@@ -180,7 +187,7 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <!-- Luxury Virtual Bank Card -->
+          <!-- Virtual Bank Card -->
           <div class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#0c281e] via-[#091b14] to-[#040c08] border border-bank-gold/50 guilloche-border bank-card-pattern flex flex-col justify-between min-h-[220px]">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2.5">
@@ -335,7 +342,6 @@
             </div>
           </div>
 
-          <!-- Leaderboard Table -->
           <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-xs">
               <thead>
@@ -470,6 +476,70 @@
 
   </main>
 
+  <!-- MODAL: Change Password -->
+  <div id="changePasswordModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative guilloche-border">
+      <button onclick="closePasswordModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-dark border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-5">
+        <div class="w-10 h-10 rounded-full bg-black border border-bank-gold flex items-center justify-center text-bank-gold">
+          <i class="fa-solid fa-key text-sm"></i>
+        </div>
+        <div>
+          <h4 class="font-royal text-lg font-bold text-bank-gold">Безопасность Счёта</h4>
+          <span class="text-[11px] text-emerald-400/80">Изменение пароля доступа</span>
+        </div>
+      </div>
+
+      <form id="changePasswordForm" onsubmit="processPasswordChange(event)" class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Старый (текущий) пароль</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-emerald-500/60 text-xs">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input type="password" id="inputOldPassword" required placeholder="Текущий пароль..." class="w-full bg-bank-dark border border-bank-border focus:border-bank-gold rounded-xl py-2 pl-9 pr-10 text-emerald-100 placeholder-emerald-800 text-xs focus:outline-none transition-all">
+            <button type="button" onclick="togglePasswordVisibility('inputOldPassword', 'eyeOldPass')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500/60 hover:text-bank-gold transition-colors">
+              <i id="eyeOldPass" class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Новый пароль</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-emerald-500/60 text-xs">
+              <i class="fa-solid fa-shield-halved"></i>
+            </span>
+            <input type="password" id="inputNewPassword" required minlength="4" placeholder="Придумайте новый пароль..." class="w-full bg-bank-dark border border-bank-border focus:border-bank-gold rounded-xl py-2 pl-9 pr-10 text-emerald-100 placeholder-emerald-800 text-xs focus:outline-none transition-all">
+            <button type="button" onclick="togglePasswordVisibility('inputNewPassword', 'eyeNewPass')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500/60 hover:text-bank-gold transition-colors">
+              <i id="eyeNewPass" class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Повторите новый пароль</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-emerald-500/60 text-xs">
+              <i class="fa-solid fa-shield-check"></i>
+            </span>
+            <input type="password" id="inputConfirmPassword" required minlength="4" placeholder="Повторите новый пароль..." class="w-full bg-bank-dark border border-bank-border focus:border-bank-gold rounded-xl py-2 pl-9 pr-10 text-emerald-100 placeholder-emerald-800 text-xs focus:outline-none transition-all">
+            <button type="button" onclick="togglePasswordVisibility('inputConfirmPassword', 'eyeConfirmPass')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500/60 hover:text-bank-gold transition-colors">
+              <i id="eyeConfirmPass" class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-bank-gold via-yellow-500 to-amber-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg mt-3">
+          Сохранить Новый Пароль
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: Banknote Inspector -->
   <div id="banknoteModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative">
@@ -525,7 +595,7 @@
     </div>
   </div>
 
-  <!-- Footer -->
+  <!-- Footer Section -->
   <footer class="border-t border-bank-border/50 bg-bank-dark/90 py-5 text-center text-xs text-emerald-600">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -538,8 +608,9 @@
     </div>
   </footer>
 
+  <!-- Application Logic & Scripts -->
   <script>
-    /* Denomination Configurations */
+    /* Denominations specification */
     const BANKNOTES_CONFIG = [
       { value: 1, titleRu: 'ОДИН БАЙТИ', titleEn: 'ONE BAITY', motif: 'Bausherman & Строительный мотив', description: 'Символизирует фундамент и развитие инфраструктуры государства Миробайт', icon: 'fa-house-shield' },
       { value: 5, titleRu: 'ПЯТЬ БАЙТИ', titleEn: 'FIVE BAITY', motif: 'Классический Фасад Банка с Колоннами', description: 'Олицетворяет надежность и незыблемость Центрального Казначейства', icon: 'fa-building-columns' },
@@ -551,12 +622,14 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и грандиозные стройки', icon: 'fa-hammer' }
     ];
 
+    /* Official Administrator Credentials (Updated to 20102010) */
     const ADMIN_LOGIN = 'Iosif';
-    const ADMIN_PASS = '20102010Aa@!';
+    const ADMIN_DEFAULT_PASS = '20102010';
 
-    /* Shared Cloud Storage Endpoint (Shared across all devices) */
+    /* Shared Cloud Storage Endpoint across all devices */
     const CLOUD_NAMESPACE = 'bank_mirobyte_main_vault_v2';
     const CLOUD_SYNC_URL = `https://kvdb.io/4y9aE2x96fJd4mY8K7sBw3/${CLOUD_NAMESPACE}`;
+    const SESSION_STORAGE_KEY = 'bank_mirobyte_active_session_username';
 
     let appState = {
       currentUser: null,
@@ -573,7 +646,7 @@
         users: {
           [ADMIN_LOGIN]: {
             username: ADMIN_LOGIN,
-            password: ADMIN_PASS,
+            password: ADMIN_DEFAULT_PASS,
             balance: 10000000,
             isAdmin: true,
             registeredAt: 'Основатель Банка'
@@ -630,6 +703,11 @@
         // Merge with local state
         appState.users = { ...appState.users, ...remote.users };
         
+        // Ensure Admin password reflects update if still on old
+        if (appState.users[ADMIN_LOGIN] && !appState.users[ADMIN_LOGIN].hasCustomPasswordChanged) {
+          appState.users[ADMIN_LOGIN].password = ADMIN_DEFAULT_PASS;
+        }
+
         // Merge transactions (unique by ID)
         const combinedTx = [...(remote.transactions || []), ...(appState.transactions || [])];
         const uniqueTx = [];
@@ -642,16 +720,15 @@
         }
         appState.transactions = uniqueTx;
 
-        // Keep current session user balance updated
+        // Keep current session user up to date
         if (appState.currentUser && appState.users[appState.currentUser.username]) {
           appState.currentUser = appState.users[appState.currentUser.username];
         }
 
         saveToLocalCache();
         updateUI();
-        if (notify) showToast('Данные синхронизированы с облаком Банка', 'info');
+        if (notify) showToast('Данные синхронизированы с Казначейством', 'info');
       } else {
-        // If remote empty, publish genesis
         if (Object.keys(appState.users).length === 0) {
           const genesis = getGenesisData();
           appState.users = genesis.users;
@@ -677,9 +754,13 @@
       try {
         localStorage.setItem(CLOUD_NAMESPACE, JSON.stringify({
           users: appState.users,
-          transactions: appState.transactions,
-          activeUsername: appState.currentUser ? appState.currentUser.username : null
+          transactions: appState.transactions
         }));
+        if (appState.currentUser) {
+          localStorage.setItem(SESSION_STORAGE_KEY, appState.currentUser.username);
+        } else {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
       } catch (e) {}
     }
 
@@ -690,9 +771,11 @@
           const parsed = JSON.parse(cached);
           appState.users = parsed.users || {};
           appState.transactions = parsed.transactions || [];
-          if (parsed.activeUsername && appState.users[parsed.activeUsername]) {
-            appState.currentUser = appState.users[parsed.activeUsername];
-          }
+        }
+
+        const savedSessionUser = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (savedSessionUser && appState.users[savedSessionUser]) {
+          appState.currentUser = appState.users[savedSessionUser];
         }
       } catch (e) {}
 
@@ -703,17 +786,37 @@
         if (!appState.transactions.length) {
           appState.transactions = genesis.transactions;
         }
+      } else if (!appState.users[ADMIN_LOGIN].hasCustomPasswordChanged) {
+        appState.users[ADMIN_LOGIN].password = ADMIN_DEFAULT_PASS;
       }
     }
 
     async function commitDatabaseChanges() {
       saveToLocalCache();
       updateUI();
-      // Push to shared cloud
       await pushCloudData({
         users: appState.users,
         transactions: appState.transactions
       });
+    }
+
+    /* Password Reveal Toggle */
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!input || !icon) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        icon.classList.add('text-bank-gold');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.remove('text-bank-gold');
+        icon.classList.add('fa-eye');
+      }
     }
 
     function setAuthTab(mode) {
@@ -749,7 +852,6 @@
         return;
       }
 
-      // First sync latest accounts from cloud
       await refreshCloudData(false);
 
       if (appState.authMode === 'login') {
@@ -763,13 +865,13 @@
           showToast('Неверный логин или пароль!', 'error');
         }
       } else {
-        // Register Mode
+        // Registration mode
         if (appState.users[u]) {
-          showToast('Гражданин с таким логином уже существует!', 'error');
+          showToast('Гражданин с таким логином уже зарегистрирован!', 'error');
           return;
         }
 
-        const isAdminReg = (u === ADMIN_LOGIN && p === ADMIN_PASS);
+        const isAdminReg = (u === ADMIN_LOGIN && p === ADMIN_DEFAULT_PASS);
         const newUser = {
           username: u,
           password: p,
@@ -791,9 +893,66 @@
         });
 
         await commitDatabaseChanges();
-        showToast(`Счёт открыт! Вам начислено ${newUser.balance} ฿`, 'success');
+        showToast(`Счёт открыт! Начислено ${newUser.balance} ฿`, 'success');
         showAppView();
       }
+    }
+
+    /* Change Password Modal Operations */
+    function openPasswordModal() {
+      document.getElementById('inputOldPassword').value = '';
+      document.getElementById('inputNewPassword').value = '';
+      document.getElementById('inputConfirmPassword').value = '';
+      const modal = document.getElementById('changePasswordModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function processPasswordChange(e) {
+      e.preventDefault();
+      if (!appState.currentUser) return;
+
+      const oldP = document.getElementById('inputOldPassword').value;
+      const newP = document.getElementById('inputNewPassword').value;
+      const confirmP = document.getElementById('inputConfirmPassword').value;
+
+      if (oldP !== appState.currentUser.password) {
+        showToast('Старый пароль указан неверно!', 'error');
+        return;
+      }
+
+      if (newP.length < 4) {
+        showToast('Новый пароль должен содержать минимум 4 символа!', 'error');
+        return;
+      }
+
+      if (newP !== confirmP) {
+        showToast('Новые пароли не совпадают!', 'error');
+        return;
+      }
+
+      await refreshCloudData(false);
+
+      const targetUsername = appState.currentUser.username;
+      if (!appState.users[targetUsername]) {
+        showToast('Ошибка аккаунта. Попробуйте снова.', 'error');
+        return;
+      }
+
+      // Update password
+      appState.users[targetUsername].password = newP;
+      appState.users[targetUsername].hasCustomPasswordChanged = true;
+      appState.currentUser.password = newP;
+
+      await commitDatabaseChanges();
+      closePasswordModal();
+      showToast('Пароль успешно обновлён!', 'success');
     }
 
     function handleLogout() {
@@ -845,6 +1004,9 @@
             </div>
             <div class="text-[11px] font-mono text-bank-gold font-bold">${u.balance.toLocaleString()} ฿</div>
           </div>
+          <button onclick="openPasswordModal()" class="w-8 h-8 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all" title="Сменить пароль">
+            <i class="fa-solid fa-key text-xs"></i>
+          </button>
           <button onclick="handleLogout()" class="w-8 h-8 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-rose-400 flex items-center justify-center transition-all" title="Выйти из банка">
             <i class="fa-solid fa-right-from-bracket text-xs"></i>
           </button>
@@ -983,12 +1145,11 @@
         return;
       }
 
-      // Sync fresh balances before transfer
       await refreshCloudData(false);
 
       const recipient = appState.users[targetUser];
       if (!recipient) {
-        showToast(`Гражданин "${targetUser}" не найден в Банке! Проверьте вкладку "Рейтинг".`, 'error');
+        showToast(`Гражданин "${targetUser}" не найден в реестре Банка!`, 'error');
         return;
       }
 
@@ -997,7 +1158,6 @@
         return;
       }
 
-      // Balance transfer
       sender.balance -= amount;
       recipient.balance += amount;
 
@@ -1341,14 +1501,20 @@
       }, 3500);
     }
 
+    /* Page Initialization */
     window.addEventListener('DOMContentLoaded', async () => {
       loadFromLocalCache();
-      showAuthView();
 
-      // Perform initial cloud sync
+      // Check if session was preserved from prior visit
+      if (appState.currentUser) {
+        showAppView();
+      } else {
+        showAuthView();
+      }
+
       await refreshCloudData(false);
 
-      // Keep cloud state synchronized every 10 seconds automatically
+      // Periodically refresh cloud state in the background
       setInterval(() => {
         refreshCloudData(false);
       }, 10000);
