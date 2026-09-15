@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -146,11 +147,6 @@
             </span>
             <input type="password" id="inputPassword" required placeholder="••••••••••••" class="w-full bg-bank-dark border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-9 pr-3 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
           </div>
-        </div>
-
-        <div id="authPrompt" class="text-[11px] text-emerald-400/80 bg-bank-dark/80 p-3 rounded-xl border border-bank-border">
-          <i class="fa-solid fa-crown text-bank-gold mr-1"></i>
-          Казначей/Владелец: логин <b class="text-white">Iosif</b> (пароль <code class="text-bank-gold font-mono">20102010Aa@!</code>).
         </div>
 
         <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-emerald-950 font-bold rounded-xl transition-all shadow-lg text-sm uppercase tracking-wider mt-2">
@@ -1249,9 +1245,8 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadStorage();
 
-      // Pre-authenticate as Iosif for instant preview testing
-      appState.currentUser = appState.users[ADMIN_LOGIN];
-      showAppView();
+      // Start at clean authentication screen (no auto-login as admin)
+      showAuthView();
     });
   </script>
 </body>
