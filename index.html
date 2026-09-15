@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -8,12 +9,12 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts: Cinzel and Inter -->
+  <!-- Google Fonts: Cinzel & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- FontAwesome Icons CDN -->
+  <!-- FontAwesome 6 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Tailwind Configuration -->
@@ -50,8 +51,8 @@
       font-family: 'Inter', sans-serif;
       background-color: #020604;
       background-image: 
-        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.09) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(230, 200, 117, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(230, 200, 117, 0.07) 0%, transparent 50%),
         repeating-linear-gradient(45deg, rgba(16, 185, 129, 0.012) 0px, rgba(16, 185, 129, 0.012) 1px, transparent 1px, transparent 14px);
       min-height: 100vh;
     }
@@ -98,7 +99,6 @@
             <circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/>
             <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/>
             <path d="M50 15 A35 35 0 0 1 85 50 A35 35 0 0 1 50 85 A35 35 0 0 1 15 50 A35 35 0 0 1 50 15 Z" fill="none" stroke="#e6c875" stroke-width="1" opacity="0.4"/>
-            <path d="M25 50 L75 50 M50 25 L50 75" stroke="#10b981" stroke-width="1" opacity="0.3"/>
             <rect x="36" y="36" width="28" height="28" rx="6" fill="#05140d" stroke="#ffd700" stroke-width="2"/>
             <text x="50" y="56" font-family="'Cinzel', serif" font-size="20" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text>
           </svg>
@@ -107,32 +107,31 @@
           <div class="font-royal text-base sm:text-xl font-black tracking-wider gold-gradient-text">BANK OF MIROBYTE</div>
           <div class="text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
             <span id="cloudSyncIndicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Синхронизация активна"></span>
-            <span id="cloudStatusText">Облако Онлайн (฿)</span>
+            <span id="cloudStatusText">Firebase Онлайн (฿)</span>
           </div>
         </div>
       </div>
 
-      <!-- Right Header Navigation: Messages, Password, User Info -->
+      <!-- Right Header Actions -->
       <div id="navBarRight" class="flex items-center space-x-2"></div>
     </div>
   </header>
 
-  <!-- Notifications Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- Auth View -->
+    <!-- Auth Container -->
     <section id="authSection" class="max-w-md mx-auto my-6 sm:my-10 bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden guilloche-panel">
       <div class="text-center mb-6">
         <div class="w-16 h-16 mx-auto mb-3 rounded-2xl ring-2 ring-bank-gold/60 p-2 bg-black flex items-center justify-center shadow-lg shadow-bank-gold/20">
           <span class="font-royal text-4xl font-black text-bank-gold">฿</span>
         </div>
         <h2 id="authTitle" class="text-xl sm:text-2xl font-royal font-bold text-bank-gold">Вход в Банк Миробайт</h2>
-        <p id="authSubtitle" class="text-xs text-emerald-400/70 mt-1">Единая расчётная система валюты Байти</p>
+        <p id="authSubtitle" class="text-xs text-emerald-400/70 mt-1">Централизованная система валюты Байти</p>
       </div>
 
-      <!-- Toggle Auth Tab -->
+      <!-- Auth Tabs -->
       <div class="flex border-b border-bank-border mb-6">
         <button id="authTabLogin" onclick="setAuthMode('login')" class="flex-1 pb-3 text-xs sm:text-sm font-semibold border-b-2 border-bank-gold text-bank-gold transition-all">
           <i class="fa-solid fa-right-to-bracket mr-1"></i> Авторизация
@@ -142,7 +141,7 @@
         </button>
       </div>
 
-      <!-- Auth Form -->
+      <!-- Form -->
       <form id="authForm" onsubmit="processAuthForm(event)" class="space-y-4">
         <div>
           <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Имя пользователя (Логин)</label>
@@ -150,7 +149,7 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-emerald-500/60 text-xs">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="inputUsername" required placeholder="Введите логин..." autocomplete="username" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-10 pr-3 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
+            <input type="text" id="inputUsername" required placeholder="Введите ваш логин..." autocomplete="username" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-10 pr-3 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
           </div>
           <p class="text-[10px] text-emerald-500/60 mt-1">Регистр букв не имеет значения (iosif = Iosif)</p>
         </div>
@@ -182,6 +181,10 @@
           <button onclick="navigateTab('dashboard')" id="tabBtn-dashboard" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-emerald-700 text-white shadow-md whitespace-nowrap">
             <i class="fa-solid fa-wallet mr-1"></i> Мой Кошелёк
           </button>
+          <button onclick="navigateTab('mail')" id="tabBtn-mail" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap relative">
+            <i class="fa-solid fa-paper-plane mr-1"></i> Телеграф Миробайт
+            <span id="unreadMailDot" class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-bank-gold"></span>
+          </button>
           <button onclick="navigateTab('leaderboard')" id="tabBtn-leaderboard" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
             <i class="fa-solid fa-trophy mr-1"></i> Рейтинг Граждан
           </button>
@@ -199,6 +202,7 @@
         </div>
       </div>
 
+      <!-- TAB 1: DASHBOARD -->
       <section id="tabContent-dashboard" class="space-y-6">
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -236,7 +240,7 @@
               <div>
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Синхронизация</span>
                 <span class="font-mono text-xs text-emerald-400 flex items-center gap-1">
-                  <i class="fa-solid fa-cloud text-[10px]"></i> Облако Онлайн
+                  <i class="fa-solid fa-cloud text-[10px]"></i> Firebase Online
                 </span>
               </div>
               <div class="text-right">
@@ -248,6 +252,7 @@
             </div>
           </div>
 
+          <!-- Transfer Box -->
           <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 flex flex-col justify-between guilloche-panel">
             <div>
               <div class="flex items-center justify-between mb-4">
@@ -260,7 +265,7 @@
               
               <form id="transferForm" onsubmit="executeTransfer(event)" class="space-y-3">
                 
-                <!-- Recipient Input -->
+                <!-- Target Recipient -->
                 <div>
                   <div class="flex justify-between items-center mb-1">
                     <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Получатель (Логин)</label>
@@ -275,7 +280,7 @@
                   </div>
                 </div>
 
-                <!-- Amount Input -->
+                <!-- Amount -->
                 <div>
                   <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Сумма перевода</label>
                   <div class="relative">
@@ -284,13 +289,13 @@
                   </div>
                 </div>
 
-                <!-- Comment Input -->
+                <!-- Comment -->
                 <div>
                   <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Назначение перевода</label>
                   <input type="text" id="transferComment" placeholder="За товар, услугу или подарок..." class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-1.5 px-3 text-emerald-100 placeholder-emerald-800 text-xs focus:outline-none transition-all">
                 </div>
 
-                <!-- Third-Party Transfer Option (When user has no phone nearby) -->
+                <!-- Third-Party Transfer Checkbox -->
                 <div class="pt-2 border-t border-bank-border/70">
                   <div class="flex items-center justify-between">
                     <label class="text-[11px] text-emerald-300 font-semibold cursor-pointer flex items-center gap-1.5" for="proxyTransferCheck">
@@ -299,7 +304,7 @@
                     </label>
                   </div>
 
-                  <!-- Collapsible Proxy Credentials Fields -->
+                  <!-- Proxy Inputs -->
                   <div id="proxyFieldsContainer" class="hidden mt-2 p-3 rounded-xl bg-bank-darkest/90 border border-emerald-500/30 space-y-2">
                     <p class="text-[10px] text-bank-gold/80 italic leading-tight">
                       Укажите логин и пароль человека, с баланса которого списываются средства (можно перевести на свой счёт!):
@@ -329,7 +334,7 @@
           </div>
         </div>
 
-        <!-- Quick Denomination Add Bar -->
+        <!-- Quick Denominations -->
         <div class="bg-bank-surface border border-bank-border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
           <div class="text-xs font-semibold text-emerald-300 flex items-center gap-2">
             <i class="fa-solid fa-plus-circle text-bank-gold"></i>
@@ -338,6 +343,7 @@
           <div class="flex flex-wrap gap-2" id="quickDenominationsBar"></div>
         </div>
 
+        <!-- Transactions Ledger -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
@@ -367,6 +373,106 @@
 
       </section>
 
+      <!-- TAB 2: TELEGRAPH / MAIL (ПЕРЕПИСКА МЕЖДУ ГРАЖДАНАМИ) -->
+      <section id="tabContent-mail" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Send Letter Form -->
+          <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-7 guilloche-panel flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
+                  <i class="fa-solid fa-envelopes-bulk text-emerald-400"></i>
+                  Отправка Телеграммы
+                </h3>
+                <span class="text-[10px] bg-bank-card px-2.5 py-0.5 rounded-full border border-bank-border text-bank-gold font-mono">
+                  Госпочта
+                </span>
+              </div>
+
+              <!-- Tariff Info Box -->
+              <div class="p-3 rounded-2xl bg-bank-darkest/80 border border-bank-border/80 mb-4 space-y-1.5 text-[11px]">
+                <div class="text-bank-gold font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-stamp"></i> Тарифы государственной почты:
+                </div>
+                <div class="flex justify-between text-emerald-300/80">
+                  <span>До 9 символов:</span>
+                  <span class="text-rose-400 font-semibold">Не отправляется (мало)</span>
+                </div>
+                <div class="flex justify-between text-emerald-300/80">
+                  <span>От 10 до 100 символов:</span>
+                  <span class="text-bank-gold font-bold">1 Байти (฿)</span>
+                </div>
+                <div class="flex justify-between text-emerald-300/80">
+                  <span>От 100 символов и более:</span>
+                  <span class="text-bank-gold font-bold">10 Байти (฿)</span>
+                </div>
+                <p class="text-[9px] text-emerald-500/70 pt-1 border-t border-bank-border/50">
+                  * Вся оплата за пересылку сообщений поступает в государственную казну Банка (Iosif).
+                </p>
+              </div>
+
+              <form id="sendMailForm" onsubmit="sendMailMessage(event)" class="space-y-4">
+                <div>
+                  <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Получатель (Логин)</label>
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-emerald-500/60 text-xs">@</span>
+                    <input type="text" id="mailRecipient" list="registeredUsersDatalist" required placeholder="Кому отправить письмо..." class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 pl-8 pr-3 text-emerald-100 placeholder-emerald-800 text-xs focus:outline-none transition-all">
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Текст сообщения</label>
+                    <span id="charCountLabel" class="text-[10px] font-mono text-emerald-400/80">0 симв.</span>
+                  </div>
+                  <textarea id="mailText" rows="5" required oninput="calculateMailCost()" placeholder="Напишите ваше сообщение (минимум 10 символов)..." class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl p-3 text-emerald-100 placeholder-emerald-800 text-xs focus:outline-none transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Realtime calculation panel -->
+                <div class="p-2.5 rounded-xl bg-bank-card/80 border border-bank-border flex items-center justify-between text-xs">
+                  <span class="text-emerald-300">Стоимость отправки:</span>
+                  <span id="calculatedCostBadge" class="font-royal font-bold text-rose-400">Менее 10 симв.</span>
+                </div>
+
+                <button type="submit" id="submitMailBtn" disabled class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i class="fa-solid fa-paper-plane mr-1"></i> Отправить телеграмму
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Letters Archive: Incoming & Outgoing -->
+          <div class="lg:col-span-2 bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-7 guilloche-panel flex flex-col justify-between">
+            <div>
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-bank-border">
+                <div>
+                  <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
+                    <i class="fa-solid fa-inbox text-emerald-400"></i>
+                    Входящие и Исходящие Телеграммы
+                  </h3>
+                  <p class="text-[11px] text-emerald-400/70">Личная корреспонденция гражданина (синхронизация онлайн)</p>
+                </div>
+
+                <!-- Mail Filter Tabs -->
+                <div class="flex rounded-xl bg-bank-darkest p-1 border border-bank-border text-[11px] font-semibold">
+                  <button type="button" id="mailTabInbox" onclick="setMailFilter('inbox')" class="px-3 py-1 rounded-lg bg-emerald-700 text-white font-bold transition-all">
+                    Входящие
+                  </button>
+                  <button type="button" id="mailTabSent" onclick="setMailFilter('sent')" class="px-3 py-1 rounded-lg text-emerald-400 hover:text-white transition-all">
+                    Отправленные
+                  </button>
+                </div>
+              </div>
+
+              <div id="mailItemsContainer" class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-1"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 3: LEADERBOARD -->
       <section id="tabContent-leaderboard" class="hidden space-y-6">
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
@@ -376,7 +482,7 @@
                 Официальный Рейтинг Богатства Граждан
               </h3>
               <p class="text-xs text-emerald-400/70 mt-1">
-                Все граждане Банка Миробайт, упорядоченные по размеру капитала (синхронизируется онлайн)
+                Все граждане Банка Миробайт (синхронизируется онлайн через Firebase)
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -404,6 +510,7 @@
         </div>
       </section>
 
+      <!-- TAB 4: BANKNOTES -->
       <section id="tabContent-banknotes" class="hidden space-y-6">
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
@@ -425,9 +532,10 @@
         </div>
       </section>
 
+      <!-- TAB 5: TREASURY (ADMIN IOSIF ONLY) -->
       <section id="tabContent-admin" class="hidden space-y-6">
         
-        <!-- Treasury Header Banner -->
+        <!-- Header Banner -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl relative overflow-hidden">
           <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
@@ -449,14 +557,14 @@
           </div>
         </div>
 
-        <!-- Global Money Supply Overview & Editable Total Supply -->
+        <!-- Global Money Supply Counters -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-bank-surface border border-bank-border rounded-2xl p-5">
             <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Всего Граждан</span>
             <div class="text-3xl font-black font-royal text-white" id="statTotalUsers">0</div>
           </div>
           
-          <!-- Editable Money Supply Block -->
+          <!-- Editable Total Supply -->
           <div class="bg-bank-surface border border-bank-gold/40 rounded-2xl p-5 relative group">
             <div class="flex items-center justify-between">
               <span class="text-[11px] text-bank-gold font-semibold uppercase tracking-wider block mb-1">Общая масса Байти в экономике</span>
@@ -477,7 +585,7 @@
           </div>
         </div>
 
-        <!-- Treasury Operations Console (Grant or Deduct) -->
+        <!-- Treasury Operations Console -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
             <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
@@ -485,7 +593,7 @@
               Казначейские Операции: Эмиссия / Списание
             </h3>
 
-            <!-- Action Mode Selector -->
+            <!-- Mode Selector -->
             <div class="flex rounded-xl bg-bank-darkest p-1 border border-bank-border text-xs font-semibold">
               <button type="button" id="btnModeGrant" onclick="setTreasuryMode('grant')" class="px-3 py-1 rounded-lg bg-emerald-600 text-emerald-950 font-bold transition-all">
                 <i class="fa-solid fa-plus mr-1"></i> Начислить (Эмиссия)
@@ -520,7 +628,7 @@
           </p>
         </div>
 
-        <!-- Registered Citizens Management Ledger -->
+        <!-- Citizens Management Registry -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel">
           <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2 mb-4">
             <i class="fa-solid fa-users-gear text-emerald-400"></i>
@@ -549,7 +657,7 @@
 
   </main>
 
-  <!-- MODAL 1: Notification & Messages Center -->
+  <!-- MODAL 1: Notification Center -->
   <div id="messagesModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative guilloche-panel flex flex-col max-h-[85vh]">
       <button onclick="closeMessagesModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
@@ -643,7 +751,7 @@
     </div>
   </div>
 
-  <!-- MODAL 3: Edit Custom Money Supply (For Treasury) -->
+  <!-- MODAL 3: Custom Money Supply Modal -->
   <div id="moneySupplyModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
       <button onclick="closeMoneySupplyModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
@@ -732,7 +840,7 @@
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <span class="font-royal font-bold text-bank-gold">BANK OF MIROBYTE</span>
-        <span>© 2026. Расчётная система валюты Байти (฿).</span>
+        <span>© 2026. Государственная финансовая система валюты Байти (฿).</span>
       </div>
       <div>
         Казначей & Владелец: <span class="text-bank-gold font-bold">Iosif</span>
@@ -740,12 +848,11 @@
     </div>
   </footer>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <script>
+    /* Exact Firebase Realtime Database URL provided by user */
+    const FIREBASE_ENDPOINT = 'https://mirobyte-bank-default-rtdb.firebaseio.com/bankData.json';
 
-    /* Banknotes Catalog */
+    /* Banknotes Configuration */
     const BANKNOTES_CONFIG = [
       { value: 1, titleRu: 'ОДИН БАЙТИ', titleEn: 'ONE BAITY', motif: 'Bausherman & Строительный мотив', description: 'Символизирует фундамент и развитие инфраструктуры государства Миробайт', icon: 'fa-house-shield' },
       { value: 5, titleRu: 'ПЯТЬ БАЙТИ', titleEn: 'FIVE BAITY', motif: 'Классический Фасад Банка с Колоннами', description: 'Олицетворяет надежность и незыблемость Центрального Казначейства', icon: 'fa-building-columns' },
@@ -765,73 +872,73 @@
     const STORAGE_KEY_SESSION = 'bank_mirobyte_active_session_login';
     const LOCAL_FALLBACK_KEY = 'bank_mirobyte_full_cloud_state_cache';
 
-    /* Unified State */
+    /* Global in-memory application state */
     let appState = {
       currentUser: null,
       authMode: 'login',
       treasuryMode: 'grant',
+      mailFilter: 'inbox',
       users: {},
       transactions: [],
       messages: [],
-      customMoneySupply: null // null for auto-calc
+      mailBox: [],
+      customMoneySupply: null
     };
 
-    let db = null;
-    let auth = null;
-    let stateDocRef = null;
-    let isConnectedToCloud = false;
+    let isSyncing = false;
+    let syncIntervalId = null;
 
-    async function setupCloudSync() {
+    async function fetchCloudData() {
       try {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mirobyte-bank-master-hub';
+        const response = await fetch(FIREBASE_ENDPOINT);
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
         
-        let firebaseConfig = null;
-        if (typeof __firebase_config !== 'undefined') {
-          firebaseConfig = JSON.parse(__firebase_config);
+        if (data) {
+          applyRemoteState(data);
+          updateSyncIndicator(true);
         } else {
-          // Public open real-time Firebase instance for decentralized multi-device banking
-          firebaseConfig = {
-            apiKey: "AIzaSyD-PlaceholderKey-MirobyteBank",
-            authDomain: "mirobyte-bank-cloud.firebaseapp.com",
-            projectId: "mirobyte-bank-cloud",
-            storageBucket: "mirobyte-bank-cloud.appspot.com",
-            messagingSenderId: "1098273645",
-            appId: "1:1098273645:web:839201948201"
-          };
+          // Cloud database is empty, push initialized master state
+          await pushStateToCloud();
         }
+      } catch (err) {
+        console.warn('Firebase sync poll warning:', err);
+        updateSyncIndicator(false);
+      }
+    }
 
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
+    async function pushStateToCloud() {
+      if (isSyncing) return;
+      isSyncing = true;
+      ensureMasterAdminExists();
+      saveLocalCache();
 
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
+      try {
+        const payload = {
+          users: appState.users,
+          transactions: appState.transactions,
+          messages: appState.messages,
+          mailBox: appState.mailBox,
+          customMoneySupply: appState.customMoneySupply,
+          lastUpdated: Date.now()
+        };
 
-        // Strict multi-device document path
-        stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'bankState', 'global');
-
-        // Real-time Cloud Snapshot Listener
-        onSnapshot(stateDocRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            applyRemoteState(data);
-            isConnectedToCloud = true;
-            updateSyncIndicator(true);
-          } else {
-            // First run: establish initial cloud state
-            syncToCloud();
-          }
-        }, (err) => {
-          console.warn("Cloud realtime sync note:", err.message);
-          updateSyncIndicator(false);
+        const response = await fetch(FIREBASE_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
 
+        if (response.ok) {
+          updateSyncIndicator(true);
+        } else {
+          updateSyncIndicator(false);
+        }
       } catch (err) {
-        console.warn("Using local cache fallback for standalone offline mode:", err);
+        console.warn('Firebase push failed:', err);
         updateSyncIndicator(false);
+      } finally {
+        isSyncing = false;
       }
     }
 
@@ -842,10 +949,10 @@
 
       if (online) {
         dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-        text.innerText = 'Облако Онлайн (฿)';
+        text.innerText = 'Firebase Онлайн (฿)';
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-        text.innerText = 'Локальный режим (฿)';
+        text.innerText = 'Локальный кэш (฿)';
       }
     }
 
@@ -854,11 +961,11 @@
       if (data.users) appState.users = data.users;
       if (data.transactions) appState.transactions = data.transactions;
       if (data.messages) appState.messages = data.messages;
+      if (data.mailBox) appState.mailBox = data.mailBox;
       if (data.customMoneySupply !== undefined) appState.customMoneySupply = data.customMoneySupply;
 
       ensureMasterAdminExists();
 
-      // Refresh current active user pointer
       if (appState.currentUser) {
         const u = findUserByUsername(appState.currentUser.username);
         if (u) {
@@ -870,33 +977,13 @@
       renderCurrentView();
     }
 
-    async function syncToCloud() {
-      ensureMasterAdminExists();
-      saveLocalCache();
-
-      if (stateDocRef) {
-        try {
-          await setDoc(stateDocRef, {
-            users: appState.users,
-            transactions: appState.transactions,
-            messages: appState.messages,
-            customMoneySupply: appState.customMoneySupply,
-            lastUpdated: Date.now()
-          });
-          updateSyncIndicator(true);
-        } catch (e) {
-          console.warn("Cloud push deferred:", e.message);
-          updateSyncIndicator(false);
-        }
-      }
-    }
-
     function saveLocalCache() {
       try {
         localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify({
           users: appState.users,
           transactions: appState.transactions,
           messages: appState.messages,
+          mailBox: appState.mailBox,
           customMoneySupply: appState.customMoneySupply
         }));
         if (appState.currentUser) {
@@ -915,6 +1002,7 @@
           if (parsed.users) appState.users = parsed.users;
           if (parsed.transactions) appState.transactions = parsed.transactions;
           if (parsed.messages) appState.messages = parsed.messages;
+          if (parsed.mailBox) appState.mailBox = parsed.mailBox;
           if (parsed.customMoneySupply !== undefined) appState.customMoneySupply = parsed.customMoneySupply;
         }
 
@@ -946,7 +1034,6 @@
       }
     }
 
-    /* Case-insensitive user lookup helper */
     window.findUserByUsername = function(name) {
       if (!name) return null;
       const key = name.trim().toLowerCase();
@@ -1023,7 +1110,7 @@
           showToast('Неверный логин или пароль!', 'error');
         }
       } else {
-        // Register Mode
+        // Register Citizen
         if (appState.users[key]) {
           showToast('Гражданин с таким логином уже зарегистрирован!', 'error');
           return;
@@ -1056,7 +1143,7 @@
           `Поздравляем с регистрацией в Банке Миробайт! Вам начислено ${newUser.balance} ฿ стартового баланса.`
         );
 
-        await syncToCloud();
+        await pushStateToCloud();
         showToast(`Счёт открыт! Начислено ${newUser.balance} ฿`, 'success');
         showAppInterface();
       }
@@ -1089,6 +1176,8 @@
       renderNavbarRight();
       populateUserAutocomplete();
       renderDashboard();
+      calculateMailCost();
+      renderMailView();
     }
 
     function renderNavbarRight() {
@@ -1141,7 +1230,7 @@
         return;
       }
 
-      const tabs = ['dashboard', 'leaderboard', 'banknotes', 'admin'];
+      const tabs = ['dashboard', 'mail', 'leaderboard', 'banknotes', 'admin'];
       tabs.forEach(t => {
         const sec = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
@@ -1170,6 +1259,7 @@
       populateUserAutocomplete();
 
       if (tabName === 'dashboard') renderDashboard();
+      if (tabName === 'mail') renderMailView();
       if (tabName === 'leaderboard') renderLeaderboard();
       if (tabName === 'banknotes') renderBanknotesCatalog();
       if (tabName === 'admin') renderAdminView();
@@ -1283,19 +1373,17 @@
         payer = authenticatedPayer;
       }
 
-      // Prohibit sending to self only if payer and recipient are truly identical
+      // Prohibit sending to oneself ONLY if payer and recipient are exactly the same person
       if (payer.username.toLowerCase() === recipient.username.toLowerCase()) {
         showToast('Плательщик и получатель не могут быть одним и тем же лицом!', 'error');
         return;
       }
 
-      // CRITICAL GUARD: Balance can NEVER drop below 0 ฿
       if (payer.balance < amount) {
         showToast(`Недостаточно средств! На балансе плательщика ${payer.balance} ฿, списание невозможно.`, 'error');
         return;
       }
 
-      // Execute transaction
       payer.balance -= amount;
       recipient.balance += amount;
 
@@ -1326,14 +1414,14 @@
         );
       }
 
-      await syncToCloud();
+      await pushStateToCloud();
 
-      // Clear transfer inputs
+      // Clear inputs
       document.getElementById('transferAmount').value = '';
       document.getElementById('transferComment').value = '';
       document.getElementById('transferTarget').value = '';
 
-      // Securely clear and reset 3rd party fields
+      // Immediately erase and reset proxy fields for security
       if (isProxy) {
         document.getElementById('proxySenderLogin').value = '';
         document.getElementById('proxySenderPassword').value = '';
@@ -1392,6 +1480,193 @@
         tbody.appendChild(tr);
       });
     }
+
+    window.calculateMailCost = function() {
+      const text = document.getElementById('mailText')?.value || '';
+      const len = text.length;
+      const badge = document.getElementById('calculatedCostBadge');
+      const submitBtn = document.getElementById('submitMailBtn');
+      const countLabel = document.getElementById('charCountLabel');
+
+      if (countLabel) countLabel.innerText = `${len} симв.`;
+
+      if (len < 10) {
+        if (badge) {
+          badge.className = 'font-royal font-bold text-rose-400';
+          badge.innerText = 'Минимум 10 симв. (не отправляется)';
+        }
+        if (submitBtn) submitBtn.disabled = true;
+        return 0;
+      } else if (len <= 100) {
+        if (badge) {
+          badge.className = 'font-royal font-bold text-bank-gold';
+          badge.innerText = '1 Байти (฿)';
+        }
+        if (submitBtn) submitBtn.disabled = false;
+        return 1;
+      } else {
+        if (badge) {
+          badge.className = 'font-royal font-bold text-bank-gold-bright';
+          badge.innerText = '10 Байти (฿)';
+        }
+        if (submitBtn) submitBtn.disabled = false;
+        return 10;
+      }
+    };
+
+    window.sendMailMessage = async function(e) {
+      e.preventDefault();
+      const sender = appState.currentUser;
+      const recipientName = document.getElementById('mailRecipient').value.trim();
+      const text = document.getElementById('mailText').value.trim();
+      const cost = calculateMailCost();
+
+      if (cost <= 0 || text.length < 10) {
+        showToast('Сообщение должно содержать не менее 10 символов!', 'error');
+        return;
+      }
+
+      const recipient = findUserByUsername(recipientName);
+      if (!recipient) {
+        showToast(`Гражданин "${recipientName}" не найден в реестре Банка!`, 'error');
+        return;
+      }
+
+      if (sender.balance < cost) {
+        showToast(`Недостаточно средств для отправки телеграммы! Требуется ${cost} ฿, ваш баланс: ${sender.balance} ฿`, 'error');
+        return;
+      }
+
+      // Deduct tariff from sender
+      sender.balance -= cost;
+      if (sender.balance < 0) sender.balance = 0;
+
+      // Transfer tariff directly to Bank Treasury (iosif)
+      const admin = findUserByUsername(MASTER_ADMIN_USERNAME);
+      if (admin) {
+        admin.balance += cost;
+      }
+
+      const mailItem = {
+        id: 'MAIL-' + Date.now(),
+        from: sender.username,
+        to: recipient.username,
+        text: text,
+        cost: cost,
+        timestamp: new Date().toLocaleString('ru-RU')
+      };
+
+      if (!appState.mailBox) appState.mailBox = [];
+      appState.mailBox.unshift(mailItem);
+
+      // Add notification to recipient
+      addSystemMessage(
+        recipient.username,
+        'Новая телеграмма',
+        `Вам пришла телеграмма от @${sender.username} (${text.length} симв.). Откройте раздел "Телеграф Миробайт".`
+      );
+
+      // Ledger record for mail tax
+      appState.transactions.unshift({
+        id: 'TX-MAIL-' + Date.now(),
+        from: sender.username,
+        to: 'ГОСУДАРСТВЕННЫЙ БАНК (Iosif)',
+        amount: cost,
+        comment: `Почтовый сбор за отправку телеграммы гражданину @${recipient.username}`,
+        timestamp: new Date().toLocaleString('ru-RU')
+      });
+
+      await pushStateToCloud();
+
+      document.getElementById('mailRecipient').value = '';
+      document.getElementById('mailText').value = '';
+      calculateMailCost();
+
+      renderNavbarRight();
+      renderDashboard();
+      renderMailView();
+      showToast(`Телеграмма отправлена гражданину @${recipient.username}! Списан сбор ${cost} ฿ в казну Банка.`, 'success');
+    };
+
+    window.setMailFilter = function(filter) {
+      appState.mailFilter = filter;
+      const bIn = document.getElementById('mailTabInbox');
+      const bOut = document.getElementById('mailTabSent');
+
+      if (filter === 'inbox') {
+        bIn.className = 'px-3 py-1 rounded-lg bg-emerald-700 text-white font-bold transition-all';
+        bOut.className = 'px-3 py-1 rounded-lg text-emerald-400 hover:text-white transition-all';
+      } else {
+        bOut.className = 'px-3 py-1 rounded-lg bg-emerald-700 text-white font-bold transition-all';
+        bIn.className = 'px-3 py-1 rounded-lg text-emerald-400 hover:text-white transition-all';
+      }
+      renderMailView();
+    };
+
+    function renderMailView() {
+      const container = document.getElementById('mailItemsContainer');
+      if (!container || !appState.currentUser) return;
+
+      container.innerHTML = '';
+      const uLower = appState.currentUser.username.toLowerCase();
+      const allMails = appState.mailBox || [];
+
+      let filtered = [];
+      if (appState.mailFilter === 'inbox') {
+        filtered = allMails.filter(m => m.to.toLowerCase() === uLower);
+      } else {
+        filtered = allMails.filter(m => m.from.toLowerCase() === uLower);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-emerald-500/60 text-xs">
+            <i class="fa-solid fa-envelope-open-text text-3xl mb-2 block"></i>
+            ${appState.mailFilter === 'inbox' ? 'Входящих телеграмм пока нет' : 'Вы еще не отправляли телеграммы'}
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'p-4 rounded-2xl bg-bank-darkest/90 border border-bank-border/80 hover:border-bank-gold/40 transition-colors shadow-md space-y-2';
+
+        const isInbox = appState.mailFilter === 'inbox';
+        item.innerHTML = `
+          <div class="flex items-center justify-between border-b border-bank-border/50 pb-2">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-bank-surface border border-bank-border flex items-center justify-center text-bank-gold text-xs">
+                <i class="fa-solid ${isInbox ? 'fa-arrow-down-left' : 'fa-arrow-up-right'}"></i>
+              </div>
+              <div class="text-xs">
+                <span class="text-emerald-500/80">${isInbox ? 'От кого:' : 'Кому:'}</span>
+                <span class="font-bold text-white font-royal ml-1">@${isInbox ? m.from : m.to}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[9px] font-mono text-emerald-500 block">${m.timestamp}</span>
+              <span class="text-[9px] text-bank-gold font-bold">Сбор: ${m.cost} ฿</span>
+            </div>
+          </div>
+          <p class="text-xs text-emerald-100 whitespace-pre-wrap leading-relaxed">${m.text}</p>
+          <div class="text-right pt-1">
+            ${isInbox ? `
+              <button onclick="replyToCitizen('${m.from}')" class="px-2.5 py-1 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 rounded-lg text-[10px] font-semibold transition-colors">
+                <i class="fa-solid fa-reply mr-1"></i> Ответить
+              </button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    window.replyToCitizen = function(login) {
+      document.getElementById('mailRecipient').value = login;
+      document.getElementById('mailText').focus();
+      showToast(`Адресат @${login} подставлен в форму отправки`, 'info');
+    };
 
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
@@ -1547,7 +1822,6 @@
       const usersList = Object.values(appState.users);
       document.getElementById('statTotalUsers').innerText = usersList.length;
 
-      // Money Supply calculation / override
       let displayMass = 0;
       if (appState.customMoneySupply !== null && appState.customMoneySupply !== undefined) {
         displayMass = appState.customMoneySupply;
@@ -1625,12 +1899,12 @@
       e.preventDefault();
       const val = parseInt(document.getElementById('inputCustomMoneySupply').value);
       if (isNaN(val) || val < 0) {
-        showToast('Введите корректное положительное число!', 'error');
+        showToast('Введите корректное число!', 'error');
         return;
       }
 
       appState.customMoneySupply = val;
-      await syncToCloud();
+      await pushStateToCloud();
       closeMoneySupplyModal();
       renderAdminView();
       showToast(`Общая денежная масса установлена на ${val.toLocaleString()} ฿!`, 'success');
@@ -1638,9 +1912,9 @@
 
     window.resetMoneySupplyToAuto = async function() {
       appState.customMoneySupply = null;
-      await syncToCloud();
+      await pushStateToCloud();
       renderAdminView();
-      showToast('Денежная масса возвращена в режим автоматического расчёта', 'info');
+      showToast('Денежная масса возвращена в режим авто-расчёта', 'info');
     };
 
     window.executeTreasuryAction = async function(e) {
@@ -1707,7 +1981,7 @@
         showToast(`Списано ${deductAmount.toLocaleString()} ฿ со счёта гражданина ${user.username}!`, 'info');
       }
 
-      await syncToCloud();
+      await pushStateToCloud();
       document.getElementById('treasuryAmount').value = '';
       document.getElementById('treasuryReason').value = '';
       renderNavbarRight();
@@ -1763,7 +2037,7 @@
         showToast(`Списано ${toDeduct} ฿ у ${u.username}!`, 'info');
       }
 
-      await syncToCloud();
+      await pushStateToCloud();
       renderNavbarRight();
       renderAdminView();
     };
@@ -1829,7 +2103,7 @@
         });
       }
 
-      syncToCloud();
+      pushStateToCloud();
       renderNavbarRight();
 
       const modal = document.getElementById('messagesModal');
@@ -1848,7 +2122,7 @@
       if (!appState.currentUser) return;
       const uLower = appState.currentUser.username.toLowerCase();
       appState.messages = appState.messages.filter(m => m.to !== uLower);
-      await syncToCloud();
+      await pushStateToCloud();
       openMessagesModal();
       showToast('История сообщений очищена', 'info');
     };
@@ -1896,7 +2170,7 @@
       appState.users[key].hasCustomPassword = true;
       appState.currentUser.password = newP;
 
-      await syncToCloud();
+      await pushStateToCloud();
       closePasswordModal();
       showToast('Пароль успешно обновлён!', 'success');
     };
@@ -1931,9 +2205,15 @@
     window.addEventListener('DOMContentLoaded', async () => {
       loadLocalCache();
       renderCurrentView();
-      await setupCloudSync();
+
+      // Initial cloud pull
+      await fetchCloudData();
+
+      // Realtime polling every 2.5 seconds to sync all devices instantly
+      syncIntervalId = setInterval(async () => {
+        await fetchCloudData();
+      }, 2500);
     });
   </script>
 </body>
 </html>
-```
