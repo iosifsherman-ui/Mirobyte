@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BANK OF MIROBYTE — Государственный Банк (฿)</title>
   
   <!-- Tailwind CSS CDN -->
@@ -16,7 +16,6 @@
   <!-- FontAwesome 6 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Tailwind Configuration -->
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -88,13 +87,13 @@
 </head>
 <body class="text-emerald-100 flex flex-col justify-between selection:bg-emerald-800 selection:text-white antialiased">
 
-  <!-- Header -->
+  <!-- Fixed Top Header -->
   <header class="border-b border-bank-border bg-bank-darkest/95 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
       
       <!-- Brand & Emblem -->
-      <div class="flex items-center space-x-3 cursor-pointer group" onclick="navigateTab('dashboard')">
-        <div class="w-12 h-12 rounded-2xl ring-2 ring-bank-gold/60 p-0.5 bg-black flex-shrink-0 flex items-center justify-center shadow-lg shadow-bank-gold/20 group-hover:ring-bank-gold transition-all">
+      <div class="flex items-center space-x-2.5 cursor-pointer flex-shrink min-w-0" onclick="navigateTab('dashboard')">
+        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ring-2 ring-bank-gold/60 p-0.5 bg-black flex-shrink-0 flex items-center justify-center shadow-lg shadow-bank-gold/20">
           <svg viewBox="0 0 100 100" class="w-full h-full">
             <circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/>
             <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/>
@@ -103,17 +102,17 @@
             <text x="50" y="56" font-family="'Cinzel', serif" font-size="20" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text>
           </svg>
         </div>
-        <div>
-          <div class="font-royal text-base sm:text-xl font-black tracking-wider gold-gradient-text">BANK OF MIROBYTE</div>
-          <div class="text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-            <span id="cloudSyncIndicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Синхронизация активна"></span>
-            <span id="cloudStatusText">Firebase Онлайн (฿)</span>
+        <div class="truncate">
+          <div class="font-royal text-sm sm:text-lg font-black tracking-wider gold-gradient-text truncate">BANK OF MIROBYTE</div>
+          <div class="text-[9px] sm:text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+            <span id="cloudSyncIndicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" title="Синхронизация активна"></span>
+            <span id="cloudStatusText" class="truncate">Firebase Онлайн (฿)</span>
           </div>
         </div>
       </div>
 
-      <!-- Right Header Actions -->
-      <div id="navBarRight" class="flex items-center space-x-2"></div>
+      <!-- Right Header Actions (Bell, Dedicated Settings, Profile) -->
+      <div id="navBarRight" class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0"></div>
     </div>
   </header>
 
@@ -123,7 +122,7 @@
 
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
-  <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+  <main class="flex-grow max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-5">
 
     <!-- Auth Container -->
     <section id="authSection" class="max-w-md mx-auto my-6 sm:my-10 bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden guilloche-panel">
@@ -223,9 +222,12 @@
                 </span>
               </div>
               
-              <!-- Avatar display -->
-              <div id="cardAvatarContainer" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg">
+              <!-- Avatar Display with Clickable Settings Link -->
+              <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group" title="Нажмите для настройки профиля">
                 <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px]">
+                  <i class="fa-solid fa-gear"></i>
+                </div>
               </div>
             </div>
 
@@ -562,7 +564,7 @@
           </div>
         </div>
 
-        <!-- Global Counters: Citizens, Money Supply, Bank Treasury Reserve -->
+        <!-- Global Counters -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-bank-surface border border-bank-border rounded-2xl p-5">
             <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Всего Граждан</span>
@@ -683,7 +685,10 @@
 
       <div class="flex items-center space-x-3 mb-6 pb-3 border-b border-bank-border">
         <div class="w-11 h-11 rounded-2xl bg-black border border-bank-gold flex items-center justify-center text-bank-gold shadow-md">
-          <i class="fa-solid fa-gear text-xl"></i>
+          <svg class="w-6 h-6 text-bank-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
         </div>
         <div>
           <h4 class="font-royal text-lg font-bold text-bank-gold">Настройки Гражданина</h4>
@@ -974,7 +979,7 @@
       messages: [],
       mailBox: [],
       customMoneySupply: null,
-      bankReserve: 5000000 // Казна Банка
+      bankReserve: 5000000
     };
 
     let isSyncing = false;
@@ -1040,10 +1045,10 @@
       if (!dot || !text) return;
 
       if (online) {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0';
         text.innerText = 'Firebase Онлайн (฿)';
       } else {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 flex-shrink-0';
         text.innerText = 'Локальный кэш (฿)';
       }
     }
@@ -1232,7 +1237,7 @@
       const NICKNAME_CHANGE_FEE = 150;
 
       if (!newNick || newNick.length < 3) {
-        showToast('Имя пользователя должно содержать не менее 3 символов!', 'error');
+        showToast('Имя пользователя должно быть не менее 3 символов!', 'error');
         return;
       }
 
@@ -1255,11 +1260,10 @@
       }
 
       if (current.balance < NICKNAME_CHANGE_FEE) {
-        showToast(`Недостаточно Байти! Пошлина составляет ${NICKNAME_CHANGE_FEE} ฿, ваш баланс: ${current.balance} ฿.`, 'error');
+        showToast(`Недостаточно Байти! Пошлина составляет ${NICKNAME_CHANGE_FEE} ฿.`, 'error');
         return;
       }
 
-      // Deduct fee and credit Bank Treasury
       current.balance -= NICKNAME_CHANGE_FEE;
       if (current.balance < 0) current.balance = 0;
 
@@ -1308,7 +1312,7 @@
       renderNavbarRight();
       renderDashboard();
       populateUserAutocomplete();
-      showToast(`Имя успешно изменено на @${newNick}! Списана пошлина ${NICKNAME_CHANGE_FEE} ฿ в Казну.`, 'success');
+      showToast(`Имя успешно изменено на @${newNick}! Списана пошлина ${NICKNAME_CHANGE_FEE} ฿.`, 'success');
     };
 
     window.processPasswordChange = async function(e) {
@@ -1485,11 +1489,12 @@
       renderMailView();
     }
 
+    /* Guaranteed Visible Navbar with Settings Gear SVG */
     function renderNavbarRight() {
       const container = document.getElementById('navBarRight');
       if (!appState.currentUser) {
         container.innerHTML = `
-          <button onclick="showAuthInterface()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-all">
+          <button onclick="showAuthInterface()" class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
             <i class="fa-solid fa-right-to-bracket mr-1"></i> Войти
           </button>
         `;
@@ -1501,24 +1506,25 @@
       const avatarHtml = u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs text-bank-gold"></i>`;
 
       container.innerHTML = `
-        <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- Compact Profile info in Navbar -->
-          <div class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-xl ring-1 ring-bank-gold/60 overflow-hidden bg-black flex items-center justify-center">
+        <div class="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+          
+          <!-- Compact Profile info in Navbar (Clickable for settings) -->
+          <div class="flex items-center gap-1.5 cursor-pointer p-1 rounded-xl hover:bg-bank-card/50 transition-colors" onclick="openSettingsModal()" title="Настройки профиля">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl ring-1 ring-bank-gold/60 overflow-hidden bg-black flex items-center justify-center flex-shrink-0">
               ${avatarHtml}
             </div>
-            <div class="text-right hidden sm:block">
+            <div class="text-right hidden md:block">
               <div class="text-xs font-bold text-white flex items-center justify-end gap-1">
-                <span class="font-royal">${u.username}</span>
-                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей Банка"></i>' : ''}
+                <span class="font-royal truncate max-w-[90px]">${u.username}</span>
+                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
               </div>
               <div class="text-[11px] font-mono text-bank-gold font-bold">${u.balance.toLocaleString()} ฿</div>
             </div>
           </div>
 
           <!-- Notification Bell -->
-          <button onclick="openMessagesModal()" class="relative w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all" title="Сообщения">
-            <i class="fa-solid fa-bell text-sm"></i>
+          <button onclick="openMessagesModal()" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all flex-shrink-0" title="Сообщения">
+            <i class="fa-solid fa-bell text-xs sm:text-sm"></i>
             ${unreadCount > 0 ? `
               <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">
                 ${unreadCount}
@@ -1526,9 +1532,12 @@
             ` : ''}
           </button>
 
-          <!-- Dedicated Settings Gear Button -->
-          <button onclick="openSettingsModal()" class="w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/40 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-sm" title="Настройки Гражданина">
-            <i class="fa-solid fa-gear text-sm"></i>
+          <!-- Guaranteed Visible Dedicated Settings Button (SVG Gear) -->
+          <button onclick="openSettingsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/60 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0 cursor-pointer active:scale-95" title="Настройки Гражданина">
+            <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
           </button>
         </div>
       `;
@@ -1598,9 +1607,19 @@
       const avatarBox = document.getElementById('cardAvatarContainer');
       if (avatarBox) {
         if (u.avatar) {
-          avatarBox.innerHTML = `<img src="${u.avatar}" class="w-full h-full object-cover">`;
+          avatarBox.innerHTML = `
+            <img src="${u.avatar}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
+              <i class="fa-solid fa-gear"></i>
+            </div>
+          `;
         } else {
-          avatarBox.innerHTML = `<i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>`;
+          avatarBox.innerHTML = `
+            <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
+              <i class="fa-solid fa-gear"></i>
+            </div>
+          `;
         }
       }
 
@@ -1735,7 +1754,6 @@
 
       await pushStateToCloud();
 
-      // Clear inputs
       document.getElementById('transferAmount').value = '';
       document.getElementById('transferComment').value = '';
       document.getElementById('transferTarget').value = '';
@@ -1851,14 +1869,13 @@
       }
 
       if (sender.balance < cost) {
-        showToast(`Недостаточно средств для отправки телеграммы! Требуется ${cost} ฿, ваш баланс: ${sender.balance} ฿`, 'error');
+        showToast(`Недостаточно средств! Требуется ${cost} ฿.`, 'error');
         return;
       }
 
       sender.balance -= cost;
       if (sender.balance < 0) sender.balance = 0;
 
-      // Transfer tariff directly to Bank Reserve Treasury
       appState.bankReserve = (appState.bankReserve || 0) + cost;
 
       const mailItem = {
@@ -1897,7 +1914,7 @@
       renderNavbarRight();
       renderDashboard();
       renderMailView();
-      showToast(`Телеграмма отправлена гражданину @${recipient.username}! Списан сбор ${cost} ฿ в Казну Банка.`, 'success');
+      showToast(`Телеграмма отправлена гражданину @${recipient.username}! Списан сбор ${cost} ฿ в Казну.`, 'success');
     };
 
     window.setMailFilter = function(filter) {
@@ -2147,7 +2164,6 @@
       const usersList = Object.values(appState.users);
       document.getElementById('statTotalUsers').innerText = usersList.length;
 
-      // Money Supply
       let displayMass = 0;
       if (appState.customMoneySupply !== null && appState.customMoneySupply !== undefined) {
         displayMass = appState.customMoneySupply;
@@ -2158,7 +2174,6 @@
       }
       document.getElementById('statMoneySupply').innerText = `${displayMass.toLocaleString()} ฿`;
 
-      // Bank Reserve (Казна Банка)
       const reserve = appState.bankReserve !== undefined ? appState.bankReserve : 5000000;
       document.getElementById('statBankReserve').innerText = `${reserve.toLocaleString()} ฿`;
 
@@ -2205,7 +2220,6 @@
       });
     }
 
-    /* Modal handlers for Bank Reserve (Казна Банка) */
     window.promptEditBankReserve = function() {
       const input = document.getElementById('inputBankReserveAmount');
       input.value = appState.bankReserve || 0;
@@ -2517,7 +2531,6 @@
 
       await fetchCloudData();
 
-      // Realtime polling
       syncIntervalId = setInterval(async () => {
         await fetchCloudData();
       }, 2500);
