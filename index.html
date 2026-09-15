@@ -2502,20 +2502,21 @@
       }, 3600);
     };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      try {
-        loadLocalCache();
-        renderCurrentView();
-      } catch (e) {
-        console.error(e);
-      }
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    loadLocalCache();
+    renderCurrentView();
+  } catch (e) {
+    console.error(e);
+  }
 
-      fetchCloudData().catch(err => console.warn(err));
+  fetchCloudData().catch(err => con
 
-      syncIntervalId = setInterval(() => {
-        fetchCloudData().catch(err => console.warn(err));
-      }, 2500);
-    });
+  syncIntervalId = setInterval(() =>
+    fetchCloudData().catch(err => c
+  }, 2500);
+});
+
   </script>
 </body>
 </html>
