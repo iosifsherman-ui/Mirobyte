@@ -116,8 +116,9 @@
     </div>
   </header>
 
-  <!-- Hidden Canvas for Avatar Compression -->
+  <!-- Hidden Canvases for Compression -->
   <canvas id="avatarCanvas" class="hidden"></canvas>
+  <canvas id="banknoteCanvas" class="hidden"></canvas>
   <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarSelected(event)">
 
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
@@ -233,6 +234,10 @@
                 <span id="userBalanceDisplay" class="text-4xl sm:text-5xl font-black font-royal text-white tracking-tight">0</span>
                 <span class="text-2xl sm:text-3xl font-royal font-bold text-bank-gold">฿</span>
                 <span class="text-xs text-emerald-400/60 font-medium ml-1 font-mono">(Байти)</span>
+              </div>
+              <div class="mt-2 text-xs text-bank-gold/90 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-award text-[11px]"></i>
+                <span id="cardCustomStatus">Статус: Полноправный гражданин</span>
               </div>
             </div>
 
@@ -549,10 +554,13 @@
                 Казначейство Банка Миробайт
               </h2>
               <p class="text-xs text-emerald-300/80 mt-1">
-                Управление эмиссией валюты Байти (฿), регулирование денежной массы и списание излишков
+                Управление эмиссией валюты Байти (฿), дизайном банкнот, статусами граждан и регулирование денежной массы
               </p>
             </div>
-            <div>
+            <div class="flex items-center gap-2">
+              <button onclick="openBanknoteManagerModal()" class="px-4 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+                <i class="fa-solid fa-palette mr-1"></i> Дизайн Купюр
+              </button>
               <span class="text-xs font-mono bg-black/50 border border-bank-gold/40 px-3.5 py-2 rounded-xl text-bank-gold font-bold">
                 Владелец: Iosif
               </span>
@@ -586,6 +594,33 @@
             <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Резерв Казначея Iosif</span>
             <div class="text-3xl font-black font-royal text-emerald-400" id="statAdminReserve">0 ฿</div>
           </div>
+        </div>
+
+        <!-- NEW: Assign Custom Citizen Statuses -->
+        <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
+          <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2 mb-3">
+            <i class="fa-solid fa-user-tag text-emerald-400"></i>
+            Присвоение Статуса / Титула Гражданину
+          </h3>
+          <p class="text-xs text-emerald-400/70 mb-4">
+            Установленный статус отображается на карточке кошелька, в официальном Рейтинге и в сообщениях Телеграфа.
+          </p>
+
+          <form id="assignStatusForm" onsubmit="processAssignStatus(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Гражданин (Логин)</label>
+              <input type="text" id="statusTargetUser" list="registeredUsersDatalist" required placeholder="Введите логин..." class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-emerald-100 text-xs focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Новый Статус / Титул</label>
+              <input type="text" id="statusNewValue" required placeholder="Например: Почётный Гражданин / Инвестор" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-emerald-100 text-xs focus:outline-none">
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+                <i class="fa-solid fa-stamp mr-1"></i> Утвердить Статус
+              </button>
+            </div>
+          </form>
         </div>
 
         <!-- Treasury Operations Console -->
@@ -643,7 +678,7 @@
               <thead>
                 <tr class="border-b border-bank-border text-emerald-400/60 uppercase tracking-wider font-semibold">
                   <th class="pb-2.5 px-3">Гражданин</th>
-                  <th class="pb-2.5 px-3">Роль</th>
+                  <th class="pb-2.5 px-3">Роль / Статус</th>
                   <th class="pb-2.5 px-3">Баланс</th>
                   <th class="pb-2.5 px-3">Дата открытия</th>
                   <th class="pb-2.5 px-3 text-right">Быстрые операции Казначея</th>
@@ -772,6 +807,50 @@
     </div>
   </div>
 
+  <!-- NEW MODAL: Banknote Images Manager (Treasurer Only) -->
+  <div id="banknoteManagerModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-md w-full p-6 shadow-2xl relative guilloche-gold">
+      <button onclick="closeBanknoteManagerModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-black border border-bank-gold flex items-center justify-center text-bank-gold">
+          <i class="fa-solid fa-palette text-sm"></i>
+        </div>
+        <div>
+          <h4 class="font-royal text-base font-bold text-bank-gold">Загрузка Изображений Купюр</h4>
+          <span class="text-[11px] text-emerald-400/80">Обновление графики в реальном времени</span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Выберите Номинал</label>
+          <select id="bmDenomSelect" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-bank-gold font-bold text-xs focus:outline-none">
+            <option value="1">1 Байти (1 ฿)</option>
+            <option value="5">5 Байти (5 ฿)</option>
+            <option value="10">10 Байти (10 ฿)</option>
+            <option value="25">25 Байти (25 ฿)</option>
+            <option value="50">50 Байти (50 ฿)</option>
+            <option value="100">100 Байти (100 ฿)</option>
+            <option value="250">250 Байти (250 ฿)</option>
+            <option value="1000">1000 Байти (1000 ฿)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Файл Изображения</label>
+          <input type="file" id="bmFileInput" accept="image/*" class="w-full text-xs text-emerald-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-bank-card file:text-emerald-300 hover:file:bg-emerald-900 cursor-pointer">
+        </div>
+
+        <button onclick="handleSaveBanknoteImage()" class="w-full py-2.5 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+          <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Сохранить Купюру в Облако
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Notification Center -->
   <div id="messagesModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative guilloche-panel flex flex-col max-h-[85vh]">
@@ -860,7 +939,7 @@
           <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold">฿</div>
         </div>
 
-        <div class="my-auto text-center relative z-10 py-2">
+        <div class="my-auto text-center relative z-10 py-2" id="modalNoteCenterBlock">
           <div class="inline-block p-4 rounded-full border border-bank-gold/40 bg-black/40 mb-2">
             <i id="modalNoteIcon" class="fa-solid fa-landmark text-4xl text-bank-gold"></i>
           </div>
@@ -933,6 +1012,7 @@
       transactions: [],
       messages: [],
       mailBox: [],
+      banknoteImages: {},
       customMoneySupply: null
     };
 
@@ -949,7 +1029,6 @@
           applyRemoteState(data);
           updateSyncIndicator(true);
         } else {
-          // Cloud database is empty, push initialized master state
           await pushStateToCloud();
         }
       } catch (err) {
@@ -970,6 +1049,7 @@
           transactions: appState.transactions,
           messages: appState.messages,
           mailBox: appState.mailBox,
+          banknoteImages: appState.banknoteImages,
           customMoneySupply: appState.customMoneySupply,
           lastUpdated: Date.now()
         };
@@ -1013,6 +1093,7 @@
       if (data.transactions) appState.transactions = data.transactions;
       if (data.messages) appState.messages = data.messages;
       if (data.mailBox) appState.mailBox = data.mailBox;
+      if (data.banknoteImages) appState.banknoteImages = data.banknoteImages;
       if (data.customMoneySupply !== undefined) appState.customMoneySupply = data.customMoneySupply;
 
       ensureMasterAdminExists();
@@ -1035,6 +1116,7 @@
           transactions: appState.transactions,
           messages: appState.messages,
           mailBox: appState.mailBox,
+          banknoteImages: appState.banknoteImages,
           customMoneySupply: appState.customMoneySupply
         }));
         if (appState.currentUser) {
@@ -1054,6 +1136,7 @@
           if (parsed.transactions) appState.transactions = parsed.transactions;
           if (parsed.messages) appState.messages = parsed.messages;
           if (parsed.mailBox) appState.mailBox = parsed.mailBox;
+          if (parsed.banknoteImages) appState.banknoteImages = parsed.banknoteImages;
           if (parsed.customMoneySupply !== undefined) appState.customMoneySupply = parsed.customMoneySupply;
         }
 
@@ -1076,6 +1159,7 @@
           balance: 10000000,
           isAdmin: true,
           registeredAt: 'Основатель Банка',
+          customStatus: 'Главный Казначей Банка',
           avatar: ''
         };
       } else {
@@ -1083,6 +1167,9 @@
           appState.users[adminKey].password = MASTER_ADMIN_PASSWORD;
         }
         appState.users[adminKey].isAdmin = true;
+        if (!appState.users[adminKey].customStatus) {
+          appState.users[adminKey].customStatus = 'Главный Казначей Банка';
+        }
       }
     }
 
@@ -1211,26 +1298,23 @@
         return;
       }
 
-      // Deduct fee and credit Treasury
       current.balance -= NICKNAME_CHANGE_FEE;
       if (current.balance < 0) current.balance = 0;
 
       const admin = findUserByUsername(MASTER_ADMIN_USERNAME);
-      if (admin) {
+      if (admin && oldKey !== MASTER_ADMIN_USERNAME) {
         admin.balance += NICKNAME_CHANGE_FEE;
       }
 
       const oldDisplay = current.username;
       current.username = newNick;
 
-      // Migrate user object in users state
       appState.users[newKey] = {
         ...appState.users[oldKey],
         username: newNick
       };
       delete appState.users[oldKey];
 
-      // Update in transactions and mailbox records
       appState.transactions.forEach(t => {
         if (t.from.toLowerCase() === oldKey) t.from = newNick;
         if (t.to.toLowerCase() === oldKey) t.to = newNick;
@@ -1243,7 +1327,6 @@
         });
       }
 
-      // Ledger entry for the nickname change fee
       appState.transactions.unshift({
         id: 'TX-FEE-' + Date.now(),
         from: newNick,
@@ -1372,7 +1455,6 @@
           showToast('Неверный логин или пароль!', 'error');
         }
       } else {
-        // Register Citizen
         if (appState.users[key]) {
           showToast('Гражданин с таким логином уже зарегистрирован!', 'error');
           return;
@@ -1385,6 +1467,7 @@
           balance: isAdmin ? 10000000 : 50,
           isAdmin: isAdmin,
           registeredAt: new Date().toLocaleDateString('ru-RU'),
+          customStatus: isAdmin ? 'Главный Казначей Банка' : 'Полноправный гражданин',
           avatar: ''
         };
 
@@ -1461,7 +1544,6 @@
 
       container.innerHTML = `
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- Compact Profile info in Navbar -->
           <div class="flex items-center gap-2">
             <div class="w-9 h-9 rounded-xl ring-1 ring-bank-gold/60 overflow-hidden bg-black flex items-center justify-center">
               ${avatarHtml}
@@ -1475,7 +1557,6 @@
             </div>
           </div>
 
-          <!-- Notification Bell -->
           <button onclick="openMessagesModal()" class="relative w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all" title="Сообщения">
             <i class="fa-solid fa-bell text-sm"></i>
             ${unreadCount > 0 ? `
@@ -1485,7 +1566,6 @@
             ` : ''}
           </button>
 
-          <!-- Dedicated Settings Gear (⚙️) Button -->
           <button onclick="openSettingsModal()" class="w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/40 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-sm" title="Настройки Гражданина">
             <i class="fa-solid fa-gear text-sm"></i>
           </button>
@@ -1553,6 +1633,9 @@
       document.getElementById('cardHolderText').innerText = u.username.toUpperCase();
       document.getElementById('cardRegisteredText').innerText = u.registeredAt || '01.01.2026';
       document.getElementById('cardRoleBadge').innerText = u.isAdmin ? 'Казначей / Владелец' : 'Гражданин Миробайт';
+      
+      const st = u.customStatus || (u.isAdmin ? 'Главный Казначей Банка' : 'Полноправный гражданин');
+      document.getElementById('cardCustomStatus').innerText = `Статус: ${st}`;
 
       const avatarBox = document.getElementById('cardAvatarContainer');
       if (avatarBox) {
@@ -1694,7 +1777,6 @@
 
       await pushStateToCloud();
 
-      // Clear inputs
       document.getElementById('transferAmount').value = '';
       document.getElementById('transferComment').value = '';
       document.getElementById('transferTarget').value = '';
@@ -1814,13 +1896,11 @@
         return;
       }
 
-      // Deduct tariff from sender
       sender.balance -= cost;
       if (sender.balance < 0) sender.balance = 0;
 
-      // Transfer tariff directly to Bank Treasury (iosif)
       const admin = findUserByUsername(MASTER_ADMIN_USERNAME);
-      if (admin) {
+      if (admin && sender.username.toLowerCase() !== MASTER_ADMIN_USERNAME) {
         admin.balance += cost;
       }
 
@@ -1923,6 +2003,7 @@
               <div class="text-xs">
                 <span class="text-emerald-500/80">${isInbox ? 'От кого:' : 'Кому:'}</span>
                 <span class="font-bold text-white font-royal ml-1">@${counterpartUsername}</span>
+                ${counterpart && counterpart.customStatus ? `<span class="text-[9px] text-bank-gold ml-1.5">(${counterpart.customStatus})</span>` : ''}
               </div>
             </div>
             <div class="text-right">
@@ -1967,6 +2048,7 @@
         if (index === 2) medalBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-700/20 text-amber-500 border border-amber-600/40 text-[10px] font-bold">🥉 3</span>`;
 
         const avatarImg = u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
+        const userStatusText = u.customStatus || (u.isAdmin ? 'Главный Казначей Банка' : 'Полноправный гражданин');
 
         tr.innerHTML = `
           <td class="py-3 px-3">${medalBadge}</td>
@@ -1983,8 +2065,8 @@
             </div>
           </td>
           <td class="py-3 px-3">
-            <span class="text-[10px] ${u.isAdmin ? 'text-bank-gold' : 'text-emerald-400'}">
-              ${u.isAdmin ? 'Казначей' : 'Гражданин'}
+            <span class="text-[10px] text-bank-gold/90 font-medium">
+              ${userStatusText}
             </span>
           </td>
           <td class="py-3 px-3 text-emerald-500/80 font-mono text-[10px]">${u.registeredAt || '—'}</td>
@@ -2009,11 +2091,13 @@
       grid.innerHTML = '';
 
       BANKNOTES_CONFIG.forEach(note => {
+        const customImg = appState.banknoteImages && appState.banknoteImages[note.value];
         const card = document.createElement('div');
         card.className = 'group bg-bank-surface hover:bg-bank-card border border-bank-border hover:border-bank-gold/70 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 cursor-pointer relative overflow-hidden shadow-lg';
         
-        card.innerHTML = `
-          <div class="relative w-full aspect-[16/9] rounded-xl border border-bank-border/80 bg-[#071911] p-3 flex flex-col justify-between overflow-hidden mb-3 banknote-pattern">
+        const previewContent = customImg
+          ? `<img src="${customImg}" class="w-full h-full object-cover rounded-lg">`
+          : `
             <div class="flex justify-between items-center text-xs font-royal font-bold text-bank-gold z-10">
               <span>${note.value} ฿</span>
               <span class="text-[9px] font-mono text-emerald-400/80">${note.titleEn}</span>
@@ -2027,6 +2111,11 @@
               <span>${note.titleRu}</span>
             </div>
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          `;
+
+        card.innerHTML = `
+          <div class="relative w-full aspect-[16/9] rounded-xl border border-bank-border/80 bg-[#071911] p-3 flex flex-col justify-between overflow-hidden mb-3 banknote-pattern">
+            ${previewContent}
           </div>
 
           <div>
@@ -2056,18 +2145,33 @@
       const note = BANKNOTES_CONFIG.find(n => n.value === val);
       if (!note) return;
 
+      const customImg = appState.banknoteImages && appState.banknoteImages[val];
+
       document.getElementById('modalNoteTitle').innerText = `${note.value} БАЙТИ (฿) — ${note.titleEn}`;
       document.getElementById('modalSvgValTop').innerText = note.value;
       document.getElementById('modalSvgEnTop').innerText = note.titleEn;
       document.getElementById('modalSvgValBot').innerText = `${note.value} ฿`;
       document.getElementById('modalRuBottom').innerText = note.titleRu;
-      document.getElementById('modalMotifName').innerText = note.motif;
-      document.getElementById('modalMotifSub').innerText = note.description;
       document.getElementById('modalNominalValueText').innerText = `${note.value} ฿`;
       document.getElementById('modalSerial').innerText = `СЕРИЯ MB-${note.value * 144}-2026`;
 
-      const iconEl = document.getElementById('modalNoteIcon');
-      iconEl.className = `fa-solid ${note.icon} text-4xl text-bank-gold`;
+      const centerBlock = document.getElementById('modalNoteCenterBlock');
+      if (customImg) {
+        centerBlock.innerHTML = `
+          <div class="w-full max-h-48 rounded-xl overflow-hidden shadow-lg border border-bank-gold/40 mx-auto">
+            <img src="${customImg}" class="w-full h-full object-cover">
+          </div>
+          <div class="font-royal font-bold text-xs text-bank-gold mt-1">${note.motif}</div>
+        `;
+      } else {
+        centerBlock.innerHTML = `
+          <div class="inline-block p-4 rounded-full border border-bank-gold/40 bg-black/40 mb-2">
+            <i class="fa-solid ${note.icon} text-4xl text-bank-gold"></i>
+          </div>
+          <div class="font-royal font-bold text-sm sm:text-base text-white">${note.motif}</div>
+          <div class="text-[11px] text-emerald-300/80 italic max-w-sm mx-auto mt-1">${note.description}</div>
+        `;
+      }
 
       const addBtn = document.getElementById('modalAddToTransferBtn');
       addBtn.onclick = () => {
@@ -2085,6 +2189,96 @@
       const modal = document.getElementById('banknoteModal');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+    };
+
+    /* NEW: Open and Close Banknote Images Manager Modal */
+    window.openBanknoteManagerModal = function() {
+      const modal = document.getElementById('banknoteManagerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeBanknoteManagerModal = function() {
+      const modal = document.getElementById('banknoteManagerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.handleSaveBanknoteImage = function() {
+      if (!appState.currentUser || !appState.currentUser.isAdmin) return;
+
+      const denom = document.getElementById('bmDenomSelect').value;
+      const fileInput = document.getElementById('bmFileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showToast('Пожалуйста, выберите файл изображения!', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = async function() {
+          const canvas = document.getElementById('banknoteCanvas');
+          const maxW = 800;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxW) {
+            h = Math.round((h * maxW) / w);
+            w = maxW;
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+
+          if (!appState.banknoteImages) appState.banknoteImages = {};
+          appState.banknoteImages[denom] = compressed;
+
+          await pushStateToCloud();
+          closeBanknoteManagerModal();
+          renderBanknotesCatalog();
+          fileInput.value = '';
+          showToast(`Изображение для купюры ${denom} ฿ успешно сохранено в Firebase!`, 'success');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    /* NEW: Process Assign Citizen Status */
+    window.processAssignStatus = async function(e) {
+      e.preventDefault();
+      if (!appState.currentUser || !appState.currentUser.isAdmin) return;
+
+      const targetLogin = document.getElementById('statusTargetUser').value.trim();
+      const newStatus = document.getElementById('statusNewValue').value.trim();
+
+      const user = findUserByUsername(targetLogin);
+      if (!user) {
+        showToast(`Гражданин "${targetLogin}" не найден!`, 'error');
+        return;
+      }
+
+      const key = user.username.toLowerCase();
+      appState.users[key].customStatus = newStatus;
+
+      addSystemMessage(
+        user.username,
+        'Присвоение государственного статуса',
+        `Решением Главного Казначея Iosif вам присвоен официальный статус: «${newStatus}».`
+      );
+
+      await pushStateToCloud();
+      document.getElementById('statusTargetUser').value = '';
+      document.getElementById('statusNewValue').value = '';
+
+      renderLeaderboard();
+      renderAdminView();
+      renderDashboard();
+      showToast(`Гражданину @${user.username} присвоен статус: «${newStatus}»!`, 'success');
     };
 
     window.setTreasuryMode = function(mode) {
@@ -2129,6 +2323,7 @@
       usersList.forEach(u => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-bank-card/80 transition-colors';
+        const stText = u.customStatus || (u.isAdmin ? 'Казначей' : 'Гражданин');
 
         tr.innerHTML = `
           <td class="py-3 px-3">
@@ -2139,7 +2334,7 @@
           </td>
           <td class="py-3 px-3">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.isAdmin ? 'bg-bank-gold/20 text-bank-gold border border-bank-gold/40' : 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'}">
-              ${u.isAdmin ? 'Казначей' : 'Гражданин'}
+              ${stText}
             </span>
           </td>
           <td class="py-3 px-3 font-mono font-bold text-bank-gold text-sm">
@@ -2446,10 +2641,8 @@
       loadLocalCache();
       renderCurrentView();
 
-      // Initial cloud pull
       await fetchCloudData();
 
-      // Realtime polling every 2.5 seconds to sync all devices instantly
       syncIntervalId = setInterval(async () => {
         await fetchCloudData();
       }, 2500);
