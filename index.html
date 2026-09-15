@@ -554,7 +554,7 @@
                 Казначейство Банка Миробайт
               </h2>
               <p class="text-xs text-emerald-300/80 mt-1">
-                Управление эмиссией валюты Байти (฿), дизайном банкнот, статусами граждан и регулирование денежной массы
+                Управление эмиссией валюты Байти (฿), дизайном банкнот, статусами граждан, регулярным доходом и штрафами
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -596,7 +596,87 @@
           </div>
         </div>
 
-        <!-- NEW: Assign Custom Citizen Statuses -->
+        <!-- NEW: Automatic Income & Salary Distribution System -->
+        <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i>
+                Автоматическое Начисление Регулярного Дохода (Зарплата Гражданам)
+              </h3>
+              <p class="text-xs text-emerald-400/70 mt-1">
+                Централизованная выплата гарантированного дохода всем жителям государства Миробайт
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="autoIncomeStatusBadge" class="px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono font-bold">
+                Включено: 10 ฿ / 24ч
+              </span>
+            </div>
+          </div>
+
+          <form id="autoIncomeConfigForm" onsubmit="saveAutoIncomeConfig(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Сумма дохода (฿)</label>
+              <input type="number" id="inputIncomeAmount" min="1" step="1" required placeholder="10" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-emerald-100 text-xs font-bold focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Периодичность</label>
+              <select id="selectIncomeInterval" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-emerald-100 text-xs font-semibold focus:outline-none">
+                <option value="60">Каждый 1 час (Тест)</option>
+                <option value="1440" selected>Каждые 24 часа (Раз в сутки)</option>
+                <option value="10080">Раз в неделю (7 дней)</option>
+              </select>
+            </div>
+            <div>
+              <button type="submit" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> Сохранить
+              </button>
+            </div>
+            <div>
+              <button type="button" onclick="triggerManualInstantPayout()" class="w-full py-2 bg-bank-darkest hover:bg-bank-card border border-bank-gold/60 text-bank-gold font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+                <i class="fa-solid fa-bolt mr-1"></i> Выплатить сейчас
+              </button>
+            </div>
+          </form>
+          <div class="text-[10px] text-emerald-500/70 mt-2 flex items-center justify-between">
+            <span>* Выплаты происходят автоматически при наступлении периода каждому гражданину с отправкой уведомительной депеши.</span>
+            <span id="nextPayoutTimeLabel" class="font-mono text-bank-gold">След. выплата: ожидание</span>
+          </div>
+        </div>
+
+        <!-- NEW: State Penalty & Fine Enforcement System -->
+        <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
+          <h3 class="font-royal text-base font-bold text-rose-400 flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-gavel text-rose-400"></i>
+            Государственная Система Штрафов и Взысканий
+          </h3>
+          <p class="text-xs text-emerald-400/70 mb-4">
+            Принудительное списание средств с баланса гражданина за нарушения. Все взыскания поступают в государственную казну (Iosif). Баланс гражданина гарантированно защищён и не упадёт ниже 0 ฿.
+          </p>
+
+          <form id="stateFineForm" onsubmit="executeStateFine(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-[11px] font-semibold text-rose-400 uppercase tracking-wider mb-1">Нарушитель (Логин)</label>
+              <input type="text" id="fineTargetUser" list="registeredUsersDatalist" required placeholder="Введите логин..." class="w-full bg-bank-darkest border border-bank-border focus:border-rose-500 rounded-xl py-2 px-3 text-emerald-100 text-xs focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-rose-400 uppercase tracking-wider mb-1">Сумма штрафа (฿)</label>
+              <input type="number" id="fineAmount" min="1" step="1" required placeholder="Например: 100" class="w-full bg-bank-darkest border border-bank-border focus:border-rose-500 rounded-xl py-2 px-3 text-emerald-100 text-xs font-bold focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-rose-400 uppercase tracking-wider mb-1">Статья / Причина штрафа</label>
+              <input type="text" id="fineReason" required placeholder="Например: Нарушение устава Банка / Спам" class="w-full bg-bank-darkest border border-bank-border focus:border-rose-500 rounded-xl py-2 px-3 text-emerald-100 text-xs focus:outline-none">
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-2 bg-gradient-to-r from-rose-600 to-rose-800 hover:from-rose-500 text-white font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg">
+                <i class="fa-solid fa-scale-unbalanced mr-1"></i> Взыскать Штраф
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Assign Custom Citizen Statuses -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2 mb-3">
             <i class="fa-solid fa-user-tag text-emerald-400"></i>
@@ -807,7 +887,7 @@
     </div>
   </div>
 
-  <!-- NEW MODAL: Banknote Images Manager (Treasurer Only) -->
+  <!-- MODAL: Banknote Images Manager (Treasurer Only) -->
   <div id="banknoteManagerModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-md w-full p-6 shadow-2xl relative guilloche-gold">
       <button onclick="closeBanknoteManagerModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
@@ -1013,6 +1093,11 @@
       messages: [],
       mailBox: [],
       banknoteImages: {},
+      autoIncomeConfig: {
+        amount: 10,
+        intervalMinutes: 1440,
+        lastPayout: 0
+      },
       customMoneySupply: null
     };
 
@@ -1050,6 +1135,7 @@
           messages: appState.messages,
           mailBox: appState.mailBox,
           banknoteImages: appState.banknoteImages,
+          autoIncomeConfig: appState.autoIncomeConfig,
           customMoneySupply: appState.customMoneySupply,
           lastUpdated: Date.now()
         };
@@ -1094,6 +1180,7 @@
       if (data.messages) appState.messages = data.messages;
       if (data.mailBox) appState.mailBox = data.mailBox;
       if (data.banknoteImages) appState.banknoteImages = data.banknoteImages;
+      if (data.autoIncomeConfig) appState.autoIncomeConfig = data.autoIncomeConfig;
       if (data.customMoneySupply !== undefined) appState.customMoneySupply = data.customMoneySupply;
 
       ensureMasterAdminExists();
@@ -1104,6 +1191,9 @@
           appState.currentUser = u;
         }
       }
+
+      // Check automated income cycle
+      checkAndExecuteAutoIncomeCycle();
 
       saveLocalCache();
       renderCurrentView();
@@ -1117,6 +1207,7 @@
           messages: appState.messages,
           mailBox: appState.mailBox,
           banknoteImages: appState.banknoteImages,
+          autoIncomeConfig: appState.autoIncomeConfig,
           customMoneySupply: appState.customMoneySupply
         }));
         if (appState.currentUser) {
@@ -1137,6 +1228,7 @@
           if (parsed.messages) appState.messages = parsed.messages;
           if (parsed.mailBox) appState.mailBox = parsed.mailBox;
           if (parsed.banknoteImages) appState.banknoteImages = parsed.banknoteImages;
+          if (parsed.autoIncomeConfig) appState.autoIncomeConfig = parsed.autoIncomeConfig;
           if (parsed.customMoneySupply !== undefined) appState.customMoneySupply = parsed.customMoneySupply;
         }
 
@@ -2191,7 +2283,7 @@
       modal.classList.remove('flex');
     };
 
-    /* NEW: Open and Close Banknote Images Manager Modal */
+    /* Open and Close Banknote Images Manager Modal */
     window.openBanknoteManagerModal = function() {
       const modal = document.getElementById('banknoteManagerModal');
       modal.classList.remove('hidden');
@@ -2248,7 +2340,7 @@
       reader.readAsDataURL(file);
     };
 
-    /* NEW: Process Assign Citizen Status */
+    /* Process Assign Citizen Status */
     window.processAssignStatus = async function(e) {
       e.preventDefault();
       if (!appState.currentUser || !appState.currentUser.isAdmin) return;
@@ -2279,6 +2371,143 @@
       renderAdminView();
       renderDashboard();
       showToast(`Гражданину @${user.username} присвоен статус: «${newStatus}»!`, 'success');
+    };
+
+    /* NEW: Auto Income Management */
+    window.saveAutoIncomeConfig = async function(e) {
+      e.preventDefault();
+      if (!appState.currentUser || !appState.currentUser.isAdmin) return;
+
+      const amt = parseInt(document.getElementById('inputIncomeAmount').value);
+      const interval = parseInt(document.getElementById('selectIncomeInterval').value);
+
+      if (isNaN(amt) || amt <= 0) {
+        showToast('Укажите корректную сумму дохода!', 'error');
+        return;
+      }
+
+      appState.autoIncomeConfig = {
+        amount: amt,
+        intervalMinutes: interval,
+        lastPayout: appState.autoIncomeConfig ? (appState.autoIncomeConfig.lastPayout || Date.now()) : Date.now()
+      };
+
+      await pushStateToCloud();
+      renderAdminView();
+      showToast(`Параметры регулярного дохода сохранены: ${amt} ฿ каждые ${interval} мин.!`, 'success');
+    };
+
+    window.triggerManualInstantPayout = async function() {
+      if (!appState.currentUser || !appState.currentUser.isAdmin) return;
+      const amt = (appState.autoIncomeConfig && appState.autoIncomeConfig.amount) || 10;
+      await performGlobalIncomePayout(amt, 'Внеочередная государственная выплата Казначея');
+      if (appState.autoIncomeConfig) appState.autoIncomeConfig.lastPayout = Date.now();
+      await pushStateToCloud();
+      renderAdminView();
+      renderDashboard();
+      showToast(`Успешно начислено по ${amt} ฿ всем гражданам!`, 'success');
+    };
+
+    async function checkAndExecuteAutoIncomeCycle() {
+      if (!appState.autoIncomeConfig) return;
+      const { amount, intervalMinutes, lastPayout } = appState.autoIncomeConfig;
+      if (!amount || !intervalMinutes) return;
+
+      const now = Date.now();
+      const intervalMs = intervalMinutes * 60 * 1000;
+
+      if (!lastPayout || (now - lastPayout) >= intervalMs) {
+        // Time to distribute regular income
+        await performGlobalIncomePayout(amount, 'Регулярная государственная выплата (Зарплата / Базовый доход)');
+        appState.autoIncomeConfig.lastPayout = now;
+        await pushStateToCloud();
+      }
+    }
+
+    async function performGlobalIncomePayout(amount, reasonText) {
+      const nowStr = new Date().toLocaleString('ru-RU');
+      Object.values(appState.users).forEach(u => {
+        // Disburse to all registered citizens
+        u.balance += amount;
+        addSystemMessage(
+          u.username,
+          'Государственный доход начислен',
+          `Вам зачислена регулярная выплата: +${amount} ฿ на счёт. ${reasonText}.`
+        );
+      });
+
+      appState.transactions.unshift({
+        id: 'TX-INCOME-' + Date.now(),
+        from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО (Iosif)',
+        to: 'ВСЕМ ГРАЖДАНАМ',
+        amount: amount,
+        comment: reasonText,
+        timestamp: nowStr
+      });
+    }
+
+    /* NEW: State Penalty & Fine Enforcement System */
+    window.executeStateFine = async function(e) {
+      e.preventDefault();
+      if (!appState.currentUser || !appState.currentUser.isAdmin) return;
+
+      const targetLogin = document.getElementById('fineTargetUser').value.trim();
+      const amount = parseInt(document.getElementById('fineAmount').value);
+      const reason = document.getElementById('fineReason').value.trim();
+
+      if (!targetLogin || isNaN(amount) || amount <= 0 || !reason) {
+        showToast('Заполните все поля для наложения штрафа!', 'error');
+        return;
+      }
+
+      const violator = findUserByUsername(targetLogin);
+      if (!violator) {
+        showToast(`Гражданин "${targetLogin}" не найден!`, 'error');
+        return;
+      }
+
+      if (violator.balance <= 0) {
+        showToast(`У нарушителя @${violator.username} баланс равен 0 ฿. Списание невозможно!`, 'error');
+        return;
+      }
+
+      const actualFine = Math.min(violator.balance, amount);
+      violator.balance -= actualFine;
+      if (violator.balance < 0) violator.balance = 0;
+
+      // Credit the penalty amount directly to the Treasury
+      const admin = findUserByUsername(MASTER_ADMIN_USERNAME);
+      if (admin && violator.username.toLowerCase() !== MASTER_ADMIN_USERNAME) {
+        admin.balance += actualFine;
+      }
+
+      const nowStr = new Date().toLocaleString('ru-RU');
+
+      appState.transactions.unshift({
+        id: 'TX-FINE-' + Date.now(),
+        from: violator.username,
+        to: 'ГОСУДАРСТВЕННАЯ КАЗНА (Iosif)',
+        amount: actualFine,
+        comment: `Штрафное взыскание: ${reason}`,
+        timestamp: nowStr
+      });
+
+      addSystemMessage(
+        violator.username,
+        'Государственное штрафное взыскание',
+        `С вашего счёта принудительно взыскан штраф в размере ${actualFine} ฿ в государственную казну. Основание: ${reason}.`
+      );
+
+      await pushStateToCloud();
+
+      document.getElementById('fineTargetUser').value = '';
+      document.getElementById('fineAmount').value = '';
+      document.getElementById('fineReason').value = '';
+
+      renderNavbarRight();
+      renderDashboard();
+      renderAdminView();
+      showToast(`Штраф ${actualFine} ฿ успешно взыскан с @${violator.username} в казну Банка!`, 'info');
     };
 
     window.setTreasuryMode = function(mode) {
@@ -2316,6 +2545,20 @@
 
       const adminUser = findUserByUsername(MASTER_ADMIN_USERNAME);
       document.getElementById('statAdminReserve').innerText = adminUser ? `${adminUser.balance.toLocaleString()} ฿` : '0 ฿';
+
+      // Render Auto Income state
+      if (appState.autoIncomeConfig) {
+        const amt = appState.autoIncomeConfig.amount || 10;
+        const interval = appState.autoIncomeConfig.intervalMinutes || 1440;
+        const badge = document.getElementById('autoIncomeStatusBadge');
+        if (badge) {
+          badge.innerText = `Включено: ${amt} ฿ / ${interval < 60 ? interval + 'м' : (interval/60) + 'ч'}`;
+        }
+        const lastP = appState.autoIncomeConfig.lastPayout || Date.now();
+        const nextP = new Date(lastP + (interval * 60 * 1000)).toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+        const nextLabel = document.getElementById('nextPayoutTimeLabel');
+        if (nextLabel) nextLabel.innerText = `След. выплата: ~${nextP}`;
+      }
 
       const tbody = document.getElementById('adminUserTableBody');
       tbody.innerHTML = '';
