@@ -2442,18 +2442,16 @@
       }, 3600);
     };
 
-        window.addEventListener('DOMContentLoaded', () => {
-      try {
-        loadLocalCache();
-        renderCurrentView();
-      } catch (e) {
-        console.error(e);
-      }
+    window.addEventListener('DOMContentLoaded', async () => {
+      loadLocalCache();
+      renderCurrentView();
 
-      fetchCloudData().catch(err => console.warn(err));
+      // Initial cloud pull
+      await fetchCloudData();
 
-      syncIntervalId = setInterval(() => {
-        fetchCloudData().catch(err => console.warn(err));
+      // Realtime polling every 2.5 seconds to sync all devices instantly
+      syncIntervalId = setInterval(async () => {
+        await fetchCloudData();
       }, 2500);
     });
   </script>
