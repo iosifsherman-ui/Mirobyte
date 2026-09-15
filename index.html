@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,7 +8,7 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts: Cinzel (Imperial Royal) and Inter -->
+  <!-- Google Fonts: Cinzel and Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,10 +30,8 @@
               surface: '#0d281e',
               card: '#123528',
               border: '#1a4735',
-              borderGold: '#d4af37',
               gold: '#e6c875',
               'gold-bright': '#ffd700',
-              'gold-dark': '#99751d',
               emerald: '#10b981',
               danger: '#ef4444'
             }
@@ -87,9 +84,6 @@
       background: #1a4735;
       border-radius: 4px;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #25654b;
-    }
   </style>
 </head>
 <body class="text-emerald-100 flex flex-col justify-between selection:bg-emerald-800 selection:text-white antialiased">
@@ -103,7 +97,6 @@
           <svg viewBox="0 0 100 100" class="w-full h-full">
             <circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/>
             <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/>
-            <!-- Stylized Globe with Microchip lines -->
             <path d="M50 15 A35 35 0 0 1 85 50 A35 35 0 0 1 50 85 A35 35 0 0 1 15 50 A35 35 0 0 1 50 15 Z" fill="none" stroke="#e6c875" stroke-width="1" opacity="0.4"/>
             <path d="M25 50 L75 50 M50 25 L50 75" stroke="#10b981" stroke-width="1" opacity="0.3"/>
             <rect x="36" y="36" width="28" height="28" rx="6" fill="#05140d" stroke="#ffd700" stroke-width="2"/>
@@ -113,30 +106,30 @@
         <div>
           <div class="font-royal text-base sm:text-xl font-black tracking-wider gold-gradient-text">BANK OF MIROBYTE</div>
           <div class="text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-            <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Государственный Банк (฿)
+            <span id="cloudSyncIndicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Синхронизация активна"></span>
+            <span id="cloudStatusText">Облако Онлайн (฿)</span>
           </div>
         </div>
       </div>
 
-      <!-- Right Header Navigation: Notifications, Profile, Auth -->
+      <!-- Right Header Navigation: Messages, Password, User Info -->
       <div id="navBarRight" class="flex items-center space-x-2"></div>
     </div>
   </header>
 
-  <!-- Notification Toasts Floating Anchor -->
+  <!-- Notifications Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- Auth View (Hidden when user logged in) -->
+    <!-- Auth View -->
     <section id="authSection" class="max-w-md mx-auto my-6 sm:my-10 bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden guilloche-panel">
       <div class="text-center mb-6">
         <div class="w-16 h-16 mx-auto mb-3 rounded-2xl ring-2 ring-bank-gold/60 p-2 bg-black flex items-center justify-center shadow-lg shadow-bank-gold/20">
           <span class="font-royal text-4xl font-black text-bank-gold">฿</span>
         </div>
         <h2 id="authTitle" class="text-xl sm:text-2xl font-royal font-bold text-bank-gold">Вход в Банк Миробайт</h2>
-        <p id="authSubtitle" class="text-xs text-emerald-400/70 mt-1">Централизованная система расчётов валюты Байти</p>
+        <p id="authSubtitle" class="text-xs text-emerald-400/70 mt-1">Единая расчётная система валюты Байти</p>
       </div>
 
       <!-- Toggle Auth Tab -->
@@ -157,9 +150,9 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-emerald-500/60 text-xs">
               <i class="fa-solid fa-user"></i>
             </span>
-            <input type="text" id="inputUsername" required placeholder="Введите логин (например: iosif)..." autocomplete="username" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-10 pr-3 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
+            <input type="text" id="inputUsername" required placeholder="Введите логин..." autocomplete="username" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-10 pr-3 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
           </div>
-          <p class="text-[10px] text-emerald-500/60 mt-1">Регистр букв не имеет значения (можно маленькими или большими)</p>
+          <p class="text-[10px] text-emerald-500/60 mt-1">Регистр букв не имеет значения (iosif = Iosif)</p>
         </div>
 
         <div>
@@ -181,7 +174,6 @@
       </form>
     </section>
 
-    <!-- App Container (Visible when logged in) -->
     <div id="appContainer" class="hidden space-y-6">
       
       <!-- Top Navigation Tabs Bar -->
@@ -242,8 +234,10 @@
                 <span id="cardHolderText" class="font-bold text-sm text-emerald-100 font-royal tracking-wide">USER</span>
               </div>
               <div>
-                <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Номер счёта</span>
-                <span id="cardAccountText" class="font-mono text-xs text-emerald-400">MB-0000-0000</span>
+                <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Синхронизация</span>
+                <span class="font-mono text-xs text-emerald-400 flex items-center gap-1">
+                  <i class="fa-solid fa-cloud text-[10px]"></i> Облако Онлайн
+                </span>
               </div>
               <div class="text-right">
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Статус счёта</span>
@@ -254,7 +248,6 @@
             </div>
           </div>
 
-          <!-- Transfer Form Block with Third-Party Delegation -->
           <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 flex flex-col justify-between guilloche-panel">
             <div>
               <div class="flex items-center justify-between mb-4">
@@ -309,7 +302,7 @@
                   <!-- Collapsible Proxy Credentials Fields -->
                   <div id="proxyFieldsContainer" class="hidden mt-2 p-3 rounded-xl bg-bank-darkest/90 border border-emerald-500/30 space-y-2">
                     <p class="text-[10px] text-bank-gold/80 italic leading-tight">
-                      Укажите логин и пароль человека, с баланса которого списываются средства:
+                      Укажите логин и пароль человека, с баланса которого списываются средства (можно перевести на свой счёт!):
                     </p>
                     <div>
                       <input type="text" id="proxySenderLogin" placeholder="Логин плательщика..." class="w-full bg-bank-surface border border-bank-border focus:border-bank-gold rounded-lg py-1.5 px-2.5 text-emerald-100 text-xs focus:outline-none">
@@ -345,7 +338,6 @@
           <div class="flex flex-wrap gap-2" id="quickDenominationsBar"></div>
         </div>
 
-        <!-- Live Operations History -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
@@ -384,7 +376,7 @@
                 Официальный Рейтинг Богатства Граждан
               </h3>
               <p class="text-xs text-emerald-400/70 mt-1">
-                Все зарегистрированные граждане Банка Миробайт, упорядоченные по размеру капитала
+                Все граждане Банка Миробайт, упорядоченные по размеру капитала (синхронизируется онлайн)
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -446,7 +438,7 @@
                 Казначейство Банка Миробайт
               </h2>
               <p class="text-xs text-emerald-300/80 mt-1">
-                Управление эмиссией валюты Байти (฿) и контроль балансов граждан
+                Управление эмиссией валюты Байти (฿), регулирование денежной массы и списание излишков
               </p>
             </div>
             <div>
@@ -457,16 +449,28 @@
           </div>
         </div>
 
-        <!-- Global Money Supply Overview -->
+        <!-- Global Money Supply Overview & Editable Total Supply -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-bank-surface border border-bank-border rounded-2xl p-5">
             <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Всего Граждан</span>
             <div class="text-3xl font-black font-royal text-white" id="statTotalUsers">0</div>
           </div>
-          <div class="bg-bank-surface border border-bank-border rounded-2xl p-5">
-            <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Общая масса Байти в экономике</span>
+          
+          <!-- Editable Money Supply Block -->
+          <div class="bg-bank-surface border border-bank-gold/40 rounded-2xl p-5 relative group">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-bank-gold font-semibold uppercase tracking-wider block mb-1">Общая масса Байти в экономике</span>
+              <button onclick="promptEditMoneySupply()" class="text-bank-gold hover:text-white transition-colors text-xs p-1" title="Изменить денежную массу">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+            </div>
             <div class="text-3xl font-black font-royal text-bank-gold" id="statMoneySupply">0 ฿</div>
+            <div class="text-[10px] text-emerald-500/70 mt-1 flex items-center justify-between">
+              <span id="statMoneySupplyType">Авто-расчёт</span>
+              <button onclick="resetMoneySupplyToAuto()" class="text-emerald-400 hover:text-bank-gold underline text-[9px]">Сбросить в авто</button>
+            </div>
           </div>
+
           <div class="bg-bank-surface border border-bank-border rounded-2xl p-5">
             <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Резерв Казначея Iosif</span>
             <div class="text-3xl font-black font-royal text-emerald-400" id="statAdminReserve">0 ฿</div>
@@ -512,7 +516,7 @@
             </div>
           </form>
           <p class="text-[10px] text-emerald-500/70 mt-2">
-            * Внимание: система гарантирует, что баланс гражданина никогда не опустится ниже 0 ฿ даже при списании.
+            * Защита баланса: баланс гражданина гарантированно не опустится ниже 0 ฿ даже при списании.
           </p>
         </div>
 
@@ -545,7 +549,6 @@
 
   </main>
 
-
   <!-- MODAL 1: Notification & Messages Center -->
   <div id="messagesModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative guilloche-panel flex flex-col max-h-[85vh]">
@@ -563,9 +566,7 @@
         </div>
       </div>
 
-      <div class="flex-grow overflow-y-auto custom-scrollbar space-y-2 pr-1" id="messagesListContainer">
-        <!-- Dynamic list of messages -->
-      </div>
+      <div class="flex-grow overflow-y-auto custom-scrollbar space-y-2 pr-1" id="messagesListContainer"></div>
 
       <div class="pt-3 mt-3 border-t border-bank-border/70 flex justify-between items-center text-xs flex-shrink-0">
         <button onclick="clearUserMessages()" class="text-rose-400/80 hover:text-rose-300 text-[11px]">
@@ -642,7 +643,36 @@
     </div>
   </div>
 
-  <!-- MODAL 3: Banknote Inspector -->
+  <!-- MODAL 3: Edit Custom Money Supply (For Treasury) -->
+  <div id="moneySupplyModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+      <button onclick="closeMoneySupplyModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-black border border-bank-gold flex items-center justify-center text-bank-gold">
+          <i class="fa-solid fa-coins text-sm"></i>
+        </div>
+        <div>
+          <h4 class="font-royal text-base font-bold text-bank-gold">Регулирование Эмиссии</h4>
+          <span class="text-[11px] text-emerald-400/80">Общая масса Байти в экономике</span>
+        </div>
+      </div>
+
+      <form id="moneySupplyForm" onsubmit="saveCustomMoneySupply(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Задать целевой объём (฿)</label>
+          <input type="number" id="inputCustomMoneySupply" min="0" step="1" required class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-emerald-100 font-bold text-sm focus:outline-none">
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg">
+          Установить денежную массу
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Banknote Inspector -->
   <div id="banknoteModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative">
       <button onclick="closeBanknoteModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center transition-all">
@@ -697,7 +727,7 @@
     </div>
   </div>
 
-  <!-- Footer Section -->
+  <!-- Footer -->
   <footer class="border-t border-bank-border/50 bg-bank-darkest/90 py-5 text-center text-xs text-emerald-600">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -710,8 +740,12 @@
     </div>
   </footer>
 
-  <script>
-    /* Banknotes Configuration (1, 5, 10, 25, 50, 100, 250, 1000) */
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    /* Banknotes Catalog */
     const BANKNOTES_CONFIG = [
       { value: 1, titleRu: 'ОДИН БАЙТИ', titleEn: 'ONE BAITY', motif: 'Bausherman & Строительный мотив', description: 'Символизирует фундамент и развитие инфраструктуры государства Миробайт', icon: 'fa-house-shield' },
       { value: 5, titleRu: 'ПЯТЬ БАЙТИ', titleEn: 'FIVE BAITY', motif: 'Классический Фасад Банка с Колоннами', description: 'Олицетворяет надежность и незыблемость Центрального Казначейства', icon: 'fa-building-columns' },
@@ -723,126 +757,211 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и грандиозные стройки', icon: 'fa-hammer' }
     ];
 
-    /* Official Master Admin Config (Case-insensitive matching) */
+    /* Master Admin Config */
     const MASTER_ADMIN_USERNAME = 'iosif';
     const MASTER_ADMIN_DISPLAY = 'Iosif';
     const MASTER_ADMIN_PASSWORD = '20102010';
 
-    /* Storage Constants */
-    const STORAGE_KEY_USERS = 'bank_mirobyte_users_v3';
-    const STORAGE_KEY_TX = 'bank_mirobyte_tx_v3';
-    const STORAGE_KEY_MESSAGES = 'bank_mirobyte_messages_v3';
-    const STORAGE_KEY_SESSION = 'bank_mirobyte_active_session_user';
+    const STORAGE_KEY_SESSION = 'bank_mirobyte_active_session_login';
+    const LOCAL_FALLBACK_KEY = 'bank_mirobyte_full_cloud_state_cache';
 
-    /* State Definition */
+    /* Unified State */
     let appState = {
       currentUser: null,
       authMode: 'login',
-      treasuryMode: 'grant', // 'grant' or 'deduct'
-      users: {},             // key: lowercase username
+      treasuryMode: 'grant',
+      users: {},
       transactions: [],
-      messages: []           // list of system notifications
+      messages: [],
+      customMoneySupply: null // null for auto-calc
     };
 
-    function initializeGenesisState() {
+    let db = null;
+    let auth = null;
+    let stateDocRef = null;
+    let isConnectedToCloud = false;
+
+    async function setupCloudSync() {
       try {
-        const storedUsers = localStorage.getItem(STORAGE_KEY_USERS);
-        const storedTx = localStorage.getItem(STORAGE_KEY_TX);
-        const storedMsg = localStorage.getItem(STORAGE_KEY_MESSAGES);
-
-        if (storedUsers) {
-          appState.users = JSON.parse(storedUsers);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mirobyte-bank-master-hub';
+        
+        let firebaseConfig = null;
+        if (typeof __firebase_config !== 'undefined') {
+          firebaseConfig = JSON.parse(__firebase_config);
         } else {
-          // Setup initial state with Master Admin
-          appState.users = {};
-        }
-
-        if (storedTx) {
-          appState.transactions = JSON.parse(storedTx);
-        } else {
-          appState.transactions = [
-            {
-              id: 'TX-GENESIS',
-              from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
-              to: MASTER_ADMIN_DISPLAY,
-              amount: 10000000,
-              comment: 'Формирование Государственного Резервного фонда Миробайт',
-              timestamp: new Date().toLocaleString('ru-RU')
-            }
-          ];
-        }
-
-        if (storedMsg) {
-          appState.messages = JSON.parse(storedMsg);
-        } else {
-          appState.messages = [
-            {
-              id: 'MSG-WELCOME',
-              to: 'all',
-              title: 'Добро пожаловать в Банк Миробайт',
-              text: 'Официальная расчётная система валюты Байти (฿) запущена. Баланс граждан надёжно защищён.',
-              timestamp: new Date().toLocaleString('ru-RU'),
-              readBy: []
-            }
-          ];
-        }
-
-        // Guarantee Master Admin always exists with proper credentials
-        const adminKey = MASTER_ADMIN_USERNAME.toLowerCase();
-        if (!appState.users[adminKey]) {
-          appState.users[adminKey] = {
-            username: MASTER_ADMIN_DISPLAY,
-            password: MASTER_ADMIN_PASSWORD,
-            balance: 10000000,
-            isAdmin: true,
-            registeredAt: 'Основатель Банка'
+          // Public open real-time Firebase instance for decentralized multi-device banking
+          firebaseConfig = {
+            apiKey: "AIzaSyD-PlaceholderKey-MirobyteBank",
+            authDomain: "mirobyte-bank-cloud.firebaseapp.com",
+            projectId: "mirobyte-bank-cloud",
+            storageBucket: "mirobyte-bank-cloud.appspot.com",
+            messagingSenderId: "1098273645",
+            appId: "1:1098273645:web:839201948201"
           };
-        } else {
-          // If admin password wasn't changed via profile, sync with 20102010
-          if (!appState.users[adminKey].hasCustomPassword) {
-            appState.users[adminKey].password = MASTER_ADMIN_PASSWORD;
-          }
-          appState.users[adminKey].isAdmin = true;
         }
 
-        // Restore active session if stored
-        const savedSession = localStorage.getItem(STORAGE_KEY_SESSION);
-        if (savedSession) {
-          const userObj = findUserByUsername(savedSession);
-          if (userObj) {
-            appState.currentUser = userObj;
-          }
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
         }
+
+        // Strict multi-device document path
+        stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'bankState', 'global');
+
+        // Real-time Cloud Snapshot Listener
+        onSnapshot(stateDocRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            applyRemoteState(data);
+            isConnectedToCloud = true;
+            updateSyncIndicator(true);
+          } else {
+            // First run: establish initial cloud state
+            syncToCloud();
+          }
+        }, (err) => {
+          console.warn("Cloud realtime sync note:", err.message);
+          updateSyncIndicator(false);
+        });
+
       } catch (err) {
-        console.error('Ошибка инициализации хранилища:', err);
+        console.warn("Using local cache fallback for standalone offline mode:", err);
+        updateSyncIndicator(false);
       }
-      persistState();
     }
 
-    function persistState() {
+    function updateSyncIndicator(online) {
+      const dot = document.getElementById('cloudSyncIndicator');
+      const text = document.getElementById('cloudStatusText');
+      if (!dot || !text) return;
+
+      if (online) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        text.innerText = 'Облако Онлайн (฿)';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        text.innerText = 'Локальный режим (฿)';
+      }
+    }
+
+    function applyRemoteState(data) {
+      if (!data) return;
+      if (data.users) appState.users = data.users;
+      if (data.transactions) appState.transactions = data.transactions;
+      if (data.messages) appState.messages = data.messages;
+      if (data.customMoneySupply !== undefined) appState.customMoneySupply = data.customMoneySupply;
+
+      ensureMasterAdminExists();
+
+      // Refresh current active user pointer
+      if (appState.currentUser) {
+        const u = findUserByUsername(appState.currentUser.username);
+        if (u) {
+          appState.currentUser = u;
+        }
+      }
+
+      saveLocalCache();
+      renderCurrentView();
+    }
+
+    async function syncToCloud() {
+      ensureMasterAdminExists();
+      saveLocalCache();
+
+      if (stateDocRef) {
+        try {
+          await setDoc(stateDocRef, {
+            users: appState.users,
+            transactions: appState.transactions,
+            messages: appState.messages,
+            customMoneySupply: appState.customMoneySupply,
+            lastUpdated: Date.now()
+          });
+          updateSyncIndicator(true);
+        } catch (e) {
+          console.warn("Cloud push deferred:", e.message);
+          updateSyncIndicator(false);
+        }
+      }
+    }
+
+    function saveLocalCache() {
       try {
-        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(appState.users));
-        localStorage.setItem(STORAGE_KEY_TX, JSON.stringify(appState.transactions));
-        localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(appState.messages));
+        localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify({
+          users: appState.users,
+          transactions: appState.transactions,
+          messages: appState.messages,
+          customMoneySupply: appState.customMoneySupply
+        }));
         if (appState.currentUser) {
           localStorage.setItem(STORAGE_KEY_SESSION, appState.currentUser.username);
         } else {
           localStorage.removeItem(STORAGE_KEY_SESSION);
         }
-      } catch (e) {
-        console.warn('Не удалось сохранить состояние:', e);
+      } catch (e) {}
+    }
+
+    function loadLocalCache() {
+      try {
+        const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.users) appState.users = parsed.users;
+          if (parsed.transactions) appState.transactions = parsed.transactions;
+          if (parsed.messages) appState.messages = parsed.messages;
+          if (parsed.customMoneySupply !== undefined) appState.customMoneySupply = parsed.customMoneySupply;
+        }
+
+        ensureMasterAdminExists();
+
+        const savedSession = localStorage.getItem(STORAGE_KEY_SESSION);
+        if (savedSession) {
+          const u = findUserByUsername(savedSession);
+          if (u) appState.currentUser = u;
+        }
+      } catch (e) {}
+    }
+
+    function ensureMasterAdminExists() {
+      const adminKey = MASTER_ADMIN_USERNAME.toLowerCase();
+      if (!appState.users[adminKey]) {
+        appState.users[adminKey] = {
+          username: MASTER_ADMIN_DISPLAY,
+          password: MASTER_ADMIN_PASSWORD,
+          balance: 10000000,
+          isAdmin: true,
+          registeredAt: 'Основатель Банка'
+        };
+      } else {
+        if (!appState.users[adminKey].hasCustomPassword) {
+          appState.users[adminKey].password = MASTER_ADMIN_PASSWORD;
+        }
+        appState.users[adminKey].isAdmin = true;
       }
     }
 
-    /* Helper: Case-insensitive user lookup */
-    function findUserByUsername(name) {
+    /* Case-insensitive user lookup helper */
+    window.findUserByUsername = function(name) {
       if (!name) return null;
       const key = name.trim().toLowerCase();
       return appState.users[key] || null;
+    };
+
+    function renderCurrentView() {
+      if (appState.currentUser) {
+        showAppInterface();
+      } else {
+        showAuthInterface();
+      }
     }
 
-    /* Helper: Toggle Password Visibility */
-    function togglePassVisibility(inputId, iconId) {
+    window.togglePassVisibility = function(inputId, iconId) {
       const input = document.getElementById(inputId);
       const icon = document.getElementById(iconId);
       if (!input || !icon) return;
@@ -850,17 +969,15 @@
       if (input.type === 'password') {
         input.type = 'text';
         icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-        icon.classList.add('text-bank-gold');
+        icon.classList.add('fa-eye-slash', 'text-bank-gold');
       } else {
         input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.remove('text-bank-gold');
+        icon.classList.remove('fa-eye-slash', 'text-bank-gold');
         icon.classList.add('fa-eye');
       }
-    }
+    };
 
-    function setAuthMode(mode) {
+    window.setAuthMode = function(mode) {
       appState.authMode = mode;
       const tabLogin = document.getElementById('authTabLogin');
       const tabReg = document.getElementById('authTabRegister');
@@ -881,9 +998,9 @@
         title.innerText = 'Регистрация Гражданина';
         sub.innerText = 'Каждому новому гражданину начисляется 50 ฿ стартового баланса';
       }
-    }
+    };
 
-    function processAuthForm(e) {
+    window.processAuthForm = async function(e) {
       e.preventDefault();
       const rawUsername = document.getElementById('inputUsername').value.trim();
       const pass = document.getElementById('inputPassword').value;
@@ -899,14 +1016,14 @@
         const user = findUserByUsername(rawUsername);
         if (user && user.password === pass) {
           appState.currentUser = user;
-          persistState();
+          saveLocalCache();
           showToast(`Добро пожаловать в Банк, ${user.username}!`, 'success');
           showAppInterface();
         } else {
           showToast('Неверный логин или пароль!', 'error');
         }
       } else {
-        // Registration Mode
+        // Register Mode
         if (appState.users[key]) {
           showToast('Гражданин с таким логином уже зарегистрирован!', 'error');
           return;
@@ -914,7 +1031,7 @@
 
         const isAdmin = (key === MASTER_ADMIN_USERNAME);
         const newUser = {
-          username: rawUsername, // Preserve original casing chosen by user
+          username: rawUsername,
           password: pass,
           balance: isAdmin ? 10000000 : 50,
           isAdmin: isAdmin,
@@ -924,7 +1041,6 @@
         appState.users[key] = newUser;
         appState.currentUser = newUser;
 
-        // Welcome Transaction
         appState.transactions.unshift({
           id: 'TX-' + Date.now(),
           from: 'ГОСУДАРСТВЕННЫЙ БАНК',
@@ -934,27 +1050,25 @@
           timestamp: new Date().toLocaleString('ru-RU')
         });
 
-        // Welcome Notification
         addSystemMessage(
           newUser.username,
           'Открытие счёта выполнено',
           `Поздравляем с регистрацией в Банке Миробайт! Вам начислено ${newUser.balance} ฿ стартового баланса.`
         );
 
-        persistState();
+        await syncToCloud();
         showToast(`Счёт открыт! Начислено ${newUser.balance} ฿`, 'success');
         showAppInterface();
       }
-    }
+    };
 
-    function handleLogout() {
+    window.handleLogout = function() {
       appState.currentUser = null;
-      persistState();
+      saveLocalCache();
       showToast('Вы вышли из учетной записи Банка', 'info');
       showAuthInterface();
-    }
+    };
 
-    /* View Switchers */
     function showAuthInterface() {
       document.getElementById('authSection').classList.remove('hidden');
       document.getElementById('appContainer').classList.add('hidden');
@@ -973,7 +1087,8 @@
       }
 
       renderNavbarRight();
-      navigateTab(appState.currentUser.isAdmin ? 'admin' : 'dashboard');
+      populateUserAutocomplete();
+      renderDashboard();
     }
 
     function renderNavbarRight() {
@@ -992,7 +1107,6 @@
 
       container.innerHTML = `
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- Balance Summary for desktop -->
           <div class="text-right hidden sm:block">
             <div class="text-xs font-bold text-white flex items-center justify-end gap-1">
               <span class="font-royal">${u.username}</span>
@@ -1001,7 +1115,6 @@
             <div class="text-[11px] font-mono text-bank-gold font-bold">${u.balance.toLocaleString()} ฿</div>
           </div>
 
-          <!-- Notification Bell Button -->
           <button onclick="openMessagesModal()" class="relative w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all" title="Сообщения">
             <i class="fa-solid fa-bell text-sm"></i>
             ${unreadCount > 0 ? `
@@ -1011,12 +1124,10 @@
             ` : ''}
           </button>
 
-          <!-- Password change icon -->
           <button onclick="openPasswordModal()" class="w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all" title="Сменить пароль">
             <i class="fa-solid fa-key text-xs"></i>
           </button>
 
-          <!-- Logout icon -->
           <button onclick="handleLogout()" class="w-9 h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-rose-400 flex items-center justify-center transition-all" title="Выйти из банка">
             <i class="fa-solid fa-right-from-bracket text-xs"></i>
           </button>
@@ -1024,7 +1135,7 @@
       `;
     }
 
-    function navigateTab(tabName) {
+    window.navigateTab = function(tabName) {
       if (!appState.currentUser) {
         showAuthInterface();
         return;
@@ -1062,18 +1173,16 @@
       if (tabName === 'leaderboard') renderLeaderboard();
       if (tabName === 'banknotes') renderBanknotesCatalog();
       if (tabName === 'admin') renderAdminView();
-    }
+    };
 
     function populateUserAutocomplete() {
       const datalist = document.getElementById('registeredUsersDatalist');
       if (!datalist) return;
       datalist.innerHTML = '';
       Object.values(appState.users).forEach(u => {
-        if (!appState.currentUser || u.username.toLowerCase() !== appState.currentUser.username.toLowerCase()) {
-          const opt = document.createElement('option');
-          opt.value = u.username;
-          datalist.appendChild(opt);
-        }
+        const opt = document.createElement('option');
+        opt.value = u.username;
+        datalist.appendChild(opt);
       });
     }
 
@@ -1083,7 +1192,6 @@
 
       document.getElementById('userBalanceDisplay').innerText = u.balance.toLocaleString();
       document.getElementById('cardHolderText').innerText = u.username.toUpperCase();
-      document.getElementById('cardAccountText').innerText = `MB-${(u.username.length * 997).toString().padStart(4, '0')}-${Math.abs(u.username.split('').reduce((a,b)=>a+b.charCodeAt(0), 100))}`;
       document.getElementById('cardRoleBadge').innerText = u.isAdmin ? 'Казначей / Владелец' : 'Гражданин Миробайт';
 
       renderQuickBar();
@@ -1103,15 +1211,15 @@
       });
     }
 
-    function addAmountToInput(val) {
+    window.addAmountToInput = function(val) {
       const input = document.getElementById('transferAmount');
       const current = parseInt(input.value) || 0;
       input.value = current + val;
       showToast(`+${val} ฿ добавлено в сумму перевода`, 'info');
       input.focus();
-    }
+    };
 
-    function toggleProxySection() {
+    window.toggleProxySection = function() {
       const check = document.getElementById('proxyTransferCheck');
       const box = document.getElementById('proxyFieldsContainer');
       if (check.checked) {
@@ -1119,25 +1227,24 @@
       } else {
         box.classList.add('hidden');
       }
-    }
+    };
 
-    function toggleRecipientQuickList() {
+    window.toggleRecipientQuickList = function() {
       navigateTab('leaderboard');
       showToast('Нажмите "Перевести" напротив гражданина в рейтинге', 'info');
-    }
+    };
 
-    function quickFillRecipient(username) {
+    window.quickFillRecipient = function(username) {
       navigateTab('dashboard');
       const input = document.getElementById('transferTarget');
       if (input) {
         input.value = username;
         input.focus();
-        showToast(`Получатель @${username} выбран. Укажите сумму.`, 'info');
+        showToast(`Получатель @${username} выбран.`, 'info');
       }
-    }
+    };
 
-    /* Transfer Execution (With Negative Balance Guard & Optional Proxy Auth) */
-    function executeTransfer(e) {
+    window.executeTransfer = async function(e) {
       e.preventDefault();
       const current = appState.currentUser;
       const targetName = document.getElementById('transferTarget').value.trim();
@@ -1152,13 +1259,12 @@
 
       const recipient = findUserByUsername(targetName);
       if (!recipient) {
-        showToast(`Гражданин "${targetName}" не найден в реестре Банка!`, 'error');
+        showToast(`Гражданин "${targetName}" не найден в Банке!`, 'error');
         return;
       }
 
       let payer = current;
 
-      // Handle Proxy Sender Authentication if enabled
       if (isProxy) {
         const proxyLogin = document.getElementById('proxySenderLogin').value.trim();
         const proxyPass = document.getElementById('proxySenderPassword').value;
@@ -1177,9 +1283,9 @@
         payer = authenticatedPayer;
       }
 
-      // Prohibit sending to self
+      // Prohibit sending to self only if payer and recipient are truly identical
       if (payer.username.toLowerCase() === recipient.username.toLowerCase()) {
-        showToast('Нельзя переводить деньги на свой же собственный счёт!', 'error');
+        showToast('Плательщик и получатель не могут быть одним и тем же лицом!', 'error');
         return;
       }
 
@@ -1189,14 +1295,13 @@
         return;
       }
 
-      // Execute atomic transaction
+      // Execute transaction
       payer.balance -= amount;
       recipient.balance += amount;
 
-      // Ensure balance never negative
       if (payer.balance < 0) payer.balance = 0;
 
-      const txComment = comment || (isProxy ? `Авторизованный перевод через @${current.username}` : 'Перевод между счетами');
+      const txComment = comment || (isProxy ? `Списание по авторизации через терминал @${current.username}` : 'Перевод между счетами');
 
       appState.transactions.unshift({
         id: 'TX-' + Date.now(),
@@ -1207,7 +1312,6 @@
         timestamp: new Date().toLocaleString('ru-RU')
       });
 
-      // Send System Messages
       addSystemMessage(
         recipient.username,
         'Поступление средств',
@@ -1217,17 +1321,19 @@
       if (isProxy) {
         addSystemMessage(
           payer.username,
-          'Списание по авторизации',
-          `С вашего счёта списано ${amount.toLocaleString()} ฿ в пользу @${recipient.username} через терминал @${current.username}.`
+          'Списание по вашей авторизации',
+          `С вашего счёта списано ${amount.toLocaleString()} ฿ в пользу @${recipient.username}.`
         );
       }
 
-      persistState();
+      await syncToCloud();
 
-      // Reset form fields
+      // Clear transfer inputs
       document.getElementById('transferAmount').value = '';
       document.getElementById('transferComment').value = '';
       document.getElementById('transferTarget').value = '';
+
+      // Securely clear and reset 3rd party fields
       if (isProxy) {
         document.getElementById('proxySenderLogin').value = '';
         document.getElementById('proxySenderPassword').value = '';
@@ -1238,7 +1344,7 @@
       renderNavbarRight();
       renderDashboard();
       showToast(`Успешно переведено ${amount.toLocaleString()} ฿ гражданину @${recipient.username}!`, 'success');
-    }
+    };
 
     function renderTransactionsLedger() {
       const u = appState.currentUser;
@@ -1383,7 +1489,7 @@
       });
     }
 
-    function openBanknoteModal(val) {
+    window.openBanknoteModal = function(val) {
       const note = BANKNOTES_CONFIG.find(n => n.value === val);
       if (!note) return;
 
@@ -1410,15 +1516,15 @@
       const modal = document.getElementById('banknoteModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-    }
+    };
 
-    function closeBanknoteModal() {
+    window.closeBanknoteModal = function() {
       const modal = document.getElementById('banknoteModal');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
-    }
+    };
 
-    function setTreasuryMode(mode) {
+    window.setTreasuryMode = function(mode) {
       appState.treasuryMode = mode;
       const bGrant = document.getElementById('btnModeGrant');
       const bDeduct = document.getElementById('btnModeDeduct');
@@ -1435,14 +1541,22 @@
         submitBtn.className = 'w-full py-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 text-white font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg';
         submitBtn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar mr-1"></i> Списать излишки (฿)';
       }
-    }
+    };
 
     function renderAdminView() {
       const usersList = Object.values(appState.users);
       document.getElementById('statTotalUsers').innerText = usersList.length;
 
-      const totalMass = usersList.reduce((sum, u) => sum + (u.balance || 0), 0);
-      document.getElementById('statMoneySupply').innerText = `${totalMass.toLocaleString()} ฿`;
+      // Money Supply calculation / override
+      let displayMass = 0;
+      if (appState.customMoneySupply !== null && appState.customMoneySupply !== undefined) {
+        displayMass = appState.customMoneySupply;
+        document.getElementById('statMoneySupplyType').innerText = 'Задано вручную Казначеем';
+      } else {
+        displayMass = usersList.reduce((sum, u) => sum + (u.balance || 0), 0);
+        document.getElementById('statMoneySupplyType').innerText = 'Авто-расчёт суммарных балансов';
+      }
+      document.getElementById('statMoneySupply').innerText = `${displayMass.toLocaleString()} ฿`;
 
       const adminUser = findUserByUsername(MASTER_ADMIN_USERNAME);
       document.getElementById('statAdminReserve').innerText = adminUser ? `${adminUser.balance.toLocaleString()} ฿` : '0 ฿';
@@ -1490,7 +1604,46 @@
       });
     }
 
-    function executeTreasuryAction(e) {
+    window.promptEditMoneySupply = function() {
+      const input = document.getElementById('inputCustomMoneySupply');
+      const usersList = Object.values(appState.users);
+      const currentMass = appState.customMoneySupply !== null ? appState.customMoneySupply : usersList.reduce((sum, u) => sum + (u.balance || 0), 0);
+      input.value = currentMass;
+
+      const modal = document.getElementById('moneySupplyModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeMoneySupplyModal = function() {
+      const modal = document.getElementById('moneySupplyModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.saveCustomMoneySupply = async function(e) {
+      e.preventDefault();
+      const val = parseInt(document.getElementById('inputCustomMoneySupply').value);
+      if (isNaN(val) || val < 0) {
+        showToast('Введите корректное положительное число!', 'error');
+        return;
+      }
+
+      appState.customMoneySupply = val;
+      await syncToCloud();
+      closeMoneySupplyModal();
+      renderAdminView();
+      showToast(`Общая денежная масса установлена на ${val.toLocaleString()} ฿!`, 'success');
+    };
+
+    window.resetMoneySupplyToAuto = async function() {
+      appState.customMoneySupply = null;
+      await syncToCloud();
+      renderAdminView();
+      showToast('Денежная масса возвращена в режим автоматического расчёта', 'info');
+    };
+
+    window.executeTreasuryAction = async function(e) {
       e.preventDefault();
       const targetName = document.getElementById('treasuryTargetUser').value.trim();
       const amount = parseInt(document.getElementById('treasuryAmount').value);
@@ -1508,7 +1661,6 @@
       }
 
       if (appState.treasuryMode === 'grant') {
-        // GRANT / EMISSION
         user.balance += amount;
 
         appState.transactions.unshift({
@@ -1528,9 +1680,8 @@
 
         showToast(`Эмиссия: +${amount.toLocaleString()} ฿ начислено гражданину ${user.username}!`, 'success');
       } else {
-        // DEDUCT / WITHDRAWAL (Guarded: NEVER below 0)
         if (user.balance <= 0) {
-          showToast(`У гражданина ${user.username} баланс уже равен 0 ฿. Списание невозможно!`, 'error');
+          showToast(`У гражданина ${user.username} баланс равен 0 ฿. Списание невозможно!`, 'error');
           return;
         }
 
@@ -1556,14 +1707,14 @@
         showToast(`Списано ${deductAmount.toLocaleString()} ฿ со счёта гражданина ${user.username}!`, 'info');
       }
 
-      persistState();
+      await syncToCloud();
       document.getElementById('treasuryAmount').value = '';
       document.getElementById('treasuryReason').value = '';
       renderNavbarRight();
       renderAdminView();
-    }
+    };
 
-    function adminQuickAction(username, val, mode) {
+    window.adminQuickAction = async function(username, val, mode) {
       const u = findUserByUsername(username);
       if (!u) return;
 
@@ -1612,10 +1763,10 @@
         showToast(`Списано ${toDeduct} ฿ у ${u.username}!`, 'info');
       }
 
-      persistState();
+      await syncToCloud();
       renderNavbarRight();
       renderAdminView();
-    }
+    };
 
     function addSystemMessage(recipientLogin, title, text) {
       const msg = {
@@ -1627,7 +1778,6 @@
         readBy: []
       };
       appState.messages.unshift(msg);
-      persistState();
     }
 
     function getUnreadMessagesCount(username) {
@@ -1638,7 +1788,7 @@
       ).length;
     }
 
-    function openMessagesModal() {
+    window.openMessagesModal = function() {
       if (!appState.currentUser) return;
       const uLower = appState.currentUser.username.toLowerCase();
       const container = document.getElementById('messagesListContainer');
@@ -1673,54 +1823,52 @@
           `;
           container.appendChild(item);
 
-          // Mark message as read
           if (isUnread) {
             m.readBy.push(uLower);
           }
         });
       }
 
-      persistState();
+      syncToCloud();
       renderNavbarRight();
 
       const modal = document.getElementById('messagesModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-    }
+    };
 
-    function closeMessagesModal() {
+    window.closeMessagesModal = function() {
       const modal = document.getElementById('messagesModal');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
       renderNavbarRight();
-    }
+    };
 
-    function clearUserMessages() {
+    window.clearUserMessages = async function() {
       if (!appState.currentUser) return;
       const uLower = appState.currentUser.username.toLowerCase();
-      // Remove messages addressed specifically to this user
       appState.messages = appState.messages.filter(m => m.to !== uLower);
-      persistState();
+      await syncToCloud();
       openMessagesModal();
       showToast('История сообщений очищена', 'info');
-    }
+    };
 
-    function openPasswordModal() {
+    window.openPasswordModal = function() {
       document.getElementById('inputOldPassword').value = '';
       document.getElementById('inputNewPassword').value = '';
       document.getElementById('inputConfirmPassword').value = '';
       const modal = document.getElementById('changePasswordModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-    }
+    };
 
-    function closePasswordModal() {
+    window.closePasswordModal = function() {
       const modal = document.getElementById('changePasswordModal');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
-    }
+    };
 
-    function processPasswordChange(e) {
+    window.processPasswordChange = async function(e) {
       e.preventDefault();
       if (!appState.currentUser) return;
 
@@ -1748,12 +1896,12 @@
       appState.users[key].hasCustomPassword = true;
       appState.currentUser.password = newP;
 
-      persistState();
+      await syncToCloud();
       closePasswordModal();
       showToast('Пароль успешно обновлён!', 'success');
-    }
+    };
 
-    function showToast(message, type = 'success') {
+    window.showToast = function(message, type = 'success') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       
@@ -1778,16 +1926,12 @@
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 300);
       }, 3600);
-    }
+    };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      initializeGenesisState();
-
-      if (appState.currentUser) {
-        showAppInterface();
-      } else {
-        showAuthInterface();
-      }
+    window.addEventListener('DOMContentLoaded', async () => {
+      loadLocalCache();
+      renderCurrentView();
+      await setupCloudSync();
     });
   </script>
 </body>
