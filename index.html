@@ -123,7 +123,7 @@
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-5">
 
-    <!-- Auth Container (по умолчанию скрыт, чтобы не мигать при обновлении страницы) -->
+    <!-- Auth Container -->
     <section id="authSection" class="hidden max-w-md mx-auto my-6 sm:my-10 bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden guilloche-panel">
       <div class="text-center mb-6">
         <div class="w-16 h-16 mx-auto mb-3 rounded-2xl ring-2 ring-bank-gold/60 p-2 bg-black flex items-center justify-center shadow-lg shadow-bank-gold/20">
@@ -206,6 +206,7 @@
                   Гражданин
                 </span>
               </div>
+              <!-- Clickable Avatar to Open Settings in One Tap -->
               <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group" title="Нажмите для настроек профиля">
                 <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
@@ -230,7 +231,8 @@
             <div class="pt-4 border-t border-bank-border/70 flex flex-wrap items-center justify-between text-xs text-emerald-300/80 gap-3">
               <div>
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Гражданин</span>
-                <span id="cardHolderText" class="font-bold text-base text-emerald-100 font-royal tracking-wide">USER</span>
+                <!-- Защита от мигания "USER": тег пустой до инициализации JS -->
+                <span id="cardHolderText" class="font-bold text-base text-emerald-100 font-royal tracking-wide"></span>
               </div>
               <div>
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Дата регистрации</span>
@@ -255,7 +257,6 @@
               </div>
               
               <form id="transferForm" onsubmit="executeTransfer(event)" class="space-y-3">
-                <!-- Поле с живым автодополнением получателя -->
                 <div class="relative">
                   <div class="flex justify-between items-center mb-1">
                     <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Получатель (Логин)</label>
@@ -435,14 +436,14 @@
       <!-- TAB 5: TREASURY (ADMIN IOSIF ONLY) -->
       <section id="tabContent-admin" class="hidden space-y-6">
         
-        <!-- Top Banner: Чистая шапка, только кнопка "Дизайн Купюр" -->
+        <!-- Top Banner: Чистая шапка -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bank-gold/20 text-bank-gold text-[10px] font-bold uppercase border border-bank-gold/40 mb-2">
               <i class="fa-solid fa-crown"></i> Главный Казначей & Владелец
             </div>
             <h2 class="text-2xl font-royal font-black text-white">Казначейство Банка Миробайт</h2>
-            <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Казна Банка, управление денежной массой и выплаты</p>
+            <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Казна Банка, управление денежной массой и санкции</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="openBanknoteManagerModal()" class="px-4 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md">
@@ -451,14 +452,13 @@
           </div>
         </div>
 
-        <!-- Global Counters: Citizens, Bank Reserve Treasury, Money Supply -->
+        <!-- Global Counters -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-bank-surface border border-bank-border rounded-2xl p-5">
             <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Всего Граждан</span>
             <div class="text-3xl font-black font-royal text-white" id="statTotalUsers">0</div>
           </div>
           
-          <!-- Bank Reserve -->
           <div class="bg-bank-surface border border-bank-gold/60 rounded-2xl p-5 relative group">
             <div class="flex items-center justify-between">
               <span class="text-[11px] text-bank-gold font-bold uppercase tracking-wider block mb-1 flex items-center gap-1.5">
@@ -472,7 +472,6 @@
             <div class="text-[10px] text-emerald-400/70 mt-1">Доходы от госпошлин, телеграфа и штрафов</div>
           </div>
 
-          <!-- Total Money Supply -->
           <div class="bg-bank-surface border border-bank-border rounded-2xl p-5 relative group">
             <div class="flex items-center justify-between">
               <span class="text-[11px] text-emerald-400/70 font-semibold uppercase tracking-wider block mb-1">Денежная масса</span>
@@ -526,7 +525,7 @@
               <thead>
                 <tr class="border-b border-bank-border text-emerald-400/60 uppercase tracking-wider font-semibold">
                   <th class="pb-2.5 px-3">Гражданин</th>
-                  <th class="pb-2.5 px-3">Роль</th>
+                  <th class="pb-2.5 px-3">Роль / Статус</th>
                   <th class="pb-2.5 px-3">Баланс</th>
                   <th class="pb-2.5 px-3">Дата открытия</th>
                   <th class="pb-2.5 px-3 text-right">Быстрые операции Казначея</th>
@@ -609,6 +608,53 @@
             <input type="text" id="statusNewValue" required placeholder="Новый статус..." class="bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
             <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase">Утвердить Статус</button>
           </form>
+        </div>
+
+        <!-- NEW: Панель Санкций, Скрытия и Удаления Граждан (Только Казначей) -->
+        <div class="bg-bank-surface border-2 border-rose-900/60 rounded-3xl p-6 sm:p-8 guilloche-panel space-y-4">
+          <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
+            <div>
+              <h3 class="font-royal text-base sm:text-lg font-bold text-rose-400 flex items-center gap-2">
+                <i class="fa-solid fa-user-slash text-rose-400"></i> Высший Надзор: Блокировка, Скрытие и Удаление
+              </h3>
+              <p class="text-xs text-emerald-400/70 mt-0.5">
+                Казначейские санкции: обнуление баланса, блокировка счетов, скрытие из рейтингов/поисковика для всех и удаление аккаунтов.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="relative sm:col-span-3">
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Выберите гражданина для применения санкций:</label>
+              <input type="text" id="sanctionTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Введите логин гражданина..." class="w-full bg-bank-darkest border border-bank-border focus:border-rose-500 rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+              <div id="sanctionTargetUser-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-bank-darkest/95 border border-bank-gold/60 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto custom-scrollbar hidden"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <!-- Кнопка 1: Обнулить баланс -->
+            <button type="button" onclick="executeSanctionAction('zero')" class="py-2.5 px-3 bg-bank-darkest hover:bg-amber-950/60 border border-amber-500/50 text-amber-300 font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-coins"></i> Обнулить счёт
+            </button>
+            
+            <!-- Кнопка 2: Заблокировать / Разблокировать -->
+            <button type="button" onclick="executeSanctionAction('toggleBlock')" class="py-2.5 px-3 bg-bank-darkest hover:bg-rose-950/60 border border-rose-500/50 text-rose-300 font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-lock"></i> Блок / Разблок
+            </button>
+
+            <!-- Кнопка 3: Скрыть / Показать для всех (Теневой бан) -->
+            <button type="button" onclick="executeSanctionAction('toggleHide')" class="py-2.5 px-3 bg-bank-darkest hover:bg-indigo-950/60 border border-indigo-500/50 text-indigo-300 font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-eye-slash"></i> Скрыть / Показать
+            </button>
+
+            <!-- Кнопка 4: Удалить аккаунт -->
+            <button type="button" onclick="executeSanctionAction('delete')" class="py-2.5 px-3 bg-rose-950/80 hover:bg-rose-900 border border-rose-600 text-white font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-trash-can"></i> Удалить счёт
+            </button>
+          </div>
+          <p class="text-[10px] text-emerald-500/70 italic">
+            * Скрытый гражданин полностью невидим в Рейтинге и подсказках для всех остальных. Видеть его в реестре может только Казначей Iosif.
+          </p>
         </div>
 
         <!-- Эмблема Банка Миробайт (в самом низу Казначейства) -->
@@ -826,7 +872,7 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и стройки', icon: 'fa-hammer' }
     ];
 
-    // Мгновенная инициализация сохраненного пользователя из кэша (предотвращает мигание формы входа)
+    // Мгновенная инициализация сохраненного пользователя из кэша (предотвращает мигание формы входа и USER)
     let currentUser = localStorage.getItem('mirobyte_active_user') || null;
     let authMode = 'login';
     let mailFilter = 'inbox';
@@ -843,10 +889,12 @@
       bankReserve: 5000000
     };
 
-    // Если в локальном кэше уже есть пользователь — сразу показываем приложение
+    // Если в локальном кэше уже есть пользователь — сразу показываем приложение и имя
     if (currentUser) {
       document.getElementById('appContainer').classList.remove('hidden');
       document.getElementById('authSection').classList.add('hidden');
+      const holder = document.getElementById('cardHolderText');
+      if (holder) holder.innerText = currentUser.toUpperCase();
     } else {
       document.getElementById('authSection').classList.remove('hidden');
       document.getElementById('appContainer').classList.add('hidden');
@@ -914,10 +962,12 @@
       const dropdown = document.getElementById(`${input.id}-dropdown`);
       if (!dropdown) return;
 
+      const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
       const usersList = Object.values(appData.users || {});
       
-      // Фильтруем список: если строка пустая — показываем всех пользователей, иначе по вхождению
+      // Скрытые граждане (hiddenFromAll) видны в автокомплите ТОЛЬКО Казначею Iosif
       const filtered = usersList.filter(u => {
+        if (!isMasterAdmin && u.hiddenFromAll) return false;
         if (!query) return true;
         return u.username.toLowerCase().startsWith(query) || u.username.toLowerCase().includes(query);
       });
@@ -947,6 +997,8 @@
                 <span>${u.username}</span>
                 ${isCurrent ? '<span class="text-[9px] px-1 bg-emerald-800 text-white rounded">Вы</span>' : ''}
                 ${u.isAdmin ? '<i class="fa-solid fa-crown text-[9px] text-bank-gold"></i>' : ''}
+                ${u.isBlocked ? '<i class="fa-solid fa-lock text-[9px] text-rose-500" title="Заблокирован"></i>' : ''}
+                ${u.hiddenFromAll ? '<i class="fa-solid fa-eye-slash text-[9px] text-indigo-400" title="Скрыт"></i>' : ''}
               </div>
               <div class="text-[10px] text-emerald-400/70 font-mono">${(u.balance || 0).toLocaleString()} ฿</div>
             </div>
@@ -969,7 +1021,7 @@
 
     // Закрытие выпадающих подсказок при клике вне поля
     document.addEventListener('click', (e) => {
-      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser'].forEach(id => {
+      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser'].forEach(id => {
         const input = document.getElementById(id);
         const dropdown = document.getElementById(`${id}-dropdown`);
         if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
@@ -1187,14 +1239,23 @@
       });
     }
 
-    // Рендер Рейтинга: с отображением чужих аватарок в ячейках
+    // Рендер Рейтинга: с отображением чужих аватарок и фильтрацией скрытых граждан
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
       tbody.innerHTML = '';
-      const list = Object.values(appData.users).sort((a, b) => (b.balance || 0) - (a.balance || 0));
-      document.getElementById('leaderboardCountBadge').innerText = `${list.length} Граждан`;
+      
+      const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
+      let usersList = Object.values(appData.users);
 
-      list.forEach((u, i) => {
+      // Скрытые граждане (hiddenFromAll) не видны никому, кроме самого Iosif
+      if (!isMasterAdmin) {
+        usersList = usersList.filter(u => !u.hiddenFromAll);
+      }
+
+      usersList.sort((a, b) => (b.balance || 0) - (a.balance || 0));
+      document.getElementById('leaderboardCountBadge').innerText = `${usersList.length} Граждан`;
+
+      usersList.forEach((u, i) => {
         const isMe = currentUser && currentUser.toLowerCase() === u.username.toLowerCase();
         const tr = document.createElement('tr');
         tr.className = `transition-colors ${isMe ? 'bg-emerald-900/30 font-semibold' : 'hover:bg-bank-card/40'}`;
@@ -1218,7 +1279,9 @@
               <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
                 <span>${u.username}</span>
                 ${isMe ? '<span class="text-[9px] px-1.5 py-0.2 bg-emerald-700 text-white rounded">Вы</span>' : ''}
-                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей Банка"></i>' : ''}
+                ${u.isBlocked ? '<i class="fa-solid fa-lock text-[10px] text-rose-500" title="Заблокирован"></i>' : ''}
+                ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
               </div>
             </div>
           </td>
@@ -1398,6 +1461,8 @@
                 <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
                   <span>${u.username}</span>
                   ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+                  ${u.isBlocked ? '<i class="fa-solid fa-lock text-[10px] text-rose-500" title="Заблокирован"></i>' : ''}
+                  ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
                 </div>
               </div>
             </td>
@@ -1536,6 +1601,71 @@
       db.ref().update(updates);
     }
 
+    // ========================================================
+    // ФУНКЦИИ ВЫСШЕГО НАДЗОРА: САНКЦИИ, ОБНУЛЕНИЕ, БЛОКИРОВКА, СКРЫТИЕ
+    // ========================================================
+    function executeSanctionAction(action) {
+      const targetInput = document.getElementById('sanctionTargetUser');
+      const targetName = targetInput.value.trim();
+      if (!targetName) return showToast('Укажите логин гражданина для применения санкций!', 'error');
+
+      const user = findUser(targetName);
+      if (!user) return showToast(`Гражданин @${targetName} не найден!`, 'error');
+
+      const uKey = user.username.toLowerCase();
+      if (uKey === 'iosif') return showToast('Нельзя применять санкции к Главному Казначею!', 'error');
+
+      const updates = {};
+      const txs = appData.transactions || [];
+
+      if (action === 'zero') {
+        const curBal = user.balance || 0;
+        if (curBal <= 0) return showToast(`Баланс @${user.username} уже равен 0 ฿!`, 'info');
+
+        updates[`bankData/users/${uKey}/balance`] = 0;
+        updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + curBal;
+
+        txs.unshift({
+          from: user.username,
+          to: 'КАЗНА БАНКА МИРОБАЙТ',
+          amount: curBal,
+          comment: 'Полная конфискация баланса по указу Казначея',
+          timestamp: new Date().toLocaleString('ru-RU')
+        });
+        updates['bankData/transactions'] = txs;
+
+        addSystemMessage(user.username, 'Обнуление счёта', `По решению Государственного Казначейства ваш баланс был полностью аннулирован.`);
+        db.ref().update(updates).then(() => {
+          showToast(`Счёт гражданина @${user.username} обнулён (${curBal} ฿ направлено в Казну)!`, 'success');
+        });
+
+      } else if (action === 'toggleBlock') {
+        const newStatus = !user.isBlocked;
+        db.ref(`bankData/users/${uKey}/isBlocked`).set(newStatus).then(() => {
+          const msg = newStatus ? `Гражданин @${user.username} ЗАБЛОКИРОВАН!` : `Гражданин @${user.username} разблокирован.`;
+          showToast(msg, newStatus ? 'error' : 'success');
+          addSystemMessage(user.username, 'Статус доступа', newStatus ? 'Ваш счёт заблокирован решением Банка.' : 'Ваш счёт снова активен.');
+        });
+
+      } else if (action === 'toggleHide') {
+        const newHide = !user.hiddenFromAll;
+        db.ref(`bankData/users/${uKey}/hiddenFromAll`).set(newHide).then(() => {
+          const msg = newHide 
+            ? `Гражданин @${user.username} СКРЫТ для всех остальных (виден только Казначею)!` 
+            : `Гражданин @${user.username} снова открыт для всех в Рейтинге и поиске.`;
+          showToast(msg, 'info');
+        });
+
+      } else if (action === 'delete') {
+        if (!confirm(`Вы действительно хотите БЕЗВОЗВРАТНО удалить аккаунт @${user.username}?`)) return;
+        
+        db.ref(`bankData/users/${uKey}`).remove().then(() => {
+          targetInput.value = '';
+          showToast(`Аккаунт @${user.username} успешно удалён из Банка!`, 'success');
+        });
+      }
+    }
+
     function promptEditBankReserve() {
       document.getElementById('inputBankReserveAmount').value = appData.bankReserve || 0;
       document.getElementById('bankReserveModal').classList.remove('hidden');
@@ -1598,6 +1728,9 @@
 
       if (authMode === 'login') {
         if (existing && existing.password === p) {
+          if (existing.isBlocked) {
+            return showToast('Ваш счёт заблокирован решением Банка!', 'error');
+          }
           currentUser = existing.username;
           localStorage.setItem('mirobyte_active_user', currentUser);
           renderCurrentView();
@@ -1617,7 +1750,9 @@
           balance: 50,
           isAdmin: false,
           registeredAt: new Date().toLocaleDateString('ru-RU'),
-          customStatus: 'Новый гражданин'
+          customStatus: 'Новый гражданин',
+          isBlocked: false,
+          hiddenFromAll: false
         }).then(() => {
           currentUser = u;
           localStorage.setItem('mirobyte_active_user', currentUser);
@@ -1647,6 +1782,9 @@
         if (!pUser || pUser.password !== pPass) return showToast('Неверные данные плательщика!', 'error');
         sender = pUser;
       }
+
+      if (sender.isBlocked) return showToast('Операция отклонена: плательщик заблокирован!', 'error');
+      if (recipient.isBlocked) return showToast('Операция отклонена: получатель заблокирован!', 'error');
 
       if (sender.username.toLowerCase() === recipient.username.toLowerCase()) return showToast('Нельзя перевести самому себе!', 'error');
       if ((sender.balance || 0) < amt) return showToast('Недостаточно Байти!', 'error');
@@ -1713,6 +1851,7 @@
       const recipient = findUser(to);
       const sender = findUser(currentUser);
 
+      if (sender.isBlocked) return showToast('Ваш счёт заблокирован: отправка запрещена!', 'error');
       if (!recipient) return showToast('Получатель не найден!', 'error');
       if ((sender.balance || 0) < cost) return showToast('Недостаточно Байти!', 'error');
 
