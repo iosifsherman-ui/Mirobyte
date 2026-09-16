@@ -203,10 +203,9 @@
                   Mirobyte Royal Reserve
                 </span>
                 <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold">
-                  <!-- Подставляется мгновенно из кэша -->
+                  <!-- Мгновенно из кэша -->
                 </span>
               </div>
-              <!-- Clickable Avatar to Open Settings in One Tap -->
               <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group" title="Нажмите для настроек профиля">
                 <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
@@ -435,7 +434,7 @@
       <!-- TAB 5: TREASURY (ADMIN IOSIF ONLY) -->
       <section id="tabContent-admin" class="hidden space-y-6">
         
-        <!-- Top Banner: Чистая шапка -->
+        <!-- Top Banner -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bank-gold/20 text-bank-gold text-[10px] font-bold uppercase border border-bank-gold/40 mb-2">
@@ -601,7 +600,7 @@
           </h3>
           <form onsubmit="processAssignStatus(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="relative">
-              <input type="text" id="statusTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин гражданина..." class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-emerald-100 focus:outline-none">
+              <input type="text" id="statusTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин гражданина..." class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
               <div id="statusTargetUser-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-bank-darkest/95 border border-bank-gold/60 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto custom-scrollbar hidden"></div>
             </div>
             <input type="text" id="statusNewValue" required placeholder="Новый статус..." class="bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-emerald-100 focus:outline-none">
@@ -649,7 +648,7 @@
           </p>
         </div>
 
-        <!-- Эмблема Банка Миробайт (в самом низу Казначейства) -->
+        <!-- Эмблема Банка Миробайт -->
         <div id="emblemManagerSection" class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -864,7 +863,7 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и стройки', icon: 'fa-hammer' }
     ];
 
-    // Мгновенная инициализация профиля из локального кэша (0 миллисекунд)
+    // Мгновенная инициализация профиля и эмблемы из локального кэша (0 миллисекунд)
     let currentUser = localStorage.getItem('mirobyte_active_user') || null;
     let cachedProfile = null;
     try {
@@ -880,13 +879,15 @@
       mailBox: [],
       messages: [],
       banknoteImages: {},
-      bankEmblemImage: null,
+      bankEmblemImage: localStorage.getItem('mirobyte_cached_emblem') || null,
       autoIncomeConfig: { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 },
       customMoneySupply: null,
       bankReserve: 5000000
     };
 
-    // Мгновенная подстановка всех данных ещё до ответа сервера (исключает мигание 0 ฿, USER и дефолтных статусов)
+    // Отрисовка эмблемы и правой панели сразу в нулевую миллисекунду
+    renderBankEmblem();
+
     if (currentUser) {
       document.getElementById('appContainer').classList.remove('hidden');
       document.getElementById('authSection').classList.add('hidden');
@@ -918,6 +919,9 @@
           const admBtn = document.getElementById('tabBtn-admin');
           if (admBtn) admBtn.classList.remove('hidden');
         }
+
+        // Мгновенная отрисовка правой панели шапки (аватарка, баланс, колокольчик, шестерёнка)
+        renderNavBarRightDirect(cachedProfile.username, cachedProfile.balance, cachedProfile.isAdmin, cachedProfile.avatar, 0);
       }
     } else {
       document.getElementById('authSection').classList.remove('hidden');
@@ -936,6 +940,12 @@
       appData.autoIncomeConfig = val.autoIncomeConfig || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 };
       appData.customMoneySupply = val.customMoneySupply !== undefined ? val.customMoneySupply : null;
       appData.bankReserve = val.bankReserve !== undefined ? val.bankReserve : 5000000;
+
+      if (appData.bankEmblemImage) {
+        localStorage.setItem('mirobyte_cached_emblem', appData.bankEmblemImage);
+      } else {
+        localStorage.removeItem('mirobyte_cached_emblem');
+      }
 
       // Ensure Master Admin Iosif exists
       const iosifKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif');
@@ -973,9 +983,6 @@
       return key ? appData.users[key] : null;
     }
 
-    // ==========================================
-    // УМНЫЙ АВТОКОМПЛИТ ЛОГИНОВ ПО ПЕРВЫМ БУКВАМ
-    // ==========================================
     function handleAutocompleteFocus(e) {
       handleAutocompleteInput(e);
     }
@@ -989,7 +996,6 @@
       const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
       const usersList = Object.values(appData.users || {});
       
-      // Скрытые граждане (hiddenFromAll) видны в подсказках ТОЛЬКО Казначею Iosif
       const filtered = usersList.filter(u => {
         if (!isMasterAdmin && u.hiddenFromAll) return false;
         if (!query) return true;
@@ -1043,7 +1049,6 @@
       dropdown.classList.remove('hidden');
     }
 
-    // Закрытие выпадающих подсказок при клике вне поля
     document.addEventListener('click', (e) => {
       ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser'].forEach(id => {
         const input = document.getElementById(id);
@@ -1054,7 +1059,6 @@
       });
     });
 
-    // Рендер государственной эмблемы Банка
     function renderBankEmblem() {
       const container = document.getElementById('bankEmblemContainer');
       const previewSmall = document.getElementById('currentEmblemPreviewSmall');
@@ -1070,9 +1074,10 @@
         </svg>
       `;
 
-      if (appData.bankEmblemImage) {
-        container.innerHTML = `<img src="${appData.bankEmblemImage}" class="w-full h-full object-cover">`;
-        if (previewSmall) previewSmall.innerHTML = `<img src="${appData.bankEmblemImage}" class="w-full h-full object-cover">`;
+      const currentImg = appData.bankEmblemImage || localStorage.getItem('mirobyte_cached_emblem');
+      if (currentImg) {
+        container.innerHTML = `<img src="${currentImg}" class="w-full h-full object-cover">`;
+        if (previewSmall) previewSmall.innerHTML = `<img src="${currentImg}" class="w-full h-full object-cover">`;
       } else {
         container.innerHTML = defaultSvg;
         if (previewSmall) previewSmall.innerHTML = defaultSvg;
@@ -1107,6 +1112,7 @@
 
           db.ref('bankData/bankEmblemImage').set(compressed).then(() => {
             fileInput.value = '';
+            localStorage.setItem('mirobyte_cached_emblem', compressed);
             showToast('Государственная эмблема Банка успешно обновлена!', 'success');
           });
         };
@@ -1117,6 +1123,7 @@
 
     function handleResetBankEmblem() {
       db.ref('bankData/bankEmblemImage').set(null).then(() => {
+        localStorage.removeItem('mirobyte_cached_emblem');
         showToast('Эмблема сброшена на оригинальный герб ฿!', 'info');
       });
     }
@@ -1143,7 +1150,7 @@
         return;
       }
 
-      // Сохраняем в мгновенный кэш профиля
+      // Сохраняем свежий профиль в кэш
       localStorage.setItem('mirobyte_cached_profile', JSON.stringify({
         username: u.username,
         balance: u.balance || 0,
@@ -1170,15 +1177,10 @@
       populateIncomeTargetDropdown();
     }
 
-    function renderNavBarRight() {
+    function renderNavBarRightDirect(username, balance, isAdmin, avatar, unread) {
       const box = document.getElementById('navBarRight');
-      if (!currentUser) {
-        box.innerHTML = ``;
-        return;
-      }
-      const u = findUser(currentUser);
-      const unread = getUnreadMessagesCount(u.username);
-      const avatarHtml = u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs text-bank-gold"></i>`;
+      if (!box) return;
+      const avatarHtml = avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs text-bank-gold"></i>`;
 
       box.innerHTML = `
         <div class="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
@@ -1188,10 +1190,10 @@
             </div>
             <div class="text-right hidden md:block">
               <div class="text-xs font-bold text-white font-royal flex items-center gap-1">
-                <span>${u.username}</span>
-                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+                <span>${username}</span>
+                ${isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
               </div>
-              <div class="text-[11px] font-mono text-bank-gold font-bold">${(u.balance || 0).toLocaleString()} ฿</div>
+              <div class="text-[11px] font-mono text-bank-gold font-bold">${(balance || 0).toLocaleString()} ฿</div>
             </div>
           </div>
 
@@ -1209,6 +1211,18 @@
           </button>
         </div>
       `;
+    }
+
+    function renderNavBarRight() {
+      if (!currentUser) {
+        const box = document.getElementById('navBarRight');
+        if (box) box.innerHTML = '';
+        return;
+      }
+      const u = findUser(currentUser);
+      if (!u) return;
+      const unread = getUnreadMessagesCount(u.username);
+      renderNavBarRightDirect(u.username, u.balance, u.isAdmin, u.avatar, unread);
     }
 
     function renderDashboard(u) {
@@ -1273,7 +1287,6 @@
       });
     }
 
-    // Рендер Рейтинга: с отображением чужих аватарок и фильтрацией скрытых граждан
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
       tbody.innerHTML = '';
@@ -1281,7 +1294,6 @@
       const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
       let usersList = Object.values(appData.users);
 
-      // Скрытые граждане (hiddenFromAll) не видны никому, кроме самого Iosif
       if (!isMasterAdmin) {
         usersList = usersList.filter(u => !u.hiddenFromAll);
       }
@@ -1635,9 +1647,6 @@
       db.ref().update(updates);
     }
 
-    // ========================================================
-    // ФУНКЦИИ ВЫСШЕГО НАДЗОРА: САНКЦИИ, ОБНУЛЕНИЕ, БЛОКИРОВКА, СКРЫТИЕ
-    // ========================================================
     function executeSanctionAction(action) {
       const targetInput = document.getElementById('sanctionTargetUser');
       const targetName = targetInput.value.trim();
@@ -2204,6 +2213,10 @@
           canvas.getContext('2d').drawImage(img, 0, 0, 128, 128);
           const base64 = canvas.toDataURL('image/jpeg', 0.8);
           db.ref(`bankData/users/${currentUser.toLowerCase()}/avatar`).set(base64).then(() => {
+            if (cachedProfile) {
+              cachedProfile.avatar = base64;
+              localStorage.setItem('mirobyte_cached_profile', JSON.stringify(cachedProfile));
+            }
             showToast('Аватарка обновлена!', 'success');
           });
         };
