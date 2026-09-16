@@ -118,6 +118,7 @@
   <canvas id="avatarCanvas" class="hidden"></canvas>
   <canvas id="banknoteCanvas" class="hidden"></canvas>
   <canvas id="emblemCanvas" class="hidden"></canvas>
+  <canvas id="cardBgCanvas" class="hidden"></canvas>
   <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarSelected(event)">
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
@@ -183,7 +184,6 @@
           <button onclick="navigateTab('banknotes')" id="tabBtn-banknotes" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
             <i class="fa-solid fa-money-bill-wave mr-1"></i> Купюры Байти
           </button>
-          <!-- Кнопка Казначейства -->
           <button onclick="navigateTab('admin')" id="tabBtn-admin" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap">
             <i class="fa-solid fa-crown mr-1"></i> Казначейство
           </button>
@@ -198,13 +198,13 @@
       <section id="tabContent-dashboard" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Citizen Card with Dynamic Styling -->
-          <div id="citizenMainCard" class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-bank-gold/50 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[260px] transition-all duration-300">
-            <div class="flex items-center justify-between">
+          <div id="citizenMainCard" class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-bank-gold/50 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[260px] transition-all duration-300 bg-cover bg-center">
+            <div class="flex items-center justify-between relative z-10">
               <div class="flex items-center space-x-2.5">
-                <span class="px-3 py-1 bg-bank-gold/15 border border-bank-gold/40 text-bank-gold text-[10px] uppercase font-royal tracking-widest rounded-full font-bold">
+                <span class="px-3 py-1 bg-bank-gold/15 border border-bank-gold/40 text-bank-gold text-[10px] uppercase font-royal tracking-widest rounded-full font-bold backdrop-blur-sm">
                   Mirobyte Royal Reserve
                 </span>
-                <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold"></span>
+                <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold backdrop-blur-sm"></span>
               </div>
               <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group" title="Нажмите для настроек профиля">
                 <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
@@ -214,7 +214,7 @@
               </div>
             </div>
 
-            <div class="my-5">
+            <div class="my-5 relative z-10">
               <div class="text-[11px] uppercase tracking-widest text-emerald-400/70 font-semibold mb-1">Доступный Баланс</div>
               <div class="flex items-baseline space-x-2">
                 <span id="userBalanceDisplay" class="text-4xl sm:text-5xl font-black font-royal text-white tracking-tight"></span>
@@ -227,7 +227,7 @@
               </div>
             </div>
 
-            <div class="pt-4 border-t border-bank-border/70 flex flex-wrap items-center justify-between text-xs text-emerald-300/80 gap-3">
+            <div class="pt-4 border-t border-bank-border/70 flex flex-wrap items-center justify-between text-xs text-emerald-300/80 gap-3 relative z-10">
               <div>
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Гражданин</span>
                 <span id="cardHolderText" class="font-bold text-base text-emerald-100 font-royal tracking-wide"></span>
@@ -275,6 +275,7 @@
                   <input type="text" id="transferComment" placeholder="За товар, услугу или подарок..." class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-1.5 px-3 text-emerald-100 text-xs focus:outline-none">
                 </div>
 
+                <!-- Списание у другого гражданина -->
                 <div class="pt-2 border-t border-bank-border/70">
                   <label class="text-[11px] text-emerald-300 font-semibold cursor-pointer flex items-center gap-1.5" for="proxyTransferCheck">
                     <input type="checkbox" id="proxyTransferCheck" onchange="toggleProxySection()" class="rounded bg-bank-darkest border-bank-border text-emerald-600 focus:ring-0">
@@ -513,36 +514,41 @@
           </form>
         </div>
 
-        <!-- NEW: УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК (ДЛЯ КАЗНАЧЕЯ) -->
+        <!-- УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК: С ПОДДЕРЖКОЙ ЗАГРУЗКИ КАРТИНКИ -->
         <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
               <h3 class="font-royal text-base sm:text-lg font-bold text-bank-gold flex items-center gap-2">
-                <i class="fa-solid fa-id-card-clip text-bank-gold"></i> Дизайн и Варианты Карточек Граждан
+                <i class="fa-solid fa-id-card-clip text-bank-gold"></i> Создание и Загрузка Дизайнов Карточек
               </h3>
-              <p class="text-xs text-emerald-400/70 mt-0.5">Создавайте стили и темы оформления, которые граждане смогут выбирать в своих настройках.</p>
+              <p class="text-xs text-emerald-400/70 mt-0.5">Создавайте новые стили или загружайте фоновые картинки, которые граждане смогут ставить в настройках.</p>
             </div>
           </div>
 
-          <form onsubmit="handleCreateCardDesign(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <form onsubmit="handleCreateCardDesign(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
             <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Название варианта карты</label>
-              <input type="text" id="newDesignName" required placeholder="Например: Рубиновый Резерв" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Название стиля карты</label>
+              <input type="text" id="newDesignName" required placeholder="Например: Золотой Дракон" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
             </div>
 
             <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Цветовая гамма карты</label>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Цветовая гамма (если без картинки)</label>
               <select id="newDesignTheme" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 font-semibold focus:outline-none">
-                <option value="emerald">Изумрудная Классика (Королевский зелёный)</option>
-                <option value="ruby">Имперский Рубин (Глубокий винно-красный)</option>
-                <option value="sapphire">Королевский Сапфир (Благородный тёмно-синий)</option>
-                <option value="obsidian">Обсидиановое Золото (Чёрный бархат и золото)</option>
-                <option value="cyber">Неоновый Киберпанк (Тёмный бирюзово-фиолетовый)</option>
+                <option value="emerald">Изумрудная Классика</option>
+                <option value="ruby">Имперский Рубин</option>
+                <option value="sapphire">Королевский Сапфир</option>
+                <option value="obsidian">Обсидиановое Золото</option>
+                <option value="cyber">Неоновый Киберпанк</option>
               </select>
             </div>
 
-            <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
-              <i class="fa-solid fa-plus mr-1"></i> Добавить стиль
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Изображение карты (опционально)</label>
+              <input type="file" id="newDesignImageFile" accept="image/*" class="w-full text-xs text-emerald-300 bg-bank-darkest border border-bank-border rounded-xl p-1.5 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-bank-gold file:text-black hover:file:bg-yellow-500 cursor-pointer">
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+              <i class="fa-solid fa-plus mr-1"></i> Создать дизайн
             </button>
           </form>
 
@@ -573,7 +579,7 @@
           </div>
         </div>
 
-        <!-- БЛОК БЕЗОПАСНОСТИ: ДЕЛЕГИРОВАНИЕ ДОСТУПА В КАЗНАЧЕЙСТВО (АКТУАЛЬНЫЙ ПАРОЛЬ ВЛАДЕЛЬЦА) -->
+        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ: ПРОВЕРКА АКТУАЛЬНОГО ПАРОЛЯ ВЛАДЕЛЬЦА -->
         <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -814,13 +820,13 @@
         <button onclick="processPasswordChange(event)" class="w-full py-2 bg-bank-surface hover:bg-bank-card border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs uppercase">Сохранить новый пароль</button>
       </div>
 
-      <!-- КНОПКА КАСТОМИЗАЦИИ КАРТОЧКИ (ПРЯМО НАД КНОПКОЙ ВЫХОДА) -->
+      <!-- КНОПКА КАСТОМИЗАЦИИ КАРТОЧКИ -->
       <div class="p-4 rounded-2xl bg-bank-darkest border border-bank-gold/60 flex items-center justify-between">
         <div>
           <div class="text-xs font-bold text-bank-gold flex items-center gap-1.5">
             <i class="fa-solid fa-paint-roller text-sm"></i> Кастомизация Карточки
           </div>
-          <div class="text-[10px] text-emerald-400/70">Выбор цвета и темы личного счёта</div>
+          <div class="text-[10px] text-emerald-400/70">Выбор фона и стиля оформления счёта</div>
         </div>
         <button onclick="openCardCustomizerModal()" class="px-3.5 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
           Выбрать
@@ -969,7 +975,6 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и стройки', icon: 'fa-hammer' }
     ];
 
-    // Словарь CSS-градиентов для тем оформления карточек
     const CARD_THEMES = {
       emerald: 'bg-gradient-to-br from-[#0e3124] via-[#081f16] to-[#040d09]',
       ruby: 'bg-gradient-to-br from-[#4a0e17] via-[#24060b] to-[#120205]',
@@ -1020,7 +1025,7 @@
         const status = document.getElementById('cardCustomStatus');
         if (status) status.innerText = `Статус: ${cachedProfile.customStatus || 'Полноправный гражданин'}`;
 
-        applyCardThemeToDOM(cachedProfile.cardTheme || 'emerald');
+        applyCardThemeToDOM(cachedProfile.cardTheme || 'emerald', cachedProfile.cardBgImage);
 
         const avatarBox = document.getElementById('cardAvatarContainer');
         if (avatarBox && cachedProfile.avatar) {
@@ -1064,12 +1069,8 @@
         localStorage.removeItem('mirobyte_cached_emblem');
       }
 
-      // ========================================================
-      // ПРИВЯЗКА ФЛАГА ВЛАДЕЛЬЦА (ISOWNER: TRUE)
-      // ========================================================
+      // Привязка флага Владельца
       let ownerKey = Object.keys(appData.users).find(k => appData.users[k].isOwner === true);
-      
-      // Если флага ещё нет ни у кого в базе — первично привязываем его к аккаунту iosif или к текущему пользователю
       if (!ownerKey) {
         const defaultKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif') || (currentUser ? currentUser.toLowerCase() : null);
         if (defaultKey && appData.users[defaultKey]) {
@@ -1077,7 +1078,6 @@
           db.ref(`bankData/users/${defaultKey}/isOwner`).set(true);
           db.ref(`bankData/users/${defaultKey}/isAdmin`).set(true);
         } else if (!Object.keys(appData.users).length) {
-          // Если база полностью пустая
           ownerKey = 'iosif';
           db.ref('bankData/users/iosif').set({
             username: 'Iosif',
@@ -1114,13 +1114,11 @@
       return key ? appData.users[key] : null;
     }
 
-    // Нахождение главного Владельца системы (isOwner: true)
     function getSystemOwner() {
       const key = Object.keys(appData.users).find(k => appData.users[k].isOwner === true);
       return key ? appData.users[key] : null;
     }
 
-    // Проверка прав администратора / казначея
     function isCurrentUserAdmin() {
       if (!currentUser) return false;
       const u = findUser(currentUser);
@@ -1274,14 +1272,21 @@
       });
     }
 
-    function applyCardThemeToDOM(themeKey) {
+    // Применение темы или изображения к карточке счёта
+    function applyCardThemeToDOM(themeKey, cardBgImage) {
       const card = document.getElementById('citizenMainCard');
       if (!card) return;
       Object.values(CARD_THEMES).forEach(cls => {
         cls.split(' ').forEach(c => card.classList.remove(c));
       });
-      const targetClass = CARD_THEMES[themeKey] || CARD_THEMES.emerald;
-      targetClass.split(' ').forEach(c => card.classList.add(c));
+      
+      if (cardBgImage) {
+        card.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.7)), url(${cardBgImage})`;
+      } else {
+        card.style.backgroundImage = '';
+        const targetClass = CARD_THEMES[themeKey] || CARD_THEMES.emerald;
+        targetClass.split(' ').forEach(c => card.classList.add(c));
+      }
     }
 
     function renderCurrentView() {
@@ -1308,7 +1313,6 @@
 
       const isAdmin = !!(u.isAdmin || u.isOwner);
 
-      // Сохраняем свежий профиль в кэш
       localStorage.setItem('mirobyte_cached_profile', JSON.stringify({
         username: u.username,
         balance: u.balance || 0,
@@ -1316,6 +1320,7 @@
         isOwner: !!u.isOwner,
         avatar: u.avatar || '',
         cardTheme: u.cardTheme || 'emerald',
+        cardBgImage: u.cardBgImage || '',
         customStatus: u.customStatus || 'Полноправный гражданин'
       }));
 
@@ -1399,7 +1404,7 @@
       document.getElementById('cardRoleBadge').innerText = u.isOwner ? 'Владелец Банка' : (u.isAdmin ? 'Казначей' : 'Гражданин');
       document.getElementById('cardCustomStatus').innerText = `Статус: ${u.customStatus || 'Полноправный гражданин'}`;
 
-      applyCardThemeToDOM(u.cardTheme || 'emerald');
+      applyCardThemeToDOM(u.cardTheme || 'emerald', u.cardBgImage);
 
       const avatarContainer = document.getElementById('cardAvatarContainer');
       if (u.avatar) {
@@ -1696,27 +1701,57 @@
       }
     }
 
-    // ========================================================
-    // ФУНКЦИИ КАСТОМИЗАЦИИ КАРТОЧЕК
-    // ========================================================
+    // Создание дизайна карточки (с поддержкой загрузки фонового изображения)
     function handleCreateCardDesign(e) {
       e.preventDefault();
       if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
 
       const name = document.getElementById('newDesignName').value.trim();
       const theme = document.getElementById('newDesignTheme').value;
+      const file = document.getElementById('newDesignImageFile').files[0];
       if (!name) return showToast('Введите название стиля!', 'error');
 
       const designId = 'design_' + Date.now();
-      db.ref(`bankData/cardDesigns/${designId}`).set({
-        id: designId,
-        name: name,
-        theme: theme,
-        createdAt: Date.now()
-      }).then(() => {
-        document.getElementById('newDesignName').value = '';
-        showToast(`Стиль «${name}» успешно добавлен в систему!`, 'success');
-      });
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.getElementById('cardBgCanvas');
+            let w = img.width, h = img.height;
+            if (w > 800) { h = Math.round((h * 800) / w); w = 800; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const compressed = canvas.toDataURL('image/jpeg', 0.82);
+
+            db.ref(`bankData/cardDesigns/${designId}`).set({
+              id: designId,
+              name: name,
+              theme: theme,
+              bgImage: compressed,
+              createdAt: Date.now()
+            }).then(() => {
+              document.getElementById('newDesignName').value = '';
+              document.getElementById('newDesignImageFile').value = '';
+              showToast(`Стиль с изображением «${name}» успешно создан!`, 'success');
+            });
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        db.ref(`bankData/cardDesigns/${designId}`).set({
+          id: designId,
+          name: name,
+          theme: theme,
+          bgImage: null,
+          createdAt: Date.now()
+        }).then(() => {
+          document.getElementById('newDesignName').value = '';
+          showToast(`Стиль «${name}» успешно добавлен в систему!`, 'success');
+        });
+      }
     }
 
     function handleDeleteCardDesign(designId) {
@@ -1749,14 +1784,15 @@
       const customList = Object.values(appData.cardDesigns || {});
       customList.forEach(d => {
         const bgClass = CARD_THEMES[d.theme] || CARD_THEMES.emerald;
+        const previewStyle = d.bgImage ? `background-image: url(${d.bgImage}); background-size: cover; background-position: center;` : '';
         const box = document.createElement('div');
         box.className = 'p-3 rounded-2xl bg-bank-darkest border border-bank-border/80 flex items-center justify-between';
         box.innerHTML = `
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl ${bgClass} border border-bank-gold/40 flex-shrink-0"></div>
+            <div class="w-8 h-8 rounded-xl ${!d.bgImage ? bgClass : ''} border border-bank-gold/40 flex-shrink-0 overflow-hidden" style="${previewStyle}"></div>
             <div>
               <div class="text-xs font-bold text-white">${d.name}</div>
-              <div class="text-[10px] text-emerald-400/70 font-mono">${d.theme}</div>
+              <div class="text-[10px] text-emerald-400/70 font-mono">${d.bgImage ? 'Фон: Изображение' : d.theme}</div>
             </div>
           </div>
           <button onclick="handleDeleteCardDesign('${d.id}')" class="text-rose-400 hover:text-white p-1 text-xs" title="Удалить стиль">
@@ -1774,29 +1810,32 @@
 
       const u = findUser(currentUser);
       const currentTheme = (u && u.cardTheme) || 'emerald';
+      const currentBg = (u && u.cardBgImage) || '';
 
       // 1. Дефолтный стиль
-      addDesignOptionToModal(grid, 'Изумрудная Классика', 'emerald', currentTheme === 'emerald');
+      addDesignOptionToModal(grid, 'Изумрудная Классика', 'emerald', null, currentTheme === 'emerald' && !currentBg);
 
-      // 2. Все кастомные стили, добавленные Казначеем
+      // 2. Все кастомные стили, созданные Казначеем
       const customList = Object.values(appData.cardDesigns || {});
       customList.forEach(d => {
-        addDesignOptionToModal(grid, d.name, d.theme, currentTheme === d.theme);
+        const isSel = (d.bgImage && currentBg === d.bgImage) || (!d.bgImage && !currentBg && currentTheme === d.theme);
+        addDesignOptionToModal(grid, d.name, d.theme, d.bgImage, isSel);
       });
 
       document.getElementById('cardCustomizerModal').classList.remove('hidden');
       document.getElementById('cardCustomizerModal').classList.add('flex');
     }
 
-    function addDesignOptionToModal(container, name, themeKey, isSelected) {
+    function addDesignOptionToModal(container, name, themeKey, bgImage, isSelected) {
       const bgClass = CARD_THEMES[themeKey] || CARD_THEMES.emerald;
+      const previewStyle = bgImage ? `background-image: url(${bgImage}); background-size: cover; background-position: center;` : '';
       const item = document.createElement('div');
       item.className = `p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
         isSelected ? 'bg-bank-darkest border-bank-gold ring-1 ring-bank-gold shadow-lg' : 'bg-bank-darkest/70 border-bank-border/80 hover:border-bank-gold/40'
       }`;
       item.innerHTML = `
         <div class="flex items-center gap-3">
-          <div class="w-10 h-7 rounded-lg ${bgClass} border border-bank-gold/50 shadow-sm flex-shrink-0"></div>
+          <div class="w-10 h-7 rounded-lg ${!bgImage ? bgClass : ''} border border-bank-gold/50 shadow-sm flex-shrink-0 overflow-hidden" style="${previewStyle}"></div>
           <div>
             <div class="text-xs font-bold text-white">${name}</div>
             <div class="text-[10px] text-emerald-400/70">${isSelected ? 'Текущий активный стиль' : 'Нажмите, чтобы применить'}</div>
@@ -1806,17 +1845,22 @@
           ${isSelected ? '<i class="fa-solid fa-circle-check text-bank-gold text-base"></i>' : '<button class="px-2.5 py-1 bg-bank-surface border border-emerald-500/40 text-emerald-300 rounded-lg text-[10px] font-bold">Выбрать</button>'}
         </div>
       `;
-      item.onclick = () => selectCardTheme(themeKey, name);
+      item.onclick = () => selectCardTheme(themeKey, bgImage, name);
       container.appendChild(item);
     }
 
-    function selectCardTheme(themeKey, themeName) {
+    function selectCardTheme(themeKey, bgImage, themeName) {
       if (!currentUser) return;
       const uKey = currentUser.toLowerCase();
-      db.ref(`bankData/users/${uKey}/cardTheme`).set(themeKey).then(() => {
-        applyCardThemeToDOM(themeKey);
+      const updates = {};
+      updates[`bankData/users/${uKey}/cardTheme`] = themeKey;
+      updates[`bankData/users/${uKey}/cardBgImage`] = bgImage || null;
+
+      db.ref().update(updates).then(() => {
+        applyCardThemeToDOM(themeKey, bgImage);
         if (cachedProfile) {
           cachedProfile.cardTheme = themeKey;
+          cachedProfile.cardBgImage = bgImage || '';
           localStorage.setItem('mirobyte_cached_profile', JSON.stringify(cachedProfile));
         }
         closeCardCustomizerModal();
@@ -1952,9 +1996,6 @@
       db.ref().update(updates);
     }
 
-    // ========================================================
-    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ: ПРОВЕРКА АКТУАЛЬНОГО ПАРОЛЯ ВЛАДЕЛЬЦА
-    // ========================================================
     function handleManageAdminAccess(e) {
       e.preventDefault();
       const targetUser = document.getElementById('accessTargetUser').value.trim();
@@ -1963,11 +2004,9 @@
 
       if (!targetUser) return showToast('Укажите логин гражданина!', 'error');
 
-      // Находим актуальный объект владельца системы (isOwner: true)
       const ownerUser = getSystemOwner();
       if (!ownerUser) return showToast('Владелец Банка не найден в системе!', 'error');
 
-      // Проверяем ТЕКУЩИЙ пароль владельца под любым его ником
       if (ownerUser.password !== passConfirm) {
         return showToast('Неверный текущий пароль Владельца Банка! Доступ заблокирован.', 'error');
       }
@@ -2138,7 +2177,6 @@
         }
         const key = u.toLowerCase();
         
-        // Новому пользователю НИКОГДА не даются права Владельца или Казначея
         db.ref(`bankData/users/${key}`).set({
           username: u,
           password: p,
@@ -2148,6 +2186,7 @@
           registeredAt: new Date().toLocaleDateString('ru-RU'),
           customStatus: 'Новый гражданин',
           cardTheme: 'emerald',
+          cardBgImage: null,
           isBlocked: false,
           hiddenFromAll: false
         }).then(() => {
@@ -2160,6 +2199,7 @@
       }
     }
 
+    // БЕЗОПАСНЫЙ ПЕРЕВОД: ПОЛЯ ПЛАТЕЛЬЩИКА АВТОМАТИЧЕСКИ ОЧИЩАЮТСЯ И ЗАКРЫВАЮТСЯ
     function executeTransfer(e) {
       e.preventDefault();
       const to = document.getElementById('transferTarget').value.trim();
@@ -2208,9 +2248,15 @@
 
       db.ref().update(updates).then(() => {
         showToast(`Переведено ${amt} ฿ гражданину @${recipient.username}!`, 'success');
+        
+        // Очищаем сумму и комментарий
         document.getElementById('transferAmount').value = '';
         document.getElementById('transferComment').value = '';
+        
+        // ИМЯ ПОЛУЧАТЕЛЯ (to) ОСТАЁТСЯ, А ДАННЫЕ ПЛАТЕЛЬЩИКА МОМЕНТАЛЬНО СТИРАЮТСЯ!
         if (isProxy) {
+          document.getElementById('proxySenderLogin').value = '';
+          document.getElementById('proxySenderPassword').value = '';
           document.getElementById('proxyTransferCheck').checked = false;
           toggleProxySection();
         }
@@ -2442,7 +2488,7 @@
       const oldKey = currentUser.toLowerCase();
       const newKey = newNick.toLowerCase();
 
-      // Сохраняем все системные флаги (включая isOwner, isAdmin, cardTheme)
+      // Сохраняем все системные флаги и параметры оформления
       const newObj = { ...u, username: newNick, balance: u.balance - 150 };
       const updates = {};
       updates[`bankData/users/${newKey}`] = newObj;
