@@ -203,7 +203,7 @@
                   Mirobyte Royal Reserve
                 </span>
                 <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold">
-                  Гражданин
+                  <!-- Подставляется мгновенно из кэша -->
                 </span>
               </div>
               <!-- Clickable Avatar to Open Settings in One Tap -->
@@ -218,20 +218,19 @@
             <div class="my-5">
               <div class="text-[11px] uppercase tracking-widest text-emerald-400/70 font-semibold mb-1">Доступный Баланс</div>
               <div class="flex items-baseline space-x-2">
-                <span id="userBalanceDisplay" class="text-4xl sm:text-5xl font-black font-royal text-white tracking-tight">0</span>
+                <span id="userBalanceDisplay" class="text-4xl sm:text-5xl font-black font-royal text-white tracking-tight"></span>
                 <span class="text-2xl sm:text-3xl font-royal font-bold text-bank-gold">฿</span>
                 <span class="text-xs text-emerald-400/60 font-medium ml-1 font-mono">(Байти)</span>
               </div>
               <div class="mt-2 text-xs text-bank-gold/90 font-medium flex items-center gap-1.5">
                 <i class="fa-solid fa-award text-[11px]"></i>
-                <span id="cardCustomStatus">Статус: Полноправный гражданин</span>
+                <span id="cardCustomStatus"></span>
               </div>
             </div>
 
             <div class="pt-4 border-t border-bank-border/70 flex flex-wrap items-center justify-between text-xs text-emerald-300/80 gap-3">
               <div>
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Гражданин</span>
-                <!-- Защита от мигания "USER": тег пустой до инициализации JS -->
                 <span id="cardHolderText" class="font-bold text-base text-emerald-100 font-royal tracking-wide"></span>
               </div>
               <div>
@@ -602,15 +601,15 @@
           </h3>
           <form onsubmit="processAssignStatus(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="relative">
-              <input type="text" id="statusTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин гражданина..." class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+              <input type="text" id="statusTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин гражданина..." class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-emerald-100 focus:outline-none">
               <div id="statusTargetUser-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-bank-darkest/95 border border-bank-gold/60 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto custom-scrollbar hidden"></div>
             </div>
-            <input type="text" id="statusNewValue" required placeholder="Новый статус..." class="bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+            <input type="text" id="statusNewValue" required placeholder="Новый статус..." class="bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-emerald-100 focus:outline-none">
             <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase">Утвердить Статус</button>
           </form>
         </div>
 
-        <!-- NEW: Панель Санкций, Скрытия и Удаления Граждан (Только Казначей) -->
+        <!-- Панель Санкций, Скрытия и Удаления Граждан (Только Казначей) -->
         <div class="bg-bank-surface border-2 border-rose-900/60 rounded-3xl p-6 sm:p-8 guilloche-panel space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -632,22 +631,15 @@
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-            <!-- Кнопка 1: Обнулить баланс -->
             <button type="button" onclick="executeSanctionAction('zero')" class="py-2.5 px-3 bg-bank-darkest hover:bg-amber-950/60 border border-amber-500/50 text-amber-300 font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
               <i class="fa-solid fa-coins"></i> Обнулить счёт
             </button>
-            
-            <!-- Кнопка 2: Заблокировать / Разблокировать -->
             <button type="button" onclick="executeSanctionAction('toggleBlock')" class="py-2.5 px-3 bg-bank-darkest hover:bg-rose-950/60 border border-rose-500/50 text-rose-300 font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
               <i class="fa-solid fa-lock"></i> Блок / Разблок
             </button>
-
-            <!-- Кнопка 3: Скрыть / Показать для всех (Теневой бан) -->
             <button type="button" onclick="executeSanctionAction('toggleHide')" class="py-2.5 px-3 bg-bank-darkest hover:bg-indigo-950/60 border border-indigo-500/50 text-indigo-300 font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
               <i class="fa-solid fa-eye-slash"></i> Скрыть / Показать
             </button>
-
-            <!-- Кнопка 4: Удалить аккаунт -->
             <button type="button" onclick="executeSanctionAction('delete')" class="py-2.5 px-3 bg-rose-950/80 hover:bg-rose-900 border border-rose-600 text-white font-bold rounded-xl text-[11px] uppercase transition-all shadow-md flex items-center justify-center gap-1.5">
               <i class="fa-solid fa-trash-can"></i> Удалить счёт
             </button>
@@ -872,8 +864,13 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и стройки', icon: 'fa-hammer' }
     ];
 
-    // Мгновенная инициализация сохраненного пользователя из кэша (предотвращает мигание формы входа и USER)
+    // Мгновенная инициализация профиля из локального кэша (0 миллисекунд)
     let currentUser = localStorage.getItem('mirobyte_active_user') || null;
+    let cachedProfile = null;
+    try {
+      cachedProfile = JSON.parse(localStorage.getItem('mirobyte_cached_profile') || 'null');
+    } catch(e) {}
+
     let authMode = 'login';
     let mailFilter = 'inbox';
     let treasuryMode = 'grant';
@@ -889,12 +886,39 @@
       bankReserve: 5000000
     };
 
-    // Если в локальном кэше уже есть пользователь — сразу показываем приложение и имя
+    // Мгновенная подстановка всех данных ещё до ответа сервера (исключает мигание 0 ฿, USER и дефолтных статусов)
     if (currentUser) {
       document.getElementById('appContainer').classList.remove('hidden');
       document.getElementById('authSection').classList.add('hidden');
+      
       const holder = document.getElementById('cardHolderText');
       if (holder) holder.innerText = currentUser.toUpperCase();
+
+      if (cachedProfile) {
+        const bal = document.getElementById('userBalanceDisplay');
+        if (bal) bal.innerText = (cachedProfile.balance || 0).toLocaleString();
+
+        const badge = document.getElementById('cardRoleBadge');
+        if (badge) badge.innerText = cachedProfile.isAdmin ? 'Казначей / Владелец' : 'Гражданин';
+
+        const status = document.getElementById('cardCustomStatus');
+        if (status) status.innerText = `Статус: ${cachedProfile.customStatus || 'Полноправный гражданин'}`;
+
+        const avatarBox = document.getElementById('cardAvatarContainer');
+        if (avatarBox && cachedProfile.avatar) {
+          avatarBox.innerHTML = `
+            <img src="${cachedProfile.avatar}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
+              <i class="fa-solid fa-gear"></i>
+            </div>
+          `;
+        }
+
+        if (cachedProfile.isAdmin) {
+          const admBtn = document.getElementById('tabBtn-admin');
+          if (admBtn) admBtn.classList.remove('hidden');
+        }
+      }
     } else {
       document.getElementById('authSection').classList.remove('hidden');
       document.getElementById('appContainer').classList.add('hidden');
@@ -965,7 +989,7 @@
       const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
       const usersList = Object.values(appData.users || {});
       
-      // Скрытые граждане (hiddenFromAll) видны в автокомплите ТОЛЬКО Казначею Iosif
+      // Скрытые граждане (hiddenFromAll) видны в подсказках ТОЛЬКО Казначею Iosif
       const filtered = usersList.filter(u => {
         if (!isMasterAdmin && u.hiddenFromAll) return false;
         if (!query) return true;
@@ -1112,11 +1136,21 @@
       if (!u) {
         currentUser = null;
         localStorage.removeItem('mirobyte_active_user');
+        localStorage.removeItem('mirobyte_cached_profile');
         authSec.classList.remove('hidden');
         appSec.classList.add('hidden');
         renderNavBarRight();
         return;
       }
+
+      // Сохраняем в мгновенный кэш профиля
+      localStorage.setItem('mirobyte_cached_profile', JSON.stringify({
+        username: u.username,
+        balance: u.balance || 0,
+        isAdmin: !!u.isAdmin,
+        avatar: u.avatar || '',
+        customStatus: u.customStatus || 'Полноправный гражданин'
+      }));
 
       authSec.classList.add('hidden');
       appSec.classList.remove('hidden');
@@ -2152,6 +2186,7 @@
     function handleLogout() {
       currentUser = null;
       localStorage.removeItem('mirobyte_active_user');
+      localStorage.removeItem('mirobyte_cached_profile');
       closeSettingsModal();
       renderCurrentView();
     }
