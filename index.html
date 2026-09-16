@@ -1730,27 +1730,57 @@
       showToast(`+${val} ฿ добавлено к сумме перевода`, 'info');
     }
 
-    function openBanknoteModal(val) {
+function openBanknoteModal(val) {
       const note = BANKNOTES_CONFIG.find(n => n.value === val);
       if (!note) return;
 
       document.getElementById('modalNoteTitle').innerText = `${note.value} БАЙТИ (฿) — ${note.titleEn}`;
-      document.getElementById('modalSvgValTop').innerText = note.value;
-      document.getElementById('modalSvgEnTop').innerText = note.titleEn;
-      document.getElementById('modalSvgValBot').innerText = `${note.value} ฿`;
-      document.getElementById('modalRuBottom').innerText = note.titleRu;
-      document.getElementById('modalMotifName').innerText = note.motif;
       document.getElementById('modalNominalValueText').innerText = `${note.value} ฿`;
-      document.getElementById('modalSerial').innerText = `СЕРИЯ MB-${note.value * 144}-2026`;
 
-      const iconEl = document.getElementById('modalNoteIcon');
-      iconEl.className = `fa-solid ${note.icon} text-4xl text-bank-gold`;
+      const renderBox = document.getElementById('modalBanknoteRender');
+      const customImg = appData.banknoteImages && appData.banknoteImages[note.value];
+
+      if (customImg) {
+        // Показываем загруженную купюру во весь размер
+        renderBox.className = 'w-full aspect-[16/9] rounded-2xl border-2 border-bank-gold/60 bg-black p-1 flex items-center justify-center relative overflow-hidden shadow-2xl my-2';
+        renderBox.innerHTML = `
+          <img src="${customImg}" alt="${note.titleRu}" class="w-full h-full object-contain rounded-xl">
+        `;
+      } else {
+        // Если картинки нет — стандартный макет
+        renderBox.className = 'w-full aspect-[16/9] rounded-2xl border-2 border-bank-gold/50 bg-[#081f16] p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl my-2 banknote-pattern';
+        renderBox.innerHTML = `
+          <div class="flex items-start justify-between relative z-10">
+            <div>
+              <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold">${note.value}</div>
+              <div class="text-[9px] font-mono tracking-widest text-emerald-400 font-bold">${note.titleEn}</div>
+            </div>
+            <div class="text-center font-royal font-bold text-xs sm:text-sm text-white border-b border-bank-gold/50 pb-0.5">BANK OF MIROBYTE</div>
+            <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold">฿</div>
+          </div>
+          <div class="my-auto text-center relative z-10 py-2">
+            <div class="inline-block p-4 rounded-full border border-bank-gold/40 bg-black/40 mb-2">
+              <i class="fa-solid ${note.icon} text-4xl text-bank-gold"></i>
+            </div>
+            <div class="font-royal font-bold text-sm sm:text-base text-white">${note.motif}</div>
+          </div>
+          <div class="flex items-end justify-between relative z-10 text-[10px] font-mono text-emerald-400/80">
+            <span>СЕРИЯ MB-${note.value * 144}-2026</span>
+            <span class="font-royal font-bold text-bank-gold">${note.titleRu}</span>
+            <span>${note.value} ฿</span>
+          </div>
+        `;
+      }
 
       const addBtn = document.getElementById('modalAddToTransferBtn');
       addBtn.onclick = () => {
         addAmountToTransferInput(note.value);
         closeBanknoteModal();
       };
+
+      document.getElementById('banknoteModal').classList.remove('hidden');
+      document.getElementById('banknoteModal').classList.add('flex');
+    }
 
       document.getElementById('banknoteModal').classList.remove('hidden');
       document.getElementById('banknoteModal').classList.add('flex');
