@@ -197,7 +197,6 @@
       <!-- TAB 1: DASHBOARD -->
       <section id="tabContent-dashboard" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Citizen Card with Dynamic Styling -->
           <div id="citizenMainCard" class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-bank-gold/50 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[260px] transition-all duration-300 bg-cover bg-center">
             <div class="flex items-center justify-between relative z-10">
               <div class="flex items-center space-x-2.5">
@@ -434,8 +433,6 @@
 
       <!-- TAB 5: TREASURY (ADMIN ONLY) -->
       <section id="tabContent-admin" class="hidden space-y-6">
-        
-        <!-- Top Banner -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bank-gold/20 text-bank-gold text-[10px] font-bold uppercase border border-bank-gold/40 mb-2">
@@ -486,7 +483,7 @@
           </div>
         </div>
 
-        <!-- Treasury Operations Console (Grant / Deduct) -->
+        <!-- Treasury Operations Console -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
             <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
@@ -514,7 +511,7 @@
           </form>
         </div>
 
-        <!-- УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК: С ПОДДЕРЖКОЙ ЗАГРУЗКИ КАРТИНКИ -->
+        <!-- УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК -->
         <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -558,7 +555,7 @@
           </div>
         </div>
 
-        <!-- Citizens Registry Quick Operations -->
+        <!-- Citizens Registry -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel">
           <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2 mb-4">
             <i class="fa-solid fa-users-gear text-emerald-400"></i> Реестр Счетов и Быстрое Регулирование Балансов
@@ -579,7 +576,7 @@
           </div>
         </div>
 
-        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ: ПРОВЕРКА АКТУАЛЬНОГО ПАРОЛЯ ВЛАДЕЛЬЦА -->
+        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ -->
         <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -695,7 +692,7 @@
           </form>
         </div>
 
-        <!-- Панель Санкций, Скрытия и Удаления Граждан -->
+        <!-- Панель Санкций, Скрытия и Удаления -->
         <div class="bg-bank-surface border-2 border-rose-900/60 rounded-3xl p-6 sm:p-8 guilloche-panel space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -730,9 +727,6 @@
               <i class="fa-solid fa-trash-can"></i> Удалить счёт
             </button>
           </div>
-          <p class="text-[10px] text-emerald-500/70 italic">
-            * Скрытый гражданин полностью невидим в Рейтинге и подсказках для всех остальных. Видеть его в реестре может только Казначей.
-          </p>
         </div>
 
         <!-- Эмблема Банка Миробайт -->
@@ -884,7 +878,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Bank Reserve (Казна Банка) -->
+  <!-- MODAL: Bank Reserve -->
   <div id="bankReserveModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border border-bank-gold/60 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
       <button onclick="closeBankReserveModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest text-emerald-400 hover:text-white flex items-center justify-center">✕</button>
@@ -951,7 +945,7 @@
     </div>
   </div>
 
-  <!-- V2: compact statistics modal; existing interface remains unchanged -->
+  <!-- MODAL: Statistics -->
   <div id="statsModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-md w-full p-6 shadow-2xl relative guilloche-gold">
       <button onclick="closeStatsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest text-emerald-400 flex items-center justify-center">✕</button>
@@ -974,7 +968,6 @@
     }
     const db = firebase.database();
 
-    // ===== BANK OF MIROBYTE v2 — безопаснее без изменения интерфейса =====
     const PASSWORD_ITERATIONS = 120000;
     const MAX_LOGIN_LENGTH = 32;
     const MAX_COMMENT_LENGTH = 300;
@@ -1021,7 +1014,6 @@
         const hash = await derivePasswordHash(password, user.passwordSalt);
         return hash === user.passwordHash;
       }
-      // Legacy migration: old plaintext passwords are accepted once and immediately replaced.
       if (typeof user.password === 'string' && user.password === password) return true;
       return false;
     }
@@ -1089,7 +1081,6 @@
 
     renderBankEmblem();
 
-    // Защищённая мгновенная предзагрузка
     if (currentUser) {
       document.getElementById('appContainer').classList.remove('hidden');
       document.getElementById('authSection').classList.add('hidden');
@@ -1131,151 +1122,132 @@
       document.getElementById('appContainer').classList.add('hidden');
     }
 
-    // Firebase realtime synchronization (optimized)
-    // Раньше сайт слушал весь /bankData целиком. Теперь отдельные ветки
-    // синхронизируются независимо, поэтому изменение баланса не тянет
-    // за собой все изображения, сообщения и историю операций.
-    let renderTimer = null;
-    let initialSyncParts = 0;
-
-    function scheduleRender() {
-      clearTimeout(renderTimer);
-      renderTimer = setTimeout(() => {
-        try { renderCurrentView(); } catch (e) { console.error('Render error:', e); }
-      }, 60);
+    let renderScheduled = false;
+    function requestRender() {
+      if (renderScheduled) return;
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        renderCurrentView();
+      });
     }
 
-    function markFirebaseOnline() {
+    function updateOnlineIndicator(isOk) {
       const dot = document.getElementById('cloudSyncIndicator');
-      const text = document.getElementById('cloudStatusText');
-      if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0';
-      if (text) text.innerText = 'Firebase Онлайн (฿)';
-    }
-
-    function markFirebaseError(err) {
-      console.error('Firebase listener error:', err);
-      const dot = document.getElementById('cloudSyncIndicator');
-      const text = document.getElementById('cloudStatusText');
-      if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400 flex-shrink-0';
-      if (text) text.innerText = 'Ошибка связи';
-    }
-
-    function finishSyncPart() {
-      initialSyncParts++;
-      if (initialSyncParts >= 4) {
-        markFirebaseOnline();
-        checkAutoIncomeCycle();
-        scheduleRender();
+      const txt = document.getElementById('cloudStatusText');
+      if (!dot || !txt) return;
+      if (isOk) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0';
+        txt.innerText = 'Firebase Онлайн (฿)';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 flex-shrink-0';
+        txt.innerText = 'Ошибка связи';
       }
     }
 
-    // Пользователи — отдельная ветка.
+    // 1. Пользователи
     db.ref('bankData/users').on('value', (snap) => {
       appData.users = snap.val() || {};
-
-      // Сохраняем права владельца только для уже существующего аккаунта.
-      // Никакого автоматического создания владельца или пароля здесь нет.
-      let ownerKey = Object.keys(appData.users).find(
-        k => appData.users[k] && appData.users[k].isOwner === true
-      );
-
+      
+      let ownerKey = Object.keys(appData.users).find(k => appData.users[k].isOwner === true);
       if (!ownerKey) {
-        const defaultKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif');
+        const defaultKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif') || (currentUser ? currentUser.toLowerCase() : null);
         if (defaultKey && appData.users[defaultKey]) {
-          db.ref(`bankData/users/${defaultKey}`)
-            .update({ isOwner: true, isAdmin: true })
-            .catch(console.error);
+          db.ref(`bankData/users/${defaultKey}/isOwner`).set(true);
+          db.ref(`bankData/users/${defaultKey}/isAdmin`).set(true);
         }
       }
 
       const savedUser = localStorage.getItem('mirobyte_active_user');
-      if (savedUser && findUser(savedUser)) currentUser = savedUser;
+      if (savedUser && findUser(savedUser)) {
+        currentUser = savedUser;
+      }
+      updateOnlineIndicator(true);
+      requestRender();
+    }, (err) => {
+      console.error('Users sync error:', err);
+      updateOnlineIndicator(false);
+    });
 
-      markFirebaseOnline();
-      checkAutoIncomeCycle();
-      scheduleRender();
-      finishSyncPart();
-    }, markFirebaseError);
-
-    // История переводов.
-    db.ref('bankData/transactions').on('value', (snap) => {
+    // 2. Транзакции
+    db.ref('bankData/transactions').limitToLast(100).on('value', (snap) => {
       const val = snap.val() || {};
-      appData.transactions = Array.isArray(val)
-        ? val
-        : Object.values(val).sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
+      appData.transactions = Array.isArray(val) ? val : Object.values(val).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
+      requestRender();
+    });
 
-      markFirebaseOnline();
-      scheduleRender();
-      finishSyncPart();
-    }, markFirebaseError);
-
-    // Телеграф / системные сообщения.
-    db.ref('bankData/messages').on('value', (snap) => {
-      const val = snap.val() || {};
-      appData.messages = Array.isArray(val)
-        ? val
-        : Object.values(val).sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
-
-      markFirebaseOnline();
-      scheduleRender();
-      finishSyncPart();
-    }, markFirebaseError);
-
-    // Почта.
+    // 3. Почта
     db.ref('bankData/mailBox').on('value', (snap) => {
-      appData.mailBox = snap.val() || {};
-      markFirebaseOnline();
-      scheduleRender();
-      finishSyncPart();
-    }, markFirebaseError);
+      const val = snap.val() || [];
+      appData.mailBox = Array.isArray(val) ? val : Object.values(val);
+      renderMailView();
+    });
 
-    // Большие и редко меняющиеся данные больше не скачиваются вместе
-    // с каждым изменением пользователя/баланса.
+    // 4. Уведомления
+    db.ref('bankData/messages').limitToLast(60).on('value', (snap) => {
+      const val = snap.val() || {};
+      appData.messages = Array.isArray(val) ? val : Object.values(val).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
+      renderNavBarRight();
+    });
+
+    // 5. Изображения купюр
     db.ref('bankData/banknoteImages').on('value', (snap) => {
       appData.banknoteImages = snap.val() || {};
-      scheduleRender();
-    }, markFirebaseError);
+      renderBanknotes();
+    });
 
+    // 6. Дизайны карточек
     db.ref('bankData/cardDesigns').on('value', (snap) => {
       appData.cardDesigns = snap.val() || {};
-      scheduleRender();
-    }, markFirebaseError);
+      if (isCurrentUserAdmin()) {
+        renderTreasuryCardDesigns();
+      }
+    });
 
+    // 7. Государственная эмблема
     db.ref('bankData/bankEmblemImage').on('value', (snap) => {
       appData.bankEmblemImage = snap.val() || null;
-
       if (appData.bankEmblemImage) {
         localStorage.setItem('mirobyte_cached_emblem', appData.bankEmblemImage);
       } else {
         localStorage.removeItem('mirobyte_cached_emblem');
       }
-
       renderBankEmblem();
-      scheduleRender();
-    }, markFirebaseError);
+    });
 
+    // 8. Настройки автодохода (БЕЗ автоматического вызова при синхронизации!)
     db.ref('bankData/autoIncomeConfig').on('value', (snap) => {
-      appData.autoIncomeConfig = snap.val() || {
-        targetUser: 'ALL',
-        amount: 10,
-        intervalMinutes: 1440,
-        lastPayout: 0
-      };
-      checkAutoIncomeCycle();
-      scheduleRender();
-    }, markFirebaseError);
+      appData.autoIncomeConfig = snap.val() || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 };
+      if (isCurrentUserAdmin()) {
+        const conf = appData.autoIncomeConfig;
+        const hours = Math.round((conf.intervalMinutes || 1440) / 60);
+        const targetLabel = (conf.targetUser && conf.targetUser !== 'ALL') ? `@${conf.targetUser}` : 'Всем';
+        const badge = document.getElementById('autoIncomeStatusBadge');
+        if (badge) badge.innerText = `${conf.amount || 10} ฿ / ${hours}ч (${targetLabel})`;
+      }
+    });
 
-    db.ref('bankData/customMoneySupply').on('value', (snap) => {
-      const v = snap.val();
-      appData.customMoneySupply = v !== null && v !== undefined ? v : null;
-      scheduleRender();
-    }, markFirebaseError);
-
+    // 9. Казна Банка
     db.ref('bankData/bankReserve').on('value', (snap) => {
-      const v = snap.val();
-      appData.bankReserve = v !== null && v !== undefined ? v : 5000000;
-      scheduleRender();
-    }, markFirebaseError);
+      const val = snap.val();
+      appData.bankReserve = val !== null && val !== undefined ? val : 5000000;
+      const statRes = document.getElementById('statBankReserve');
+      if (statRes) statRes.innerText = `${appData.bankReserve.toLocaleString()} ฿`;
+    });
+
+    // 10. Ручная масса
+    db.ref('bankData/customMoneySupply').on('value', (snap) => {
+      const val = snap.val();
+      appData.customMoneySupply = val !== undefined ? val : null;
+      if (isCurrentUserAdmin()) {
+        renderAdminView();
+      }
+    });
+
+    // Периодическая безопасная проверка автодохода раз в 60 сек
+    setInterval(() => {
+      checkAutoIncomeCycle();
+    }, 60000);
 
     function findUser(login) {
       if (!login) return null;
@@ -1294,31 +1266,12 @@
       return !!(u && (u.isAdmin || u.isOwner));
     }
 
-    // Список всех полей выбора логина, к которым добавлена стрелочка-селектор
-    const AUTOCOMPLETE_FIELD_IDS = ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser', 'accessTargetUser'];
-
     function handleAutocompleteFocus(e) {
-      renderAutocompleteDropdown(e.target);
+      handleAutocompleteInput(e);
     }
 
     function handleAutocompleteInput(e) {
-      renderAutocompleteDropdown(e.target);
-    }
-
-    // Открывает/закрывает список выбора по клику на стрелочку, без фокуса на поле
-    // (чтобы на телефоне не открывалась экранная клавиатура).
-    function toggleAutocompleteDropdown(inputId) {
-      const input = document.getElementById(inputId);
-      const dropdown = document.getElementById(`${inputId}-dropdown`);
-      if (!input || !dropdown) return;
-      if (!dropdown.classList.contains('hidden')) {
-        dropdown.classList.add('hidden');
-        return;
-      }
-      renderAutocompleteDropdown(input);
-    }
-
-    function renderAutocompleteDropdown(input) {
+      const input = e.target;
       const query = input.value.trim().toLowerCase();
       const dropdown = document.getElementById(`${input.id}-dropdown`);
       if (!dropdown) return;
@@ -1370,6 +1323,7 @@
           ev.preventDefault();
           input.value = u.username;
           dropdown.classList.add('hidden');
+          input.focus();
         };
 
         dropdown.appendChild(row);
@@ -1379,12 +1333,10 @@
     }
 
     document.addEventListener('click', (e) => {
-      AUTOCOMPLETE_FIELD_IDS.forEach(id => {
+      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser', 'accessTargetUser'].forEach(id => {
         const input = document.getElementById(id);
         const dropdown = document.getElementById(`${id}-dropdown`);
-        const arrowBtn = document.querySelector(`[data-arrow-for="${id}"]`);
-        const clickedArrow = arrowBtn && arrowBtn.contains(e.target);
-        if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target) && !clickedArrow) {
+        if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
           dropdown.classList.add('hidden');
         }
       });
@@ -1461,7 +1413,6 @@
       });
     }
 
-    // Применение темы или изображения к карточке счёта
     function applyCardThemeToDOM(themeKey, cardBgImage) {
       const card = document.getElementById('citizenMainCard');
       if (!card) return;
@@ -1826,12 +1777,10 @@
       const totalCount = document.getElementById('statTotalUsers');
       if (totalCount) totalCount.innerText = usersList.length;
 
-      // Bank Reserve
       const reserve = appData.bankReserve !== undefined ? appData.bankReserve : 5000000;
       const statRes = document.getElementById('statBankReserve');
       if (statRes) statRes.innerText = `${reserve.toLocaleString()} ฿`;
 
-      // Money Supply
       let displayMass = 0;
       if (appData.customMoneySupply !== null && appData.customMoneySupply !== undefined) {
         displayMass = appData.customMoneySupply;
@@ -1845,14 +1794,12 @@
       const statMass = document.getElementById('statMoneySupply');
       if (statMass) statMass.innerText = `${displayMass.toLocaleString()} ฿`;
 
-      // Auto income status badge
       const conf = appData.autoIncomeConfig || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440 };
-      const hours = Math.round(conf.intervalMinutes / 60);
+      const hours = Math.round((conf.intervalMinutes || 1440) / 60);
       const targetLabel = (conf.targetUser && conf.targetUser !== 'ALL') ? `@${conf.targetUser}` : 'Всем';
       const badge = document.getElementById('autoIncomeStatusBadge');
       if (badge) badge.innerText = `${conf.amount || 10} ฿ / ${hours}ч (${targetLabel})`;
 
-      // Admin quick registry table with avatars
       const tbody = document.getElementById('adminUserTableBody');
       if (tbody) {
         tbody.innerHTML = '';
@@ -1892,7 +1839,6 @@
       }
     }
 
-    // Создание дизайна карточки (с поддержкой загрузки фонового изображения)
     function handleCreateCardDesign(e) {
       e.preventDefault();
       if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
@@ -1957,7 +1903,6 @@
       if (!container) return;
       container.innerHTML = '';
 
-      // Базовый дефолтный стиль
       const defaultBox = document.createElement('div');
       defaultBox.className = 'p-3 rounded-2xl bg-bank-darkest border border-bank-border/80 flex items-center justify-between';
       defaultBox.innerHTML = `
@@ -2003,10 +1948,8 @@
       const currentTheme = (u && u.cardTheme) || 'emerald';
       const currentBg = (u && u.cardBgImage) || '';
 
-      // 1. Дефолтный стиль
       addDesignOptionToModal(grid, 'Изумрудная Классика', 'emerald', null, currentTheme === 'emerald' && !currentBg);
 
-      // 2. Все кастомные стили, созданные Казначеем
       const customList = Object.values(appData.cardDesigns || {});
       customList.forEach(d => {
         const isSel = (d.bgImage && currentBg === d.bgImage) || (!d.bgImage && !currentBg && currentTheme === d.theme);
@@ -2110,42 +2053,50 @@
       if (!user) return showToast('Гражданин не найден!', 'error');
 
       const uKey = user.username.toLowerCase();
-      const updates = {};
-      const txs = appData.transactions || [];
+      const txId = newOperationId('TX');
 
       if (treasuryMode === 'grant') {
+        const updates = {};
         updates[`bankData/users/${uKey}/balance`] = (user.balance || 0) + amt;
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
           to: user.username,
           amount: amt,
           comment: reason || 'Государственная эмиссия',
-          timestamp: new Date().toLocaleString('ru-RU')
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
+
+        db.ref().update(updates).then(() => {
+          addSystemMessage(user.username, 'Эмиссия средств', `Казначейство начислило вам +${amt} ฿. Основание: ${reason || 'Эмиссия'}`);
+          showToast(`Эмиссия: +${amt} ฿ гражданину @${user.username}!`, 'success');
+          document.getElementById('treasuryAmount').value = '';
+          document.getElementById('treasuryReason').value = '';
         });
-        addSystemMessage(user.username, 'Эмиссия средств', `Казначейство начислило вам +${amt} ฿. Основание: ${reason || 'Эмиссия'}`);
-        showToast(`Эмиссия: +${amt} ฿ гражданину @${user.username}!`, 'success');
       } else {
         if ((user.balance || 0) <= 0) return showToast('Баланс уже 0 ฿, списание невозможно!', 'error');
         const toDeduct = Math.min(user.balance, amt);
+        const updates = {};
         updates[`bankData/users/${uKey}/balance`] = user.balance - toDeduct;
         updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + toDeduct;
-
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: user.username,
           to: 'КАЗНА БАНКА МИРОБАЙТ',
           amount: toDeduct,
           comment: reason || 'Списание излишков казначеем',
-          timestamp: new Date().toLocaleString('ru-RU')
-        });
-        addSystemMessage(user.username, 'Списание излишков', `С вашего счёта списано ${toDeduct} ฿. Причина: ${reason || 'Регулирование'}`);
-        showToast(`Списано ${toDeduct} ฿ со счёта @${user.username}!`, 'info');
-      }
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
 
-      updates['bankData/transactions'] = txs;
-      db.ref().update(updates).then(() => {
-        document.getElementById('treasuryAmount').value = '';
-        document.getElementById('treasuryReason').value = '';
-      });
+        db.ref().update(updates).then(() => {
+          addSystemMessage(user.username, 'Списание излишков', `С вашего счёта списано ${toDeduct} ฿. Причина: ${reason || 'Регулирование'}`);
+          showToast(`Списано ${toDeduct} ฿ со счёта @${user.username}!`, 'info');
+          document.getElementById('treasuryAmount').value = '';
+          document.getElementById('treasuryReason').value = '';
+        });
+      }
     }
 
     function adminQuickAction(username, val, mode) {
@@ -2153,38 +2104,43 @@
       const user = findUser(username);
       if (!user) return;
       const uKey = user.username.toLowerCase();
+      const txId = newOperationId('TX');
       const updates = {};
-      const txs = appData.transactions || [];
 
       if (mode === 'grant') {
         updates[`bankData/users/${uKey}/balance`] = (user.balance || 0) + val;
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
           to: user.username,
           amount: val,
           comment: 'Быстрое начисление Казначея',
-          timestamp: new Date().toLocaleString('ru-RU')
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
+        db.ref().update(updates).then(() => {
+          addSystemMessage(user.username, 'Пополнение от Казначея', `Казначей начислил вам +${val} ฿.`);
+          showToast(`+${val} ฿ начислено @${user.username}!`, 'success');
         });
-        addSystemMessage(user.username, 'Пополнение от Казначея', `Казначей начислил вам +${val} ฿.`);
-        showToast(`+${val} ฿ начислено @${user.username}!`, 'success');
       } else {
         if ((user.balance || 0) <= 0) return showToast('Баланс уже 0 ฿!', 'error');
         const toDeduct = Math.min(user.balance, val);
         updates[`bankData/users/${uKey}/balance`] = user.balance - toDeduct;
         updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + toDeduct;
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: user.username,
           to: 'КАЗНА БАНКА МИРОБАЙТ',
           amount: toDeduct,
           comment: 'Быстрое списание Казначеем',
-          timestamp: new Date().toLocaleString('ru-RU')
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
+        db.ref().update(updates).then(() => {
+          addSystemMessage(user.username, 'Списание средств', `С вашего счёта списано ${toDeduct} ฿ по решению Казначея.`);
+          showToast(`Списано ${toDeduct} ฿ у @${user.username}!`, 'info');
         });
-        addSystemMessage(user.username, 'Списание средств', `С вашего счёта списано ${toDeduct} ฿ по решению Казначея.`);
-        showToast(`Списано ${toDeduct} ฿ у @${user.username}!`, 'info');
       }
-
-      updates['bankData/transactions'] = txs;
-      db.ref().update(updates);
     }
 
     async function handleManageAdminAccess(e) {
@@ -2233,27 +2189,27 @@
       if (user.isOwner) return showToast('Нельзя применять санкции к Создателю / Владельцу Банка!', 'error');
 
       const uKey = user.username.toLowerCase();
-      const updates = {};
-      const txs = appData.transactions || [];
 
       if (action === 'zero') {
         const curBal = user.balance || 0;
         if (curBal <= 0) return showToast(`Баланс @${user.username} уже равен 0 ฿!`, 'info');
 
+        const txId = newOperationId('TX');
+        const updates = {};
         updates[`bankData/users/${uKey}/balance`] = 0;
         updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + curBal;
-
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: user.username,
           to: 'КАЗНА БАНКА МИРОБАЙТ',
           amount: curBal,
           comment: 'Полная конфискация баланса по указу Казначея',
-          timestamp: new Date().toLocaleString('ru-RU')
-        });
-        updates['bankData/transactions'] = txs;
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
 
-        addSystemMessage(user.username, 'Обнуление счёта', `По решению Государственного Казначейства ваш баланс был полностью аннулирован.`);
         db.ref().update(updates).then(() => {
+          addSystemMessage(user.username, 'Обнуление счёта', `По решению Государственного Казначейства ваш баланс был полностью аннулирован.`);
           showToast(`Счёт гражданина @${user.username} обнулён (${curBal} ฿ направлено в Казну)!`, 'success');
         });
 
@@ -2388,7 +2344,6 @@
       }
     }
 
-    // БЕЗОПАСНЫЙ ПЕРЕВОД: ПОЛЯ ПЛАТЕЛЬЩИКА АВТОМАТИЧЕСКИ ОЧИЩАЮТСЯ И ЗАКРЫВАЮТСЯ
     async function executeTransfer(e) {
       e.preventDefault();
       const to = document.getElementById('transferTarget').value.trim();
@@ -2448,7 +2403,6 @@
         }
       } catch (err) {
         console.error(err);
-        // Если получатель не принял операцию, стараемся вернуть списанное.
         if (debited) await senderRef.transaction(balance => Number(balance || 0) + amt);
         showToast('Перевод не завершён. Средства возвращены, если списание произошло.', 'error');
       }
@@ -2491,19 +2445,19 @@
       if ((sender.balance || 0) < cost) return showToast('Недостаточно Байти!', 'error');
 
       const sKey = sender.username.toLowerCase();
+      const mailId = newOperationId('MAIL');
       const updates = {};
       updates[`bankData/users/${sKey}/balance`] = sender.balance - cost;
       updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + cost;
-
-      const mList = appData.mailBox || [];
-      mList.unshift({
+      updates[`bankData/mailBox/${mailId}`] = {
+        id: mailId,
         from: sender.username,
         to: recipient.username,
         text: txt,
         cost: cost,
-        timestamp: new Date().toLocaleString('ru-RU')
-      });
-      updates['bankData/mailBox'] = mList;
+        timestamp: new Date().toLocaleString('ru-RU'),
+        timestampMs: Date.now()
+      };
 
       addSystemMessage(recipient.username, 'Новая телеграмма', `Вам пришла телеграмма от @${sender.username} (${txt.length} симв.).`);
 
@@ -2541,48 +2495,59 @@
       const amt = parseInt(document.getElementById('inputIncomeAmount')?.value) || conf.amount || 10;
       
       const updates = {};
-      const txs = appData.transactions || [];
+      const txId = newOperationId('TX');
 
       if (target === 'ALL') {
         Object.keys(appData.users).forEach(k => {
           updates[`bankData/users/${k}/balance`] = (appData.users[k].balance || 0) + amt;
           addSystemMessage(appData.users[k].username, 'Регулярный доход', `Вам начислен регулярный доход в размере +${amt} ฿.`);
         });
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
           to: 'ВСЕМ ГРАЖДАНАМ',
           amount: amt,
           comment: 'Выплата регулярного дохода',
-          timestamp: new Date().toLocaleString('ru-RU')
-        });
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
         showToast(`Начислено по ${amt} ฿ всем гражданам!`, 'success');
       } else {
         const user = findUser(target);
         if (!user) return showToast(`Гражданин @${target} не найден!`, 'error');
         const uKey = user.username.toLowerCase();
         updates[`bankData/users/${uKey}/balance`] = (user.balance || 0) + amt;
-        txs.unshift({
+        updates[`bankData/transactions/${txId}`] = {
+          id: txId,
           from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
           to: user.username,
           amount: amt,
           comment: 'Индивидуальная выплата регулярного дохода',
-          timestamp: new Date().toLocaleString('ru-RU')
-        });
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
         addSystemMessage(user.username, 'Персональный доход', `Вам начислен регулярный доход в размере +${amt} ฿ от Казначейства.`);
         showToast(`Начислено ${amt} ฿ гражданину @${user.username}!`, 'success');
       }
 
-      updates['bankData/transactions'] = txs;
-      updates['bankData/autoIncomeConfig/lastPayout'] = Date.now();
+      const now = Date.now();
+      appData.autoIncomeConfig.lastPayout = now;
+      updates['bankData/autoIncomeConfig/lastPayout'] = now;
       db.ref().update(updates);
     }
 
     function checkAutoIncomeCycle() {
-      if (!appData.autoIncomeConfig) return;
+      // Запуск проверки автодохода разрешён только если вошёл Казначей / Владелец
+      if (!isCurrentUserAdmin() || !appData.autoIncomeConfig) return;
       const { amount, intervalMinutes, lastPayout } = appData.autoIncomeConfig;
       if (!amount || !intervalMinutes) return;
       const now = Date.now();
-      if (!lastPayout || (now - lastPayout) >= intervalMinutes * 60 * 1000) {
+      if (!lastPayout) {
+        // Инициализация стартового времени без немедленного спама
+        db.ref('bankData/autoIncomeConfig/lastPayout').set(now);
+        return;
+      }
+      if ((now - lastPayout) >= intervalMinutes * 60 * 1000) {
         triggerManualIncomePayout();
       }
     }
@@ -2601,19 +2566,19 @@
 
       const actualFine = Math.min(user.balance, amt);
       const uKey = user.username.toLowerCase();
+      const txId = newOperationId('TX');
       const updates = {};
       updates[`bankData/users/${uKey}/balance`] = user.balance - actualFine;
       updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + actualFine;
-
-      const txs = appData.transactions || [];
-      txs.unshift({
+      updates[`bankData/transactions/${txId}`] = {
+        id: txId,
         from: user.username,
         to: 'КАЗНА БАНКА МИРОБАЙТ',
         amount: actualFine,
         comment: `Штраф: ${reason}`,
-        timestamp: new Date().toLocaleString('ru-RU')
-      });
-      updates['bankData/transactions'] = txs;
+        timestamp: new Date().toLocaleString('ru-RU'),
+        timestampMs: Date.now()
+      };
 
       addSystemMessage(user.username, 'Взыскан штраф', `По решению Банка списан штраф в размере ${actualFine} ฿. Причина: ${reason}`);
 
@@ -2681,23 +2646,22 @@
 
       const oldKey = currentUser.toLowerCase();
       const newKey = newNick.toLowerCase();
+      const txId = newOperationId('TX');
 
-      // Сохраняем все системные флаги и параметры оформления
       const newObj = { ...u, username: newNick, balance: u.balance - 150 };
       const updates = {};
       updates[`bankData/users/${newKey}`] = newObj;
       updates[`bankData/users/${oldKey}`] = null;
       updates[`bankData/bankReserve`] = (appData.bankReserve || 0) + 150;
-
-      const txs = appData.transactions || [];
-      txs.unshift({
+      updates[`bankData/transactions/${txId}`] = {
+        id: txId,
         from: newNick,
         to: 'КАЗНА БАНКА МИРОБАЙТ',
         amount: 150,
         comment: `Госпошлина за смену ника с @${currentUser} на @${newNick}`,
-        timestamp: new Date().toLocaleString('ru-RU')
-      });
-      updates['bankData/transactions'] = txs;
+        timestamp: new Date().toLocaleString('ru-RU'),
+        timestampMs: Date.now()
+      };
 
       db.ref().update(updates).then(() => {
         currentUser = newNick;
@@ -2737,7 +2701,6 @@
         timestampMs: Date.now(),
         readBy: []
       };
-      // Child records prevent two simultaneous notifications from overwriting each other.
       return db.ref('bankData/messages').push(msg);
     }
 
@@ -2775,7 +2738,6 @@
           }
         });
         const readUpdates = {};
-        // New message records are children; mark only the messages the current user read.
         Object.entries(appData.messages || {}).forEach(([key, msg]) => {
           if (!msg || !msg.to) return;
           if ((msg.to === 'all' || msg.to === uLow) && !(msg.readBy || []).includes(uLow)) {
@@ -2803,7 +2765,6 @@
       Object.entries(appData.messages || {}).forEach(([key, m]) => {
         if (m && normalizeLogin(m.to) === uLow) updates[`bankData/messages/${key}`] = null;
       });
-      // Legacy array messages are retained if present; new messages use child records.
       try {
         if (Object.keys(updates).length) await db.ref().update(updates);
         else if (Array.isArray(appData.messages)) {
