@@ -183,6 +183,7 @@
           <button onclick="navigateTab('banknotes')" id="tabBtn-banknotes" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
             <i class="fa-solid fa-money-bill-wave mr-1"></i> Купюры Байти
           </button>
+          <!-- Кнопка Казначейства: ПО УМОЛЧАНИЮ ВСЕГДА СКРЫТА -->
           <button onclick="navigateTab('admin')" id="tabBtn-admin" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap">
             <i class="fa-solid fa-crown mr-1"></i> Казначейство
           </button>
@@ -202,9 +203,7 @@
                 <span class="px-3 py-1 bg-bank-gold/15 border border-bank-gold/40 text-bank-gold text-[10px] uppercase font-royal tracking-widest rounded-full font-bold">
                   Mirobyte Royal Reserve
                 </span>
-                <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold">
-                  <!-- Мгновенно из кэша -->
-                </span>
+                <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold"></span>
               </div>
               <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group" title="Нажмите для настроек профиля">
                 <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
@@ -431,17 +430,17 @@
         </div>
       </section>
 
-      <!-- TAB 5: TREASURY (ADMIN IOSIF ONLY) -->
+      <!-- TAB 5: TREASURY (ADMIN ONLY) -->
       <section id="tabContent-admin" class="hidden space-y-6">
         
         <!-- Top Banner -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bank-gold/20 text-bank-gold text-[10px] font-bold uppercase border border-bank-gold/40 mb-2">
-              <i class="fa-solid fa-crown"></i> Главный Казначей & Владелец
+              <i class="fa-solid fa-crown"></i> Казначейство Банка
             </div>
             <h2 class="text-2xl font-royal font-black text-white">Казначейство Банка Миробайт</h2>
-            <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Казна Банка, управление денежной массой и санкции</p>
+            <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Резерв Казны, управление денежной массой и безопасность</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="openBanknoteManagerModal()" class="px-4 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md">
@@ -534,6 +533,48 @@
           </div>
         </div>
 
+        <!-- БЛОК БЕЗОПАСНОСТИ: ДЕЛЕГИРОВАНИЕ ДОСТУПА В КАЗНАЧЕЙСТВО (ТОЛЬКО С ТЕКУЩИМ ПАРОЛЕМ IOSIF) -->
+        <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
+          <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
+            <div>
+              <h3 class="font-royal text-base sm:text-lg font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-key text-bank-gold"></i> Делегирование Полномочий Казначея
+              </h3>
+              <p class="text-xs text-emerald-400/70 mt-0.5">
+                Выдача или отзыв доступа к Казначейству. Доступ разрешён строго при подтверждении текущего пароля Iosif.
+              </p>
+            </div>
+          </div>
+
+          <form onsubmit="handleManageAdminAccess(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div class="relative">
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Гражданин (Логин)</label>
+              <input type="text" id="accessTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин гражданина..." class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+              <div id="accessTargetUser-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-bank-darkest/95 border border-bank-gold/60 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto custom-scrollbar hidden"></div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Действие</label>
+              <select id="accessActionSelect" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 font-bold focus:outline-none">
+                <option value="grant" class="text-emerald-400">👑 Дать доступ в Казначейство</option>
+                <option value="revoke" class="text-rose-400">🚫 Отобрать доступ (Сделать гражданином)</option>
+              </select>
+            </div>
+
+            <div class="relative">
+              <label class="block text-[11px] font-semibold text-bank-gold uppercase mb-1">Твой текущий пароль (Iosif)</label>
+              <input type="password" id="accessAdminPasswordConfirm" required placeholder="Текущий пароль Iosif..." class="w-full bg-bank-darkest border border-bank-gold/70 rounded-xl py-2 px-3 pr-8 text-xs text-emerald-100 focus:outline-none">
+              <button type="button" onclick="togglePassVisibility('accessAdminPasswordConfirm', 'eyeAccessPass')" class="absolute inset-y-0 right-0 top-5 flex items-center pr-2.5 text-emerald-500/60 hover:text-bank-gold">
+                <i id="eyeAccessPass" class="fa-solid fa-eye text-xs"></i>
+              </button>
+            </div>
+
+            <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+              Подтвердить паролем
+            </button>
+          </form>
+        </div>
+
         <!-- Auto Income Management -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
@@ -603,12 +644,12 @@
               <input type="text" id="statusTargetUser" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин гражданина..." class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
               <div id="statusTargetUser-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-bank-darkest/95 border border-bank-gold/60 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto custom-scrollbar hidden"></div>
             </div>
-            <input type="text" id="statusNewValue" required placeholder="Новый статус..." class="bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-emerald-100 focus:outline-none">
+            <input type="text" id="statusNewValue" required placeholder="Новый статус..." class="bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
             <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase">Утвердить Статус</button>
           </form>
         </div>
 
-        <!-- Панель Санкций, Скрытия и Удаления Граждан (Только Казначей) -->
+        <!-- Панель Санкций, Скрытия и Удаления Граждан -->
         <div class="bg-bank-surface border-2 border-rose-900/60 rounded-3xl p-6 sm:p-8 guilloche-panel space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -863,7 +904,6 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и стройки', icon: 'fa-hammer' }
     ];
 
-    // Мгновенная инициализация профиля и эмблемы из локального кэша (0 миллисекунд)
     let currentUser = localStorage.getItem('mirobyte_active_user') || null;
     let cachedProfile = null;
     try {
@@ -885,9 +925,9 @@
       bankReserve: 5000000
     };
 
-    // Отрисовка эмблемы и правой панели сразу в нулевую миллисекунду
     renderBankEmblem();
 
+    // Защищённая предзагрузка
     if (currentUser) {
       document.getElementById('appContainer').classList.remove('hidden');
       document.getElementById('authSection').classList.add('hidden');
@@ -915,12 +955,12 @@
           `;
         }
 
+        // Кнопка Казначейства видна ТОЛЬКО если в кэше подтверждён isAdmin
         if (cachedProfile.isAdmin) {
           const admBtn = document.getElementById('tabBtn-admin');
           if (admBtn) admBtn.classList.remove('hidden');
         }
 
-        // Мгновенная отрисовка правой панели шапки (аватарка, баланс, колокольчик, шестерёнка)
         renderNavBarRightDirect(cachedProfile.username, cachedProfile.balance, cachedProfile.isAdmin, cachedProfile.avatar, 0);
       }
     } else {
@@ -947,7 +987,7 @@
         localStorage.removeItem('mirobyte_cached_emblem');
       }
 
-      // Ensure Master Admin Iosif exists
+      // Всегда гарантируем основателя Iosif
       const iosifKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif');
       if (!iosifKey) {
         db.ref('bankData/users/iosif').set({
@@ -958,6 +998,11 @@
           registeredAt: 'Основатель Банка',
           customStatus: 'Главный Казначей Банка'
         });
+      } else {
+        // Iosif всегда имеет статус isAdmin = true
+        if (!appData.users[iosifKey].isAdmin) {
+          db.ref(`bankData/users/${iosifKey}/isAdmin`).set(true);
+        }
       }
 
       document.getElementById('cloudSyncIndicator').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0';
@@ -983,6 +1028,13 @@
       return key ? appData.users[key] : null;
     }
 
+    // Проверка прав администратора
+    function isCurrentUserAdmin() {
+      if (!currentUser) return false;
+      const u = findUser(currentUser);
+      return !!(u && u.isAdmin);
+    }
+
     function handleAutocompleteFocus(e) {
       handleAutocompleteInput(e);
     }
@@ -993,11 +1045,12 @@
       const dropdown = document.getElementById(`${input.id}-dropdown`);
       if (!dropdown) return;
 
-      const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
+      const isAdmin = isCurrentUserAdmin();
       const usersList = Object.values(appData.users || {});
       
+      // Скрытые граждане (hiddenFromAll) видны в подсказках ТОЛЬКО Казначею
       const filtered = usersList.filter(u => {
-        if (!isMasterAdmin && u.hiddenFromAll) return false;
+        if (!isAdmin && u.hiddenFromAll) return false;
         if (!query) return true;
         return u.username.toLowerCase().startsWith(query) || u.username.toLowerCase().includes(query);
       });
@@ -1050,7 +1103,7 @@
     }
 
     document.addEventListener('click', (e) => {
-      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser'].forEach(id => {
+      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser', 'accessTargetUser'].forEach(id => {
         const input = document.getElementById(id);
         const dropdown = document.getElementById(`${id}-dropdown`);
         if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
@@ -1085,6 +1138,7 @@
     }
 
     function handleSaveBankEmblem() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён: требуется статус Казначея!', 'error');
       const fileInput = document.getElementById('bankEmblemFileInput');
       const file = fileInput.files[0];
       if (!file) return showToast('Пожалуйста, выберите файл изображения герба!', 'error');
@@ -1122,6 +1176,7 @@
     }
 
     function handleResetBankEmblem() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён: требуется статус Казначея!', 'error');
       db.ref('bankData/bankEmblemImage').set(null).then(() => {
         localStorage.removeItem('mirobyte_cached_emblem');
         showToast('Эмблема сброшена на оригинальный герб ฿!', 'info');
@@ -1150,7 +1205,7 @@
         return;
       }
 
-      // Сохраняем свежий профиль в кэш
+      // Сохраняем в кэш точные права доступа
       localStorage.setItem('mirobyte_cached_profile', JSON.stringify({
         username: u.username,
         balance: u.balance || 0,
@@ -1162,10 +1217,17 @@
       authSec.classList.add('hidden');
       appSec.classList.remove('hidden');
 
+      // Кнопка Казначейства видна ТОЛЬКО если пользователь является администратором
+      const admTabBtn = document.getElementById('tabBtn-admin');
       if (u.isAdmin) {
-        document.getElementById('tabBtn-admin').classList.remove('hidden');
+        admTabBtn.classList.remove('hidden');
       } else {
-        document.getElementById('tabBtn-admin').classList.add('hidden');
+        admTabBtn.classList.add('hidden');
+        // Если гражданин каким-то образом оказался на вкладке admin, принудительно возвращаем его в кошелёк
+        const adminSection = document.getElementById('tabContent-admin');
+        if (adminSection && !adminSection.classList.contains('hidden')) {
+          navigateTab('dashboard');
+        }
       }
 
       renderNavBarRight();
@@ -1173,8 +1235,10 @@
       renderLeaderboard();
       renderBanknotes();
       renderMailView();
-      renderAdminView();
-      populateIncomeTargetDropdown();
+      if (u.isAdmin) {
+        renderAdminView();
+        populateIncomeTargetDropdown();
+      }
     }
 
     function renderNavBarRightDirect(username, balance, isAdmin, avatar, unread) {
@@ -1202,7 +1266,6 @@
             ${unread > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">${unread}</span>` : ''}
           </button>
 
-          <!-- SVG Settings Button -->
           <button onclick="openSettingsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/60 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0 cursor-pointer active:scale-95" title="Настройки">
             <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -1291,10 +1354,10 @@
       const tbody = document.getElementById('leaderboardTableBody');
       tbody.innerHTML = '';
       
-      const isMasterAdmin = currentUser && currentUser.toLowerCase() === 'iosif';
+      const isAdmin = isCurrentUserAdmin();
       let usersList = Object.values(appData.users);
 
-      if (!isMasterAdmin) {
+      if (!isAdmin) {
         usersList = usersList.filter(u => !u.hiddenFromAll);
       }
 
@@ -1506,7 +1569,7 @@
                 </div>
                 <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
                   <span>${u.username}</span>
-                  ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+                  ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей"></i>' : ''}
                   ${u.isBlocked ? '<i class="fa-solid fa-lock text-[10px] text-rose-500" title="Заблокирован"></i>' : ''}
                   ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
                 </div>
@@ -1563,6 +1626,8 @@
 
     function executeTreasuryAction(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён: требуется статус Казначея!', 'error');
+
       const target = document.getElementById('treasuryTargetUser').value.trim();
       const amt = parseInt(document.getElementById('treasuryAmount').value);
       const reason = document.getElementById('treasuryReason').value.trim();
@@ -1610,6 +1675,7 @@
     }
 
     function adminQuickAction(username, val, mode) {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён: требуется статус Казначея!', 'error');
       const user = findUser(username);
       if (!user) return;
       const uKey = user.username.toLowerCase();
@@ -1625,7 +1691,7 @@
           comment: 'Быстрое начисление Казначея',
           timestamp: new Date().toLocaleString('ru-RU')
         });
-        addSystemMessage(user.username, 'Пополнение от Казначея', `Казначей Iosif начислил вам +${val} ฿.`);
+        addSystemMessage(user.username, 'Пополнение от Казначея', `Казначей начислил вам +${val} ฿.`);
         showToast(`+${val} ฿ начислено @${user.username}!`, 'success');
       } else {
         if ((user.balance || 0) <= 0) return showToast('Баланс уже 0 ฿!', 'error');
@@ -1647,7 +1713,46 @@
       db.ref().update(updates);
     }
 
+    // ========================================================
+    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ: ПРОВЕРКА АКТУАЛЬНОГО ПАРОЛЯ IOSIF
+    // ========================================================
+    function handleManageAdminAccess(e) {
+      e.preventDefault();
+      const targetUser = document.getElementById('accessTargetUser').value.trim();
+      const action = document.getElementById('accessActionSelect').value;
+      const passConfirm = document.getElementById('accessAdminPasswordConfirm').value;
+
+      if (!targetUser) return showToast('Укажите логин гражданина!', 'error');
+
+      const iosifUser = findUser('iosif');
+      if (!iosifUser) return showToast('Основатель Iosif не найден в системе!', 'error');
+
+      // Проверяем ТЕКУЩИЙ, СОХРАНЁННЫЙ В БАЗЕ пароль Iosif
+      if (iosifUser.password !== passConfirm) {
+        return showToast('Неверный текущий пароль Iosif! Доступ заблокирован.', 'error');
+      }
+
+      const target = findUser(targetUser);
+      if (!target) return showToast(`Гражданин @${targetUser} не найден!`, 'error');
+
+      const targetKey = target.username.toLowerCase();
+      if (targetKey === 'iosif' && action === 'revoke') {
+        return showToast('Нельзя забрать права у самого Iosif!', 'error');
+      }
+
+      const isGrant = (action === 'grant');
+      db.ref(`bankData/users/${targetKey}/isAdmin`).set(isGrant).then(() => {
+        document.getElementById('accessAdminPasswordConfirm').value = '';
+        const msg = isGrant 
+          ? `Гражданину @${target.username} успешно ПРЕДОСТАВЛЕН доступ в Казначейство!` 
+          : `У гражданина @${target.username} ОТОЗВАН доступ в Казначейство.`;
+        showToast(msg, isGrant ? 'success' : 'info');
+        addSystemMessage(target.username, 'Изменение прав доступа', isGrant ? 'Вам предоставлен доступ в Казначейство Банка.' : 'Ваш доступ в Казначейство был отозван.');
+      });
+    }
+
     function executeSanctionAction(action) {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён: требуется статус Казначея!', 'error');
       const targetInput = document.getElementById('sanctionTargetUser');
       const targetName = targetInput.value.trim();
       if (!targetName) return showToast('Укажите логин гражданина для применения санкций!', 'error');
@@ -1710,6 +1815,7 @@
     }
 
     function promptEditBankReserve() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       document.getElementById('inputBankReserveAmount').value = appData.bankReserve || 0;
       document.getElementById('bankReserveModal').classList.remove('hidden');
       document.getElementById('bankReserveModal').classList.add('flex');
@@ -1720,6 +1826,7 @@
     }
     function saveBankReserve(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const val = parseInt(document.getElementById('inputBankReserveAmount').value);
       if (isNaN(val) || val < 0) return showToast('Введите корректную сумму!', 'error');
       db.ref('bankData/bankReserve').set(val).then(() => {
@@ -1729,6 +1836,7 @@
     }
 
     function promptEditMoneySupply() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const usersList = Object.values(appData.users);
       const currentMass = appData.customMoneySupply !== null ? appData.customMoneySupply : usersList.reduce((s, u) => s + (u.balance || 0), 0);
       document.getElementById('inputCustomMoneySupply').value = currentMass;
@@ -1741,6 +1849,7 @@
     }
     function saveCustomMoneySupply(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const val = parseInt(document.getElementById('inputCustomMoneySupply').value);
       if (isNaN(val) || val < 0) return showToast('Введите корректную сумму!', 'error');
       db.ref('bankData/customMoneySupply').set(val).then(() => {
@@ -1749,6 +1858,7 @@
       });
     }
     function resetMoneySupplyToAuto() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       db.ref('bankData/customMoneySupply').set(null).then(() => {
         showToast('Денежная масса возвращена в авто-режим', 'info');
       });
@@ -1787,19 +1897,21 @@
           return;
         }
         const key = u.toLowerCase();
+        // ВАЖНО: Никаких прав администратора новым пользователям! Только если это логин 'iosif'
+        const isMaster = (key === 'iosif');
         db.ref(`bankData/users/${key}`).set({
           username: u,
           password: p,
-          balance: 50,
-          isAdmin: false,
+          balance: isMaster ? 10000000 : 50,
+          isAdmin: isMaster,
           registeredAt: new Date().toLocaleDateString('ru-RU'),
-          customStatus: 'Новый гражданин',
+          customStatus: isMaster ? 'Главный Казначей Банка' : 'Новый гражданин',
           isBlocked: false,
           hiddenFromAll: false
         }).then(() => {
           currentUser = u;
           localStorage.setItem('mirobyte_active_user', currentUser);
-          addSystemMessage(u, 'Открытие счёта', `Счёт успешно открыт! Вам начислено 50 ฿ стартового баланса.`);
+          addSystemMessage(u, 'Открытие счёта', `Счёт успешно открыт! Вам начислено ${isMaster ? 10000000 : 50} ฿ стартового баланса.`);
           renderCurrentView();
           showToast('Счёт открыт (+50 ฿)!', 'success');
         });
@@ -1925,6 +2037,7 @@
 
     function saveAutoIncomeConfig(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const target = document.getElementById('selectIncomeTarget').value;
       const amt = parseInt(document.getElementById('inputIncomeAmount').value);
       const inter = parseInt(document.getElementById('selectIncomeInterval').value);
@@ -1941,6 +2054,7 @@
     }
 
     function triggerManualIncomePayout() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const conf = appData.autoIncomeConfig || {};
       const target = document.getElementById('selectIncomeTarget')?.value || conf.targetUser || 'ALL';
       const amt = parseInt(document.getElementById('inputIncomeAmount')?.value) || conf.amount || 10;
@@ -1994,6 +2108,7 @@
 
     function executeStateFine(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const target = document.getElementById('fineTargetUser').value.trim();
       const amt = parseInt(document.getElementById('fineAmount').value);
       const reason = document.getElementById('fineReason').value.trim();
@@ -2030,6 +2145,7 @@
 
     function processAssignStatus(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const target = document.getElementById('statusTargetUser').value.trim();
       const st = document.getElementById('statusNewValue').value.trim();
       const user = findUser(target);
@@ -2044,6 +2160,7 @@
     }
 
     function handleSaveBanknoteImage() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
       const denom = document.getElementById('bmDenomSelect').value;
       const file = document.getElementById('bmFileInput').files[0];
       if (!file) return showToast('Выберите файл!', 'error');
@@ -2226,6 +2343,12 @@
     }
 
     function navigateTab(tab) {
+      // Строгая защита: на вкладку admin нельзя зайти, если не админ
+      if (tab === 'admin' && !isCurrentUserAdmin()) {
+        tab = 'dashboard';
+        showToast('Доступ к Казначейству ограничен!', 'error');
+      }
+
       ['dashboard', 'mail', 'leaderboard', 'banknotes', 'admin'].forEach(t => {
         const sec = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
