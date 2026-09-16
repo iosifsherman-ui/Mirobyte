@@ -183,7 +183,7 @@
           <button onclick="navigateTab('banknotes')" id="tabBtn-banknotes" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
             <i class="fa-solid fa-money-bill-wave mr-1"></i> Купюры Байти
           </button>
-          <!-- Кнопка Казначейства: ПО УМОЛЧАНИЮ ВСЕГДА СКРЫТА -->
+          <!-- Кнопка Казначейства -->
           <button onclick="navigateTab('admin')" id="tabBtn-admin" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap">
             <i class="fa-solid fa-crown mr-1"></i> Казначейство
           </button>
@@ -197,7 +197,8 @@
       <!-- TAB 1: DASHBOARD -->
       <section id="tabContent-dashboard" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#0e3124] via-[#081f16] to-[#040d09] border border-bank-gold/50 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[260px]">
+          <!-- Citizen Card with Dynamic Styling -->
+          <div id="citizenMainCard" class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-bank-gold/50 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[260px] transition-all duration-300">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2.5">
                 <span class="px-3 py-1 bg-bank-gold/15 border border-bank-gold/40 text-bank-gold text-[10px] uppercase font-royal tracking-widest rounded-full font-bold">
@@ -440,7 +441,7 @@
               <i class="fa-solid fa-crown"></i> Казначейство Банка
             </div>
             <h2 class="text-2xl font-royal font-black text-white">Казначейство Банка Миробайт</h2>
-            <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Резерв Казны, управление денежной массой и безопасность</p>
+            <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Резерв Казны, дизайн карточек и управление системой</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="openBanknoteManagerModal()" class="px-4 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md">
@@ -512,6 +513,45 @@
           </form>
         </div>
 
+        <!-- NEW: УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК (ДЛЯ КАЗНАЧЕЯ) -->
+        <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
+          <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
+            <div>
+              <h3 class="font-royal text-base sm:text-lg font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-id-card-clip text-bank-gold"></i> Дизайн и Варианты Карточек Граждан
+              </h3>
+              <p class="text-xs text-emerald-400/70 mt-0.5">Создавайте стили и темы оформления, которые граждане смогут выбирать в своих настройках.</p>
+            </div>
+          </div>
+
+          <form onsubmit="handleCreateCardDesign(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Название варианта карты</label>
+              <input type="text" id="newDesignName" required placeholder="Например: Рубиновый Резерв" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Цветовая гамма карты</label>
+              <select id="newDesignTheme" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 font-semibold focus:outline-none">
+                <option value="emerald">Изумрудная Классика (Королевский зелёный)</option>
+                <option value="ruby">Имперский Рубин (Глубокий винно-красный)</option>
+                <option value="sapphire">Королевский Сапфир (Благородный тёмно-синий)</option>
+                <option value="obsidian">Обсидиановое Золото (Чёрный бархат и золото)</option>
+                <option value="cyber">Неоновый Киберпанк (Тёмный бирюзово-фиолетовый)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+              <i class="fa-solid fa-plus mr-1"></i> Добавить стиль
+            </button>
+          </form>
+
+          <div class="pt-3">
+            <h4 class="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">Существующие варианты карточек:</h4>
+            <div id="treasuryCardDesignsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
+        </div>
+
         <!-- Citizens Registry Quick Operations -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel">
           <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2 mb-4">
@@ -533,7 +573,7 @@
           </div>
         </div>
 
-        <!-- БЛОК БЕЗОПАСНОСТИ: ДЕЛЕГИРОВАНИЕ ДОСТУПА В КАЗНАЧЕЙСТВО (ТОЛЬКО С ТЕКУЩИМ ПАРОЛЕМ IOSIF) -->
+        <!-- БЛОК БЕЗОПАСНОСТИ: ДЕЛЕГИРОВАНИЕ ДОСТУПА В КАЗНАЧЕЙСТВО (АКТУАЛЬНЫЙ ПАРОЛЬ ВЛАДЕЛЬЦА) -->
         <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -541,7 +581,7 @@
                 <i class="fa-solid fa-key text-bank-gold"></i> Делегирование Полномочий Казначея
               </h3>
               <p class="text-xs text-emerald-400/70 mt-0.5">
-                Выдача или отзыв доступа к Казначейству. Доступ разрешён строго при подтверждении текущего пароля Iosif.
+                Выдача или отзыв доступа к Казначейству. Доступ разрешён строго при подтверждении текущего пароля Владельца.
               </p>
             </div>
           </div>
@@ -562,8 +602,8 @@
             </div>
 
             <div class="relative">
-              <label class="block text-[11px] font-semibold text-bank-gold uppercase mb-1">Твой текущий пароль (Iosif)</label>
-              <input type="password" id="accessAdminPasswordConfirm" required placeholder="Текущий пароль Iosif..." class="w-full bg-bank-darkest border border-bank-gold/70 rounded-xl py-2 px-3 pr-8 text-xs text-emerald-100 focus:outline-none">
+              <label class="block text-[11px] font-semibold text-bank-gold uppercase mb-1">Твой текущий пароль Владельца</label>
+              <input type="password" id="accessAdminPasswordConfirm" required placeholder="Твой пароль..." class="w-full bg-bank-darkest border border-bank-gold/70 rounded-xl py-2 px-3 pr-8 text-xs text-emerald-100 focus:outline-none">
               <button type="button" onclick="togglePassVisibility('accessAdminPasswordConfirm', 'eyeAccessPass')" class="absolute inset-y-0 right-0 top-5 flex items-center pr-2.5 text-emerald-500/60 hover:text-bank-gold">
                 <i id="eyeAccessPass" class="fa-solid fa-eye text-xs"></i>
               </button>
@@ -685,7 +725,7 @@
             </button>
           </div>
           <p class="text-[10px] text-emerald-500/70 italic">
-            * Скрытый гражданин полностью невидим в Рейтинге и подсказках для всех остальных. Видеть его в реестре может только Казначей Iosif.
+            * Скрытый гражданин полностью невидим в Рейтинге и подсказках для всех остальных. Видеть его в реестре может только Казначей.
           </p>
         </div>
 
@@ -724,7 +764,7 @@
 
   <!-- MODAL: Settings -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
-    <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative guilloche-gold max-h-[90vh] overflow-y-auto custom-scrollbar space-y-6">
+    <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative guilloche-gold max-h-[90vh] overflow-y-auto custom-scrollbar space-y-5">
       <button onclick="closeSettingsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center">✕</button>
       <div class="flex items-center space-x-3 border-b border-bank-border pb-3">
         <h4 class="font-royal text-lg font-bold text-bank-gold">⚙️ Настройки Гражданина</h4>
@@ -774,7 +814,32 @@
         <button onclick="processPasswordChange(event)" class="w-full py-2 bg-bank-surface hover:bg-bank-card border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs uppercase">Сохранить новый пароль</button>
       </div>
 
+      <!-- КНОПКА КАСТОМИЗАЦИИ КАРТОЧКИ (ПРЯМО НАД КНОПКОЙ ВЫХОДА) -->
+      <div class="p-4 rounded-2xl bg-bank-darkest border border-bank-gold/60 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-bank-gold flex items-center gap-1.5">
+            <i class="fa-solid fa-paint-roller text-sm"></i> Кастомизация Карточки
+          </div>
+          <div class="text-[10px] text-emerald-400/70">Выбор цвета и темы личного счёта</div>
+        </div>
+        <button onclick="openCardCustomizerModal()" class="px-3.5 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+          Выбрать
+        </button>
+      </div>
+
       <button onclick="handleLogout()" class="w-full py-2.5 bg-rose-950/40 border border-rose-800/50 text-rose-300 rounded-xl text-xs font-bold uppercase">Выйти из Счёта</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Card Customizer for Citizens -->
+  <div id="cardCustomizerModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-md w-full p-6 shadow-2xl relative guilloche-gold space-y-4">
+      <button onclick="closeCardCustomizerModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest text-emerald-400 hover:text-white flex items-center justify-center">✕</button>
+      <div>
+        <h4 class="font-royal text-base font-bold text-bank-gold">🎨 Выбор Дизайна Карточки</h4>
+        <p class="text-xs text-emerald-400/70 mt-0.5">Выберите желаемый вариант оформления счёта:</p>
+      </div>
+      <div id="citizenAvailableDesignsGrid" class="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar pr-1"></div>
     </div>
   </div>
 
@@ -904,6 +969,15 @@
       { value: 1000, titleRu: 'ТЫСЯЧА БАЙТЫ', titleEn: 'ONE THOUSAND BAITY', motif: 'Мастер в папахе & Шерманстрой', description: 'Высший номинал. Государственная мощь, созидание и стройки', icon: 'fa-hammer' }
     ];
 
+    // Словарь CSS-градиентов для тем оформления карточек
+    const CARD_THEMES = {
+      emerald: 'bg-gradient-to-br from-[#0e3124] via-[#081f16] to-[#040d09]',
+      ruby: 'bg-gradient-to-br from-[#4a0e17] via-[#24060b] to-[#120205]',
+      sapphire: 'bg-gradient-to-br from-[#0c2340] via-[#051124] to-[#020812]',
+      obsidian: 'bg-gradient-to-br from-[#1c1917] via-[#0c0a09] to-[#000000]',
+      cyber: 'bg-gradient-to-br from-[#1e1b4b] via-[#0f172a] to-[#06202a]'
+    };
+
     let currentUser = localStorage.getItem('mirobyte_active_user') || null;
     let cachedProfile = null;
     try {
@@ -919,6 +993,7 @@
       mailBox: [],
       messages: [],
       banknoteImages: {},
+      cardDesigns: {},
       bankEmblemImage: localStorage.getItem('mirobyte_cached_emblem') || null,
       autoIncomeConfig: { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 },
       customMoneySupply: null,
@@ -927,7 +1002,7 @@
 
     renderBankEmblem();
 
-    // Защищённая предзагрузка
+    // Защищённая мгновенная предзагрузка
     if (currentUser) {
       document.getElementById('appContainer').classList.remove('hidden');
       document.getElementById('authSection').classList.add('hidden');
@@ -945,6 +1020,8 @@
         const status = document.getElementById('cardCustomStatus');
         if (status) status.innerText = `Статус: ${cachedProfile.customStatus || 'Полноправный гражданин'}`;
 
+        applyCardThemeToDOM(cachedProfile.cardTheme || 'emerald');
+
         const avatarBox = document.getElementById('cardAvatarContainer');
         if (avatarBox && cachedProfile.avatar) {
           avatarBox.innerHTML = `
@@ -955,7 +1032,6 @@
           `;
         }
 
-        // Кнопка Казначейства видна ТОЛЬКО если в кэше подтверждён isAdmin
         if (cachedProfile.isAdmin) {
           const admBtn = document.getElementById('tabBtn-admin');
           if (admBtn) admBtn.classList.remove('hidden');
@@ -976,6 +1052,7 @@
       appData.mailBox = val.mailBox || [];
       appData.messages = val.messages || [];
       appData.banknoteImages = val.banknoteImages || {};
+      appData.cardDesigns = val.cardDesigns || {};
       appData.bankEmblemImage = val.bankEmblemImage || null;
       appData.autoIncomeConfig = val.autoIncomeConfig || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 };
       appData.customMoneySupply = val.customMoneySupply !== undefined ? val.customMoneySupply : null;
@@ -987,21 +1064,30 @@
         localStorage.removeItem('mirobyte_cached_emblem');
       }
 
-      // Всегда гарантируем основателя Iosif
-      const iosifKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif');
-      if (!iosifKey) {
-        db.ref('bankData/users/iosif').set({
-          username: 'Iosif',
-          password: '20102010',
-          balance: 10000000,
-          isAdmin: true,
-          registeredAt: 'Основатель Банка',
-          customStatus: 'Главный Казначей Банка'
-        });
-      } else {
-        // Iosif всегда имеет статус isAdmin = true
-        if (!appData.users[iosifKey].isAdmin) {
-          db.ref(`bankData/users/${iosifKey}/isAdmin`).set(true);
+      // ========================================================
+      // ПРИВЯЗКА ФЛАГА ВЛАДЕЛЬЦА (ISOWNER: TRUE)
+      // ========================================================
+      let ownerKey = Object.keys(appData.users).find(k => appData.users[k].isOwner === true);
+      
+      // Если флага ещё нет ни у кого в базе — первично привязываем его к аккаунту iosif или к текущему пользователю
+      if (!ownerKey) {
+        const defaultKey = Object.keys(appData.users).find(k => k.toLowerCase() === 'iosif') || (currentUser ? currentUser.toLowerCase() : null);
+        if (defaultKey && appData.users[defaultKey]) {
+          ownerKey = defaultKey;
+          db.ref(`bankData/users/${defaultKey}/isOwner`).set(true);
+          db.ref(`bankData/users/${defaultKey}/isAdmin`).set(true);
+        } else if (!Object.keys(appData.users).length) {
+          // Если база полностью пустая
+          ownerKey = 'iosif';
+          db.ref('bankData/users/iosif').set({
+            username: 'Iosif',
+            password: '20102010',
+            balance: 10000000,
+            isAdmin: true,
+            isOwner: true,
+            registeredAt: 'Основатель Банка',
+            customStatus: 'Главный Казначей Банка'
+          });
         }
       }
 
@@ -1028,11 +1114,17 @@
       return key ? appData.users[key] : null;
     }
 
-    // Проверка прав администратора
+    // Нахождение главного Владельца системы (isOwner: true)
+    function getSystemOwner() {
+      const key = Object.keys(appData.users).find(k => appData.users[k].isOwner === true);
+      return key ? appData.users[key] : null;
+    }
+
+    // Проверка прав администратора / казначея
     function isCurrentUserAdmin() {
       if (!currentUser) return false;
       const u = findUser(currentUser);
-      return !!(u && u.isAdmin);
+      return !!(u && (u.isAdmin || u.isOwner));
     }
 
     function handleAutocompleteFocus(e) {
@@ -1048,7 +1140,6 @@
       const isAdmin = isCurrentUserAdmin();
       const usersList = Object.values(appData.users || {});
       
-      // Скрытые граждане (hiddenFromAll) видны в подсказках ТОЛЬКО Казначею
       const filtered = usersList.filter(u => {
         if (!isAdmin && u.hiddenFromAll) return false;
         if (!query) return true;
@@ -1079,7 +1170,7 @@
               <div class="font-royal font-bold text-xs text-white flex items-center gap-1">
                 <span>${u.username}</span>
                 ${isCurrent ? '<span class="text-[9px] px-1 bg-emerald-800 text-white rounded">Вы</span>' : ''}
-                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[9px] text-bank-gold"></i>' : ''}
+                ${u.isOwner ? '<i class="fa-solid fa-crown text-[9px] text-yellow-400" title="Владелец Банка"></i>' : (u.isAdmin ? '<i class="fa-solid fa-crown text-[9px] text-bank-gold" title="Казначей"></i>' : '')}
                 ${u.isBlocked ? '<i class="fa-solid fa-lock text-[9px] text-rose-500" title="Заблокирован"></i>' : ''}
                 ${u.hiddenFromAll ? '<i class="fa-solid fa-eye-slash text-[9px] text-indigo-400" title="Скрыт"></i>' : ''}
               </div>
@@ -1183,6 +1274,16 @@
       });
     }
 
+    function applyCardThemeToDOM(themeKey) {
+      const card = document.getElementById('citizenMainCard');
+      if (!card) return;
+      Object.values(CARD_THEMES).forEach(cls => {
+        cls.split(' ').forEach(c => card.classList.remove(c));
+      });
+      const targetClass = CARD_THEMES[themeKey] || CARD_THEMES.emerald;
+      targetClass.split(' ').forEach(c => card.classList.add(c));
+    }
+
     function renderCurrentView() {
       const authSec = document.getElementById('authSection');
       const appSec = document.getElementById('appContainer');
@@ -1205,25 +1306,27 @@
         return;
       }
 
-      // Сохраняем в кэш точные права доступа
+      const isAdmin = !!(u.isAdmin || u.isOwner);
+
+      // Сохраняем свежий профиль в кэш
       localStorage.setItem('mirobyte_cached_profile', JSON.stringify({
         username: u.username,
         balance: u.balance || 0,
-        isAdmin: !!u.isAdmin,
+        isAdmin: isAdmin,
+        isOwner: !!u.isOwner,
         avatar: u.avatar || '',
+        cardTheme: u.cardTheme || 'emerald',
         customStatus: u.customStatus || 'Полноправный гражданин'
       }));
 
       authSec.classList.add('hidden');
       appSec.classList.remove('hidden');
 
-      // Кнопка Казначейства видна ТОЛЬКО если пользователь является администратором
       const admTabBtn = document.getElementById('tabBtn-admin');
-      if (u.isAdmin) {
+      if (isAdmin) {
         admTabBtn.classList.remove('hidden');
       } else {
         admTabBtn.classList.add('hidden');
-        // Если гражданин каким-то образом оказался на вкладке admin, принудительно возвращаем его в кошелёк
         const adminSection = document.getElementById('tabContent-admin');
         if (adminSection && !adminSection.classList.contains('hidden')) {
           navigateTab('dashboard');
@@ -1235,9 +1338,10 @@
       renderLeaderboard();
       renderBanknotes();
       renderMailView();
-      if (u.isAdmin) {
+      if (isAdmin) {
         renderAdminView();
         populateIncomeTargetDropdown();
+        renderTreasuryCardDesigns();
       }
     }
 
@@ -1285,15 +1389,17 @@
       const u = findUser(currentUser);
       if (!u) return;
       const unread = getUnreadMessagesCount(u.username);
-      renderNavBarRightDirect(u.username, u.balance, u.isAdmin, u.avatar, unread);
+      renderNavBarRightDirect(u.username, u.balance, isCurrentUserAdmin(), u.avatar, unread);
     }
 
     function renderDashboard(u) {
       document.getElementById('userBalanceDisplay').innerText = (u.balance || 0).toLocaleString();
       document.getElementById('cardHolderText').innerText = u.username.toUpperCase();
       document.getElementById('cardRegisteredText').innerText = u.registeredAt || '01.01.2026';
-      document.getElementById('cardRoleBadge').innerText = u.isAdmin ? 'Казначей / Владелец' : 'Гражданин';
+      document.getElementById('cardRoleBadge').innerText = u.isOwner ? 'Владелец Банка' : (u.isAdmin ? 'Казначей' : 'Гражданин');
       document.getElementById('cardCustomStatus').innerText = `Статус: ${u.customStatus || 'Полноправный гражданин'}`;
+
+      applyCardThemeToDOM(u.cardTheme || 'emerald');
 
       const avatarContainer = document.getElementById('cardAvatarContainer');
       if (u.avatar) {
@@ -1388,7 +1494,7 @@
               <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
                 <span>${u.username}</span>
                 ${isMe ? '<span class="text-[9px] px-1.5 py-0.2 bg-emerald-700 text-white rounded">Вы</span>' : ''}
-                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей Банка"></i>' : ''}
+                ${u.isOwner ? '<i class="fa-solid fa-crown text-[10px] text-yellow-400" title="Владелец Банка"></i>' : (u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей"></i>' : '')}
                 ${u.isBlocked ? '<i class="fa-solid fa-lock text-[10px] text-rose-500" title="Заблокирован"></i>' : ''}
                 ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
               </div>
@@ -1569,13 +1675,13 @@
                 </div>
                 <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
                   <span>${u.username}</span>
-                  ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей"></i>' : ''}
+                  ${u.isOwner ? '<i class="fa-solid fa-crown text-[10px] text-yellow-400" title="Владелец Банка"></i>' : (u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей"></i>' : '')}
                   ${u.isBlocked ? '<i class="fa-solid fa-lock text-[10px] text-rose-500" title="Заблокирован"></i>' : ''}
                   ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
                 </div>
               </div>
             </td>
-            <td class="py-2.5 px-3 text-[10px]">${u.isAdmin ? '<span class="text-bank-gold font-bold">Казначей</span>' : '<span class="text-emerald-400">Гражданин</span>'}</td>
+            <td class="py-2.5 px-3 text-[10px]">${u.isOwner ? '<span class="text-yellow-400 font-bold">Владелец</span>' : (u.isAdmin ? '<span class="text-bank-gold font-bold">Казначей</span>' : '<span class="text-emerald-400">Гражданин</span>')}</td>
             <td class="py-2.5 px-3 font-mono font-bold text-bank-gold">${(u.balance || 0).toLocaleString()} ฿</td>
             <td class="py-2.5 px-3 text-[10px] text-emerald-500">${u.registeredAt || '—'}</td>
             <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
@@ -1588,6 +1694,139 @@
           tbody.appendChild(tr);
         });
       }
+    }
+
+    // ========================================================
+    // ФУНКЦИИ КАСТОМИЗАЦИИ КАРТОЧЕК
+    // ========================================================
+    function handleCreateCardDesign(e) {
+      e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
+
+      const name = document.getElementById('newDesignName').value.trim();
+      const theme = document.getElementById('newDesignTheme').value;
+      if (!name) return showToast('Введите название стиля!', 'error');
+
+      const designId = 'design_' + Date.now();
+      db.ref(`bankData/cardDesigns/${designId}`).set({
+        id: designId,
+        name: name,
+        theme: theme,
+        createdAt: Date.now()
+      }).then(() => {
+        document.getElementById('newDesignName').value = '';
+        showToast(`Стиль «${name}» успешно добавлен в систему!`, 'success');
+      });
+    }
+
+    function handleDeleteCardDesign(designId) {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
+      db.ref(`bankData/cardDesigns/${designId}`).remove().then(() => {
+        showToast('Вариант стиля удалён!', 'info');
+      });
+    }
+
+    function renderTreasuryCardDesigns() {
+      const container = document.getElementById('treasuryCardDesignsList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Базовый дефолтный стиль
+      const defaultBox = document.createElement('div');
+      defaultBox.className = 'p-3 rounded-2xl bg-bank-darkest border border-bank-border/80 flex items-center justify-between';
+      defaultBox.innerHTML = `
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl ${CARD_THEMES.emerald} border border-bank-gold/40 flex-shrink-0"></div>
+          <div>
+            <div class="text-xs font-bold text-white">Изумрудная Классика</div>
+            <div class="text-[10px] text-emerald-400/70">Стандартный гос. стиль</div>
+          </div>
+        </div>
+        <span class="text-[10px] font-mono text-bank-gold">Базовый</span>
+      `;
+      container.appendChild(defaultBox);
+
+      const customList = Object.values(appData.cardDesigns || {});
+      customList.forEach(d => {
+        const bgClass = CARD_THEMES[d.theme] || CARD_THEMES.emerald;
+        const box = document.createElement('div');
+        box.className = 'p-3 rounded-2xl bg-bank-darkest border border-bank-border/80 flex items-center justify-between';
+        box.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl ${bgClass} border border-bank-gold/40 flex-shrink-0"></div>
+            <div>
+              <div class="text-xs font-bold text-white">${d.name}</div>
+              <div class="text-[10px] text-emerald-400/70 font-mono">${d.theme}</div>
+            </div>
+          </div>
+          <button onclick="handleDeleteCardDesign('${d.id}')" class="text-rose-400 hover:text-white p-1 text-xs" title="Удалить стиль">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    function openCardCustomizerModal() {
+      const grid = document.getElementById('citizenAvailableDesignsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const u = findUser(currentUser);
+      const currentTheme = (u && u.cardTheme) || 'emerald';
+
+      // 1. Дефолтный стиль
+      addDesignOptionToModal(grid, 'Изумрудная Классика', 'emerald', currentTheme === 'emerald');
+
+      // 2. Все кастомные стили, добавленные Казначеем
+      const customList = Object.values(appData.cardDesigns || {});
+      customList.forEach(d => {
+        addDesignOptionToModal(grid, d.name, d.theme, currentTheme === d.theme);
+      });
+
+      document.getElementById('cardCustomizerModal').classList.remove('hidden');
+      document.getElementById('cardCustomizerModal').classList.add('flex');
+    }
+
+    function addDesignOptionToModal(container, name, themeKey, isSelected) {
+      const bgClass = CARD_THEMES[themeKey] || CARD_THEMES.emerald;
+      const item = document.createElement('div');
+      item.className = `p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+        isSelected ? 'bg-bank-darkest border-bank-gold ring-1 ring-bank-gold shadow-lg' : 'bg-bank-darkest/70 border-bank-border/80 hover:border-bank-gold/40'
+      }`;
+      item.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-7 rounded-lg ${bgClass} border border-bank-gold/50 shadow-sm flex-shrink-0"></div>
+          <div>
+            <div class="text-xs font-bold text-white">${name}</div>
+            <div class="text-[10px] text-emerald-400/70">${isSelected ? 'Текущий активный стиль' : 'Нажмите, чтобы применить'}</div>
+          </div>
+        </div>
+        <div>
+          ${isSelected ? '<i class="fa-solid fa-circle-check text-bank-gold text-base"></i>' : '<button class="px-2.5 py-1 bg-bank-surface border border-emerald-500/40 text-emerald-300 rounded-lg text-[10px] font-bold">Выбрать</button>'}
+        </div>
+      `;
+      item.onclick = () => selectCardTheme(themeKey, name);
+      container.appendChild(item);
+    }
+
+    function selectCardTheme(themeKey, themeName) {
+      if (!currentUser) return;
+      const uKey = currentUser.toLowerCase();
+      db.ref(`bankData/users/${uKey}/cardTheme`).set(themeKey).then(() => {
+        applyCardThemeToDOM(themeKey);
+        if (cachedProfile) {
+          cachedProfile.cardTheme = themeKey;
+          localStorage.setItem('mirobyte_cached_profile', JSON.stringify(cachedProfile));
+        }
+        closeCardCustomizerModal();
+        showToast(`Стиль карточки изменён на «${themeName}»!`, 'success');
+      });
+    }
+
+    function closeCardCustomizerModal() {
+      document.getElementById('cardCustomizerModal').classList.add('hidden');
+      document.getElementById('cardCustomizerModal').classList.remove('flex');
     }
 
     function populateIncomeTargetDropdown() {
@@ -1714,7 +1953,7 @@
     }
 
     // ========================================================
-    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ: ПРОВЕРКА АКТУАЛЬНОГО ПАРОЛЯ IOSIF
+    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ: ПРОВЕРКА АКТУАЛЬНОГО ПАРОЛЯ ВЛАДЕЛЬЦА
     // ========================================================
     function handleManageAdminAccess(e) {
       e.preventDefault();
@@ -1724,20 +1963,21 @@
 
       if (!targetUser) return showToast('Укажите логин гражданина!', 'error');
 
-      const iosifUser = findUser('iosif');
-      if (!iosifUser) return showToast('Основатель Iosif не найден в системе!', 'error');
+      // Находим актуальный объект владельца системы (isOwner: true)
+      const ownerUser = getSystemOwner();
+      if (!ownerUser) return showToast('Владелец Банка не найден в системе!', 'error');
 
-      // Проверяем ТЕКУЩИЙ, СОХРАНЁННЫЙ В БАЗЕ пароль Iosif
-      if (iosifUser.password !== passConfirm) {
-        return showToast('Неверный текущий пароль Iosif! Доступ заблокирован.', 'error');
+      // Проверяем ТЕКУЩИЙ пароль владельца под любым его ником
+      if (ownerUser.password !== passConfirm) {
+        return showToast('Неверный текущий пароль Владельца Банка! Доступ заблокирован.', 'error');
       }
 
       const target = findUser(targetUser);
       if (!target) return showToast(`Гражданин @${targetUser} не найден!`, 'error');
 
       const targetKey = target.username.toLowerCase();
-      if (targetKey === 'iosif' && action === 'revoke') {
-        return showToast('Нельзя забрать права у самого Iosif!', 'error');
+      if (target.isOwner && action === 'revoke') {
+        return showToast('Нельзя забрать права у самого Владельца Банка!', 'error');
       }
 
       const isGrant = (action === 'grant');
@@ -1760,9 +2000,9 @@
       const user = findUser(targetName);
       if (!user) return showToast(`Гражданин @${targetName} не найден!`, 'error');
 
-      const uKey = user.username.toLowerCase();
-      if (uKey === 'iosif') return showToast('Нельзя применять санкции к Главному Казначею!', 'error');
+      if (user.isOwner) return showToast('Нельзя применять санкции к Создателю / Владельцу Банка!', 'error');
 
+      const uKey = user.username.toLowerCase();
       const updates = {};
       const txs = appData.transactions || [];
 
@@ -1897,21 +2137,23 @@
           return;
         }
         const key = u.toLowerCase();
-        // ВАЖНО: Никаких прав администратора новым пользователям! Только если это логин 'iosif'
-        const isMaster = (key === 'iosif');
+        
+        // Новому пользователю НИКОГДА не даются права Владельца или Казначея
         db.ref(`bankData/users/${key}`).set({
           username: u,
           password: p,
-          balance: isMaster ? 10000000 : 50,
-          isAdmin: isMaster,
+          balance: 50,
+          isAdmin: false,
+          isOwner: false,
           registeredAt: new Date().toLocaleDateString('ru-RU'),
-          customStatus: isMaster ? 'Главный Казначей Банка' : 'Новый гражданин',
+          customStatus: 'Новый гражданин',
+          cardTheme: 'emerald',
           isBlocked: false,
           hiddenFromAll: false
         }).then(() => {
           currentUser = u;
           localStorage.setItem('mirobyte_active_user', currentUser);
-          addSystemMessage(u, 'Открытие счёта', `Счёт успешно открыт! Вам начислено ${isMaster ? 10000000 : 50} ฿ стартового баланса.`);
+          addSystemMessage(u, 'Открытие счёта', `Счёт успешно открыт! Вам начислено 50 ฿ стартового баланса.`);
           renderCurrentView();
           showToast('Счёт открыт (+50 ฿)!', 'success');
         });
@@ -2068,7 +2310,7 @@
           addSystemMessage(appData.users[k].username, 'Регулярный доход', `Вам начислен регулярный доход в размере +${amt} ฿.`);
         });
         txs.unshift({
-          from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО (Iosif)',
+          from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
           to: 'ВСЕМ ГРАЖДАНАМ',
           amount: amt,
           comment: 'Выплата регулярного дохода',
@@ -2081,7 +2323,7 @@
         const uKey = user.username.toLowerCase();
         updates[`bankData/users/${uKey}/balance`] = (user.balance || 0) + amt;
         txs.unshift({
-          from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО (Iosif)',
+          from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
           to: user.username,
           amount: amt,
           comment: 'Индивидуальная выплата регулярного дохода',
@@ -2200,6 +2442,7 @@
       const oldKey = currentUser.toLowerCase();
       const newKey = newNick.toLowerCase();
 
+      // Сохраняем все системные флаги (включая isOwner, isAdmin, cardTheme)
       const newObj = { ...u, username: newNick, balance: u.balance - 150 };
       const updates = {};
       updates[`bankData/users/${newKey}`] = newObj;
@@ -2343,7 +2586,6 @@
     }
 
     function navigateTab(tab) {
-      // Строгая защита: на вкладку admin нельзя зайти, если не админ
       if (tab === 'admin' && !isCurrentUserAdmin()) {
         tab = 'dashboard';
         showToast('Доступ к Казначейству ограничен!', 'error');
