@@ -89,7 +89,9 @@
   <header class="border-b border-bank-border bg-bank-darkest/95 backdrop-blur-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
       <div class="flex items-center space-x-2.5 cursor-pointer group flex-shrink min-w-0" onclick="navigateTab('dashboard')">
-        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ring-2 ring-bank-gold/60 p-0.5 bg-black flex-shrink-0 flex items-center justify-center shadow-lg shadow-bank-gold/20 group-hover:ring-bank-gold transition-all">
+        
+        <!-- Dynamic Emblem Container -->
+        <div id="bankEmblemContainer" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ring-2 ring-bank-gold/60 p-0.5 bg-black flex-shrink-0 flex items-center justify-center shadow-lg shadow-bank-gold/20 group-hover:ring-bank-gold transition-all overflow-hidden">
           <svg viewBox="0 0 100 100" class="w-full h-full">
             <circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/>
             <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/>
@@ -98,6 +100,7 @@
             <text x="50" y="56" font-family="'Cinzel', serif" font-size="20" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text>
           </svg>
         </div>
+
         <div class="truncate">
           <div class="font-royal text-sm sm:text-lg font-black tracking-wider gold-gradient-text truncate">BANK OF MIROBYTE</div>
           <div class="text-[9px] sm:text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
@@ -114,6 +117,7 @@
 
   <canvas id="avatarCanvas" class="hidden"></canvas>
   <canvas id="banknoteCanvas" class="hidden"></canvas>
+  <canvas id="emblemCanvas" class="hidden"></canvas>
   <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarSelected(event)">
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
@@ -425,6 +429,8 @@
 
       <!-- TAB 5: TREASURY (ADMIN IOSIF ONLY) -->
       <section id="tabContent-admin" class="hidden space-y-6">
+        
+        <!-- Top Banner with Buttons: Дизайн Купюр & Эмблема Банка -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bank-gold/20 text-bank-gold text-[10px] font-bold uppercase border border-bank-gold/40 mb-2">
@@ -433,9 +439,12 @@
             <h2 class="text-2xl font-royal font-black text-white">Казначейство Банка Миробайт</h2>
             <p class="text-xs text-emerald-300/80 mt-1">Эмиссия, Казна Банка, управление денежной массой и выплаты</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <button onclick="openBanknoteManagerModal()" class="px-4 py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md">
               <i class="fa-solid fa-palette mr-1"></i> Дизайн Купюр
+            </button>
+            <button onclick="scrollToEmblemManager()" class="px-4 py-2 bg-bank-darkest hover:bg-bank-card border border-bank-gold/60 text-bank-gold font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-colors">
+              <i class="fa-solid fa-shield-halved mr-1"></i> Эмблема Банка
             </button>
           </div>
         </div>
@@ -523,29 +532,46 @@
           </div>
         </div>
 
-        <!-- Auto Income Management -->
+        <!-- Auto Income Management (Поддержка выплат как ВСЕМ, так и ОТДЕЛЬНЫМ гражданам) -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
             <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
               <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> Автоматический Регулярный Доход
             </h3>
-            <span id="autoIncomeStatusBadge" class="px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono font-bold">10 ฿ / 24ч</span>
+            <span id="autoIncomeStatusBadge" class="px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono font-bold">10 ฿ / 24ч (Всем)</span>
           </div>
-          <form onsubmit="saveAutoIncomeConfig(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Сумма (฿)</label>
-              <input type="number" id="inputIncomeAmount" min="1" required placeholder="10" class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs font-bold text-emerald-100">
+
+          <form onsubmit="saveAutoIncomeConfig(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Получатель дохода</label>
+                <select id="selectIncomeTarget" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs font-semibold text-emerald-100 focus:outline-none">
+                  <option value="ALL" selected>⭐ Все граждане Банка</option>
+                  <!-- Динамически заполняются логины граждан -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Сумма выплаты (฿)</label>
+                <input type="number" id="inputIncomeAmount" min="1" required placeholder="10" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs font-bold text-emerald-100 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Интервал начисления</label>
+                <select id="selectIncomeInterval" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs font-semibold text-emerald-100 focus:outline-none">
+                  <option value="60">Каждый 1 час</option>
+                  <option value="1440" selected>Каждые 24 часа</option>
+                  <option value="10080">Каждые 7 дней</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Интервал</label>
-              <select id="selectIncomeInterval" class="w-full bg-bank-darkest border border-bank-border rounded-xl py-2 px-3 text-xs font-semibold text-emerald-100">
-                <option value="60">1 час</option>
-                <option value="1440" selected>24 часа</option>
-                <option value="10080">7 дней</option>
-              </select>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> Сохранить настройки дохода
+              </button>
+              <button type="button" onclick="triggerManualIncomePayout()" class="w-full py-2.5 bg-bank-darkest hover:bg-bank-card border border-bank-gold/60 text-bank-gold font-royal font-bold rounded-xl text-xs uppercase transition-all shadow-md">
+                <i class="fa-solid fa-bolt mr-1"></i> Выплатить сейчас выбранным
+              </button>
             </div>
-            <button type="submit" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-emerald-950 font-royal font-bold rounded-xl text-xs uppercase">Сохранить</button>
-            <button type="button" onclick="triggerManualInstantPayout()" class="w-full py-2 bg-bank-darkest border border-bank-gold/60 text-bank-gold font-royal font-bold rounded-xl text-xs uppercase">Выплатить всем сейчас</button>
           </form>
         </div>
 
@@ -574,6 +600,38 @@
             <button type="submit" class="w-full py-2 bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold rounded-xl text-xs uppercase">Утвердить Статус</button>
           </form>
         </div>
+
+        <!-- NEW SECTION: Эмблема Банка Миробайт (в самом низу Казначейства) -->
+        <div id="emblemManagerSection" class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
+          <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
+            <div>
+              <h3 class="font-royal text-lg font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-bank-gold"></i> Государственная Эмблема Банка
+              </h3>
+              <p class="text-xs text-emerald-400/70 mt-0.5">Управление главным гербом Банка Миробайт в шапке сайта</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl border border-bank-gold/60 bg-black flex items-center justify-center overflow-hidden flex-shrink-0" id="currentEmblemPreviewSmall">
+              <!-- Текущая миниатюра -->
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Загрузить новый герб / эмблему (PNG, JPG)</label>
+              <input type="file" id="bankEmblemFileInput" accept="image/*" class="w-full text-xs text-emerald-300 bg-bank-darkest border border-bank-border rounded-xl p-2 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-bank-gold file:text-black hover:file:bg-yellow-500 cursor-pointer">
+              <p class="text-[10px] text-emerald-500/70 mt-1">Изображение автоматически сжимается и транслируется в шапку всем гражданам.</p>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button type="button" onclick="handleSaveBankEmblem()" class="w-full py-2.5 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+                <i class="fa-solid fa-upload mr-1"></i> Сохранить герб
+              </button>
+              <button type="button" onclick="handleResetBankEmblem()" class="w-full py-2 bg-bank-darkest hover:bg-rose-950/40 border border-rose-800/40 text-rose-300 hover:text-white font-semibold rounded-xl text-xs transition-all">
+                Сбросить на оригинал ฿
+              </button>
+            </div>
+          </div>
+        </div>
+
       </section>
     </div>
   </main>
@@ -770,7 +828,8 @@
       mailBox: [],
       messages: [],
       banknoteImages: {},
-      autoIncomeConfig: { amount: 10, intervalMinutes: 1440, lastPayout: 0 },
+      bankEmblemImage: null,
+      autoIncomeConfig: { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 },
       customMoneySupply: null,
       bankReserve: 5000000
     };
@@ -783,7 +842,8 @@
       appData.mailBox = val.mailBox || [];
       appData.messages = val.messages || [];
       appData.banknoteImages = val.banknoteImages || {};
-      appData.autoIncomeConfig = val.autoIncomeConfig || { amount: 10, intervalMinutes: 1440, lastPayout: 0 };
+      appData.bankEmblemImage = val.bankEmblemImage || null;
+      appData.autoIncomeConfig = val.autoIncomeConfig || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 };
       appData.customMoneySupply = val.customMoneySupply !== undefined ? val.customMoneySupply : null;
       appData.bankReserve = val.bankReserve !== undefined ? val.bankReserve : 5000000;
 
@@ -808,6 +868,7 @@
         currentUser = savedUser;
       }
 
+      renderBankEmblem();
       checkAutoIncomeCycle();
       renderCurrentView();
     }, (err) => {
@@ -820,6 +881,82 @@
       if (!login) return null;
       const key = Object.keys(appData.users).find(k => k.toLowerCase() === login.trim().toLowerCase());
       return key ? appData.users[key] : null;
+    }
+
+    // Рендер государственной эмблемы Банка
+    function renderBankEmblem() {
+      const container = document.getElementById('bankEmblemContainer');
+      const previewSmall = document.getElementById('currentEmblemPreviewSmall');
+      if (!container) return;
+
+      const defaultSvg = `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <path d="M50 15 A35 35 0 0 1 85 50 A35 35 0 0 1 50 85 A35 35 0 0 1 15 50 A35 35 0 0 1 50 15 Z" fill="none" stroke="#e6c875" stroke-width="1" opacity="0.4"/>
+          <rect x="36" y="36" width="28" height="28" rx="6" fill="#05140d" stroke="#ffd700" stroke-width="2"/>
+          <text x="50" y="56" font-family="'Cinzel', serif" font-size="20" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text>
+        </svg>
+      `;
+
+      if (appData.bankEmblemImage) {
+        container.innerHTML = `<img src="${appData.bankEmblemImage}" class="w-full h-full object-cover">`;
+        if (previewSmall) previewSmall.innerHTML = `<img src="${appData.bankEmblemImage}" class="w-full h-full object-cover">`;
+      } else {
+        container.innerHTML = defaultSvg;
+        if (previewSmall) previewSmall.innerHTML = defaultSvg;
+      }
+    }
+
+    function scrollToEmblemManager() {
+      const el = document.getElementById('emblemManagerSection');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        el.classList.add('ring-2', 'ring-bank-gold');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-bank-gold'), 2000);
+      }
+    }
+
+    function handleSaveBankEmblem() {
+      const fileInput = document.getElementById('bankEmblemFileInput');
+      const file = fileInput.files[0];
+      if (!file) return showToast('Пожалуйста, выберите файл изображения герба!', 'error');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById('emblemCanvas');
+          const target = 160;
+          canvas.width = target;
+          canvas.height = target;
+          const ctx = canvas.getContext('2d');
+
+          let sx = 0, sy = 0, sSize = Math.min(img.width, img.height);
+          if (img.width > img.height) {
+            sx = (img.width - img.height) / 2;
+          } else {
+            sy = (img.height - img.width) / 2;
+          }
+
+          ctx.clearRect(0, 0, target, target);
+          ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, target, target);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+
+          db.ref('bankData/bankEmblemImage').set(compressed).then(() => {
+            fileInput.value = '';
+            showToast('Государственная эмблема Банка успешно обновлена!', 'success');
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleResetBankEmblem() {
+      db.ref('bankData/bankEmblemImage').set(null).then(() => {
+        showToast('Эмблема сброшена на оригинальный герб ฿!', 'info');
+      });
     }
 
     function renderCurrentView() {
@@ -859,6 +996,7 @@
       renderMailView();
       renderAdminView();
       populateDatalist();
+      populateIncomeTargetDropdown();
     }
 
     function renderNavBarRight() {
@@ -964,6 +1102,7 @@
       });
     }
 
+    // Рендер Рейтинга: с отображением чужих аватарок в ячейках
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
       tbody.innerHTML = '';
@@ -980,12 +1119,23 @@
         if (i === 1) medal = `🥈 2`;
         if (i === 2) medal = `🥉 3`;
 
+        const avatarMini = u.avatar 
+          ? `<img src="${u.avatar}" class="w-full h-full object-cover">`
+          : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
+
         tr.innerHTML = `
           <td class="py-2.5 px-3 font-bold text-bank-gold">${medal}</td>
-          <td class="py-2.5 px-3 font-bold text-white font-royal flex items-center gap-1.5">
-            ${u.username}
-            ${isMe ? '<span class="text-[9px] px-1.5 bg-emerald-700 text-white rounded">Вы</span>' : ''}
-            ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+          <td class="py-2.5 px-3">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg ring-1 ring-bank-gold/40 bg-black overflow-hidden flex items-center justify-center flex-shrink-0">
+                ${avatarMini}
+              </div>
+              <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
+                <span>${u.username}</span>
+                ${isMe ? '<span class="text-[9px] px-1.5 py-0.2 bg-emerald-700 text-white rounded">Вы</span>' : ''}
+                ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold" title="Казначей Банка"></i>' : ''}
+              </div>
+            </div>
           </td>
           <td class="py-2.5 px-3 text-[11px] text-bank-gold/80">${u.customStatus || 'Гражданин'}</td>
           <td class="py-2.5 px-3 text-right font-mono font-bold text-bank-gold">${(u.balance || 0).toLocaleString()} ฿</td>
@@ -1112,6 +1262,7 @@
       renderMailView();
     }
 
+    // Рендер Казначейства и реестра счетов с аватарками
     function renderAdminView() {
       const usersList = Object.values(appData.users);
       const totalCount = document.getElementById('statTotalUsers');
@@ -1136,17 +1287,35 @@
       const statMass = document.getElementById('statMoneySupply');
       if (statMass) statMass.innerText = `${displayMass.toLocaleString()} ฿`;
 
-      // Admin quick registry table
+      // Auto income status badge
+      const conf = appData.autoIncomeConfig || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440 };
+      const hours = Math.round(conf.intervalMinutes / 60);
+      const targetLabel = (conf.targetUser && conf.targetUser !== 'ALL') ? `@${conf.targetUser}` : 'Всем';
+      const badge = document.getElementById('autoIncomeStatusBadge');
+      if (badge) badge.innerText = `${conf.amount || 10} ฿ / ${hours}ч (${targetLabel})`;
+
+      // Admin quick registry table with avatars
       const tbody = document.getElementById('adminUserTableBody');
       if (tbody) {
         tbody.innerHTML = '';
         usersList.forEach(u => {
+          const avatarMini = u.avatar 
+            ? `<img src="${u.avatar}" class="w-full h-full object-cover">`
+            : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
+
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-bank-card/80 transition-colors';
           tr.innerHTML = `
-            <td class="py-2.5 px-3 font-bold text-white font-royal flex items-center gap-1.5">
-              ${u.username}
-              ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+            <td class="py-2.5 px-3">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg ring-1 ring-bank-gold/40 bg-black overflow-hidden flex items-center justify-center flex-shrink-0">
+                  ${avatarMini}
+                </div>
+                <div class="font-bold text-white font-royal flex items-center gap-1.5 truncate">
+                  <span>${u.username}</span>
+                  ${u.isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+                </div>
+              </div>
             </td>
             <td class="py-2.5 px-3 text-[10px]">${u.isAdmin ? '<span class="text-bank-gold font-bold">Казначей</span>' : '<span class="text-emerald-400">Гражданин</span>'}</td>
             <td class="py-2.5 px-3 font-mono font-bold text-bank-gold">${(u.balance || 0).toLocaleString()} ฿</td>
@@ -1161,6 +1330,22 @@
           tbody.appendChild(tr);
         });
       }
+    }
+
+    // Заполнение выпадающего списка получателей автодохода
+    function populateIncomeTargetDropdown() {
+      const select = document.getElementById('selectIncomeTarget');
+      if (!select) return;
+      const currentVal = (appData.autoIncomeConfig && appData.autoIncomeConfig.targetUser) || 'ALL';
+      
+      select.innerHTML = `<option value="ALL">⭐ Все граждане Банка</option>`;
+      Object.values(appData.users).forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.username;
+        opt.innerText = `@${u.username} (${u.balance || 0} ฿)`;
+        select.appendChild(opt);
+      });
+      select.value = currentVal;
     }
 
     function setTreasuryMode(mode) {
@@ -1473,34 +1658,65 @@
       });
     }
 
+    // Сохранение конфигурации автодохода (с поддержкой конкретного логина или ВСЕХ)
     function saveAutoIncomeConfig(e) {
       e.preventDefault();
+      const target = document.getElementById('selectIncomeTarget').value;
       const amt = parseInt(document.getElementById('inputIncomeAmount').value);
       const inter = parseInt(document.getElementById('selectIncomeInterval').value);
+
       db.ref('bankData/autoIncomeConfig').set({
+        targetUser: target,
         amount: amt,
         intervalMinutes: inter,
         lastPayout: Date.now()
-      }).then(() => showToast('Параметры дохода сохранены!', 'success'));
+      }).then(() => {
+        const targetText = target === 'ALL' ? 'всем гражданам' : `гражданину @${target}`;
+        showToast(`Доход сохранен: ${amt} ฿ для ${targetText}!`, 'success');
+      });
     }
 
-    function triggerManualInstantPayout() {
-      const amt = (appData.autoIncomeConfig && appData.autoIncomeConfig.amount) || 10;
+    // Ручная мгновенная выплата дохода (выбранному гражданину или всем)
+    function triggerManualIncomePayout() {
+      const conf = appData.autoIncomeConfig || {};
+      const target = document.getElementById('selectIncomeTarget')?.value || conf.targetUser || 'ALL';
+      const amt = parseInt(document.getElementById('inputIncomeAmount')?.value) || conf.amount || 10;
+      
       const updates = {};
-      Object.keys(appData.users).forEach(k => {
-        updates[`bankData/users/${k}/balance`] = (appData.users[k].balance || 0) + amt;
-      });
       const txs = appData.transactions || [];
-      txs.unshift({
-        from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО (Iosif)',
-        to: 'ВСЕМ ГРАЖДАНАМ',
-        amount: amt,
-        comment: 'Внеочередная выплата регулярного дохода',
-        timestamp: new Date().toLocaleString('ru-RU')
-      });
+
+      if (target === 'ALL') {
+        Object.keys(appData.users).forEach(k => {
+          updates[`bankData/users/${k}/balance`] = (appData.users[k].balance || 0) + amt;
+          addSystemMessage(appData.users[k].username, 'Регулярный доход', `Вам начислен регулярный доход в размере +${amt} ฿.`);
+        });
+        txs.unshift({
+          from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО (Iosif)',
+          to: 'ВСЕМ ГРАЖДАНАМ',
+          amount: amt,
+          comment: 'Выплата регулярного дохода',
+          timestamp: new Date().toLocaleString('ru-RU')
+        });
+        showToast(`Начислено по ${amt} ฿ всем гражданам!`, 'success');
+      } else {
+        const user = findUser(target);
+        if (!user) return showToast(`Гражданин @${target} не найден!`, 'error');
+        const uKey = user.username.toLowerCase();
+        updates[`bankData/users/${uKey}/balance`] = (user.balance || 0) + amt;
+        txs.unshift({
+          from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО (Iosif)',
+          to: user.username,
+          amount: amt,
+          comment: 'Индивидуальная выплата регулярного дохода',
+          timestamp: new Date().toLocaleString('ru-RU')
+        });
+        addSystemMessage(user.username, 'Персональный доход', `Вам начислен регулярный доход в размере +${amt} ฿ от Казначейства.`);
+        showToast(`Начислено ${amt} ฿ гражданину @${user.username}!`, 'success');
+      }
+
       updates['bankData/transactions'] = txs;
       updates['bankData/autoIncomeConfig/lastPayout'] = Date.now();
-      db.ref().update(updates).then(() => showToast(`Начислено по ${amt} ฿ всем гражданам!`, 'success'));
+      db.ref().update(updates);
     }
 
     function checkAutoIncomeCycle() {
@@ -1509,7 +1725,7 @@
       if (!amount || !intervalMinutes) return;
       const now = Date.now();
       if (!lastPayout || (now - lastPayout) >= intervalMinutes * 60 * 1000) {
-        triggerManualInstantPayout();
+        triggerManualIncomePayout();
       }
     }
 
@@ -1753,9 +1969,9 @@
       if (tSec) tSec.classList.remove('hidden');
       if (tBtn) {
         if (tab === 'admin') {
-          tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all bg-bank-gold text-emerald-950 font-black shadow-md whitespace-nowrap';
+          tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold text-emerald-950 font-black shadow-md whitespace-nowrap';
         } else {
-          tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all bg-emerald-700 text-white shadow-md whitespace-nowrap';
+          tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-emerald-700 text-white shadow-md whitespace-nowrap';
         }
       }
     }
