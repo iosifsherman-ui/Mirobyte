@@ -486,50 +486,6 @@
           </form>
         </div>
 
-        <!-- УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК -->
-        <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
-          <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
-            <div>
-              <h3 class="font-royal text-base sm:text-lg font-bold text-bank-gold flex items-center gap-2">
-                <i class="fa-solid fa-id-card-clip text-bank-gold"></i> Создание и Загрузка Дизайнов Карточек
-              </h3>
-              <p class="text-xs text-emerald-400/70 mt-0.5">Создавайте новые стили или загружайте фоновые картинки, которые граждане смогут ставить в настройках.</p>
-            </div>
-          </div>
-
-          <form onsubmit="handleCreateCardDesign(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Название стиля карты</label>
-              <input type="text" id="newDesignName" required placeholder="Например: Золотой Дракон" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Цветовая гамма (если без картинки)</label>
-              <select id="newDesignTheme" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 font-semibold focus:outline-none">
-                <option value="emerald">Изумрудная Классика</option>
-                <option value="ruby">Имперский Рубин</option>
-                <option value="sapphire">Королевский Сапфир</option>
-                <option value="obsidian">Обсидиановое Золото</option>
-                <option value="cyber">Неоновый Киберпанк</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Изображение карты (опционально)</label>
-              <input type="file" id="newDesignImageFile" accept="image/*" class="w-full text-xs text-emerald-300 bg-bank-darkest border border-bank-border rounded-xl p-1.5 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-bank-gold file:text-black hover:file:bg-yellow-500 cursor-pointer">
-            </div>
-
-            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
-              <i class="fa-solid fa-plus mr-1"></i> Создать дизайн
-            </button>
-          </form>
-
-          <div class="pt-3">
-            <h4 class="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">Существующие варианты карточек:</h4>
-            <div id="treasuryCardDesignsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-          </div>
-        </div>
-
         <!-- Citizens Registry -->
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel">
           <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2 mb-4">
@@ -543,7 +499,7 @@
                   <th class="pb-2.5 px-3">Роль / Статус</th>
                   <th class="pb-2.5 px-3">Баланс</th>
                   <th class="pb-2.5 px-3">Дата открытия</th>
-                  <th class="pb-2.5 px-3 text-right">Быстрые операции Казначея</th>
+                  <th class="pb-2.5 px-3 text-right">Быстрые операции</th>
                 </tr>
               </thead>
               <tbody id="adminUserTableBody" class="divide-y divide-bank-border/40 text-emerald-200"></tbody>
@@ -551,15 +507,15 @@
           </div>
         </div>
 
-        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ -->
-        <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
+        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ (ДОСТУПНО ТОЛЬКО ВЛАДЕЛЬЦУ БАНКА) -->
+        <div id="ownerDelegationSection" class="hidden bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
               <h3 class="font-royal text-base sm:text-lg font-bold text-bank-gold flex items-center gap-2">
                 <i class="fa-solid fa-key text-bank-gold"></i> Делегирование Полномочий Казначея
               </h3>
               <p class="text-xs text-emerald-400/70 mt-0.5">
-                Выдача или отзыв доступа к Казначейству. Доступ разрешён строго при подтверждении текущего пароля Владельца.
+                Выдача или отзыв доступа к Казначейству. Раздел доступен строго Создателю Банка при подтверждении пароля.
               </p>
             </div>
           </div>
@@ -591,6 +547,50 @@
               Подтвердить паролем
             </button>
           </form>
+        </div>
+
+        <!-- УПРАВЛЕНИЕ ВАРИАНТАМИ ДИЗАЙНА КАРТОЧЕК -->
+        <div class="bg-bank-surface border-2 border-bank-gold/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
+          <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
+            <div>
+              <h3 class="font-royal text-base sm:text-lg font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-id-card-clip text-bank-gold"></i> Создание и Загрузка Дизайнов Карточек
+              </h3>
+              <p class="text-xs text-emerald-400/70 mt-0.5">Создавайте новые стили или загружайте фоновые картинки, которые граждане смогут ставить в настройках.</p>
+            </div>
+          </div>
+
+          <form onsubmit="handleCreateCardDesign(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Название стиля карты</label>
+              <input type="text" id="newDesignName" required placeholder="Например: Золотой Дракон" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Цветовая гамма</label>
+              <select id="newDesignTheme" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2 px-3 text-xs text-emerald-100 font-semibold focus:outline-none">
+                <option value="emerald">Изумрудная Классика</option>
+                <option value="ruby">Имперский Рубин</option>
+                <option value="sapphire">Королевский Сапфир</option>
+                <option value="obsidian">Обсидиановое Золото</option>
+                <option value="cyber">Неоновый Киберпанк</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Изображение карты</label>
+              <input type="file" id="newDesignImageFile" accept="image/*" class="w-full text-xs text-emerald-300 bg-bank-darkest border border-bank-border rounded-xl p-1.5 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-bank-gold file:text-black hover:file:bg-yellow-500 cursor-pointer">
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+              <i class="fa-solid fa-plus mr-1"></i> Создать дизайн
+            </button>
+          </form>
+
+          <div class="pt-3">
+            <h4 class="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">Существующие варианты карточек:</h4>
+            <div id="treasuryCardDesignsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
         </div>
 
         <!-- Auto Income Management -->
@@ -1090,7 +1090,7 @@
         if (bal) bal.innerText = (cachedProfile.balance || 0).toLocaleString();
 
         const badge = document.getElementById('cardRoleBadge');
-        if (badge) badge.innerText = cachedProfile.isAdmin ? 'Казначей / Владелец' : 'Гражданин';
+        if (badge) badge.innerText = cachedProfile.isOwner ? 'Владелец Банка' : (cachedProfile.isAdmin ? 'Казначей' : 'Гражданин');
 
         const status = document.getElementById('cardCustomStatus');
         if (status) status.innerText = `Статус: ${cachedProfile.customStatus || 'Полноправный гражданин'}`;
@@ -1107,12 +1107,16 @@
           `;
         }
 
-        if (cachedProfile.isAdmin) {
-          const admBtn = document.getElementById('tabBtn-admin');
-          if (admBtn) admBtn.classList.remove('hidden');
+        const admBtn = document.getElementById('tabBtn-admin');
+        if (admBtn) {
+          if (cachedProfile.isAdmin || cachedProfile.isOwner) {
+            admBtn.classList.remove('hidden');
+          } else {
+            admBtn.classList.add('hidden');
+          }
         }
 
-        renderNavBarRightDirect(cachedProfile.username, cachedProfile.balance, cachedProfile.isAdmin, cachedProfile.avatar, 0);
+        renderNavBarRightDirect(cachedProfile.username, cachedProfile.balance, cachedProfile.isAdmin || cachedProfile.isOwner, cachedProfile.avatar, 0);
       }
     } else {
       document.getElementById('authSection').classList.remove('hidden');
@@ -1261,14 +1265,20 @@
     }
 
     function getSystemOwner() {
-      const key = Object.keys(appData.users).find(k => appData.users[k].isOwner === true);
+      const key = Object.keys(appData.users).find(k => appData.users[k].isOwner === true || k.toLowerCase() === OWNER_USERNAME.toLowerCase());
       return key ? appData.users[key] : null;
+    }
+
+    function isCurrentUserOwner() {
+      if (!currentUser) return false;
+      const u = findUser(currentUser);
+      return !!(u && (u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase()));
     }
 
     function isCurrentUserAdmin() {
       if (!currentUser) return false;
       const u = findUser(currentUser);
-      return !!(u && (u.isAdmin || u.isOwner));
+      return !!(u && (u.isAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase()));
     }
 
     function handleAutocompleteFocus(e) {
@@ -1456,13 +1466,14 @@
         return;
       }
 
-      const isAdmin = !!(u.isAdmin || u.isOwner);
+      const isAdmin = !!(u.isAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
+      const isOwner = !!(u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
 
       localStorage.setItem('mirobyte_cached_profile', JSON.stringify({
         username: u.username,
         balance: u.balance || 0,
         isAdmin: isAdmin,
-        isOwner: !!u.isOwner,
+        isOwner: isOwner,
         avatar: u.avatar || '',
         cardTheme: u.cardTheme || 'emerald',
         cardBgImage: u.cardBgImage || '',
@@ -1473,13 +1484,25 @@
       appSec.classList.remove('hidden');
 
       const admTabBtn = document.getElementById('tabBtn-admin');
-      if (isAdmin) {
-        admTabBtn.classList.remove('hidden');
-      } else {
-        admTabBtn.classList.add('hidden');
-        const adminSection = document.getElementById('tabContent-admin');
-        if (adminSection && !adminSection.classList.contains('hidden')) {
-          navigateTab('dashboard');
+      if (admTabBtn) {
+        if (isAdmin) {
+          admTabBtn.classList.remove('hidden');
+        } else {
+          admTabBtn.classList.add('hidden');
+          const adminSection = document.getElementById('tabContent-admin');
+          if (adminSection && !adminSection.classList.contains('hidden')) {
+            navigateTab('dashboard');
+          }
+        }
+      }
+
+      // Показ/скрытие блока делегирования полномочий ТОЛЬКО для Владельца
+      const ownerDelSec = document.getElementById('ownerDelegationSection');
+      if (ownerDelSec) {
+        if (isOwner) {
+          ownerDelSec.classList.remove('hidden');
+        } else {
+          ownerDelSec.classList.add('hidden');
         }
       }
 
@@ -1744,7 +1767,7 @@
 
       const filtered = mailFilter === 'inbox' 
         ? all.filter(m => m.to && m.to.toLowerCase() === uLow && !m.deletedByRecipient)
-        : all.filter(m => m.from && m.from.toLowerCase() === uLow);
+        : all.filter(m => m.from && m.from.toLowerCase() === uLow && !m.deletedBySender);
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class="text-center py-8 text-emerald-500/60 text-xs">Депеш пока нет</div>`;
@@ -1762,30 +1785,35 @@
           <p class="text-white whitespace-pre-wrap">${escapeHtml(m.text)}</p>
           <div class="flex items-center justify-end gap-2 pt-1">
             ${mailFilter === 'inbox' ? `
-              <button onclick="promptDeleteMail('${m._dbKey}')" class="px-2 py-0.5 bg-rose-950/60 border border-rose-700/40 text-rose-300 hover:text-white rounded text-[10px] transition-colors" title="Удалить депешу">
+              <button onclick="promptDeleteMail('${m._dbKey}', 'inbox')" class="px-2 py-0.5 bg-rose-950/60 border border-rose-700/40 text-rose-300 hover:text-white rounded text-[10px] transition-colors" title="Удалить депешу">
                 <i class="fa-solid fa-trash-can mr-1"></i> Удалить
               </button>
               <button onclick="document.getElementById('mailRecipient').value='${m.from}'; document.getElementById('mailText').focus(); showToast('Ответ гражданину @${m.from}', 'info');" class="px-2 py-0.5 bg-emerald-950 border border-emerald-500/30 text-emerald-300 rounded text-[10px]">
                 <i class="fa-solid fa-reply mr-1"></i> Ответить
               </button>
-            ` : ''}
+            ` : `
+              <button onclick="promptDeleteMail('${m._dbKey}', 'sent')" class="px-2 py-0.5 bg-rose-950/60 border border-rose-700/40 text-rose-300 hover:text-white rounded text-[10px] transition-colors" title="Удалить отправленную депешу">
+                <i class="fa-solid fa-trash-can mr-1"></i> Удалить депешу
+              </button>
+            `}
           </div>
         `;
         container.appendChild(el);
       });
     }
 
-    function promptDeleteMail(mailKey) {
+    function promptDeleteMail(mailKey, originType) {
       if (!mailKey) return;
-      const isEverywhere = confirm("Удалить депешу НАВСЕГДА ДЛЯ ВСЕХ?\n\n[OK] — Удалить у всех (стереть из базы)\n[Отмена] — Удалить только у меня из входящих");
+      const isEverywhere = confirm("Удалить депешу НАВСЕГДА ДЛЯ ВСЕХ?\n\n[OK] — Удалить у всех (стереть из базы)\n[Отмена] — Удалить только из моего списка");
 
       if (isEverywhere) {
         db.ref(`bankData/mailBox/${mailKey}`).remove().then(() => {
           showToast('Депеша удалена у всех участников!', 'info');
         });
       } else {
-        db.ref(`bankData/mailBox/${mailKey}/deletedByRecipient`).set(true).then(() => {
-          showToast('Депеша удалена из ваших входящих!', 'success');
+        const updateField = originType === 'sent' ? 'deletedBySender' : 'deletedByRecipient';
+        db.ref(`bankData/mailBox/${mailKey}/${updateField}`).set(true).then(() => {
+          showToast('Депеша скрыта из вашего списка!', 'success');
         });
       }
     }
@@ -1825,6 +1853,7 @@
       const badge = document.getElementById('autoIncomeStatusBadge');
       if (badge) badge.innerText = `${conf.amount || 10} ฿ / ${hours}ч (${targetLabel})`;
 
+      const isOwner = isCurrentUserOwner();
       const tbody = document.getElementById('adminUserTableBody');
       if (tbody) {
         tbody.innerHTML = '';
@@ -1832,6 +1861,8 @@
           const avatarMini = u.avatar 
             ? `<img src="${u.avatar}" class="w-full h-full object-cover">`
             : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
+
+          const canRevokeTreasury = isOwner && u.isAdmin && !u.isOwner && u.username.toLowerCase() !== OWNER_USERNAME.toLowerCase();
 
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-bank-card/80 transition-colors';
@@ -1857,11 +1888,24 @@
               <button onclick="adminQuickAction('${u.username}', 1000, 'grant')" class="px-2 py-1 bg-bank-darkest hover:bg-bank-gold/30 text-bank-gold border border-bank-gold/40 rounded text-[10px] font-bold">+1 000</button>
               <button onclick="adminQuickAction('${u.username}', 50, 'deduct')" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold">-50</button>
               <button onclick="adminQuickAction('${u.username}', 500, 'deduct')" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold">-500</button>
+              ${canRevokeTreasury ? `<button onclick="quickRevokeAdmin('${u.username}')" class="px-2 py-1 bg-rose-900 hover:bg-rose-800 text-white rounded text-[10px] font-bold" title="Отобрать права казначея"><i class="fa-solid fa-user-xmark mr-1"></i> Отобрать</button>` : ''}
             </td>
           `;
           tbody.appendChild(tr);
         });
       }
+    }
+
+    function quickRevokeAdmin(username) {
+      if (!isCurrentUserOwner()) return showToast('Только Владелец Банка может отбирать полномочия!', 'error');
+      if (!confirm(`Отобрать права Казначея у пользователя @${username}?`)) return;
+      const target = findUser(username);
+      if (!target) return;
+      const targetKey = target.username.toLowerCase();
+      db.ref(`bankData/users/${targetKey}/isAdmin`).set(false).then(() => {
+        showToast(`Полномочия Казначея у @${target.username} успешно отозваны!`, 'info');
+        addSystemMessage(target.username, 'Изменение прав доступа', 'Ваш доступ в Казначейство был отозван Владельцем Банка.');
+      });
     }
 
     function handleCreateCardDesign(e) {
@@ -2116,6 +2160,8 @@
 
     async function handleManageAdminAccess(e) {
       e.preventDefault();
+      if (!isCurrentUserOwner()) return showToast('Доступ запрещён! Только Владелец может изменять права казначея.', 'error');
+
       const targetUser = document.getElementById('accessTargetUser').value.trim();
       const action = document.getElementById('accessActionSelect').value;
       const passConfirm = document.getElementById('accessAdminPasswordConfirm').value;
@@ -2133,7 +2179,7 @@
       if (!target) return showToast(`Гражданин @${targetUser} не найден!`, 'error');
 
       const targetKey = target.username.toLowerCase();
-      if (target.isOwner && action === 'revoke') {
+      if ((target.isOwner || targetKey === OWNER_USERNAME.toLowerCase()) && action === 'revoke') {
         return showToast('Нельзя забрать права у самого Владельца Банка!', 'error');
       }
 
@@ -2157,7 +2203,7 @@
       const user = findUser(targetName);
       if (!user) return showToast(`Гражданин @${targetName} не найден!`, 'error');
 
-      if (user.isOwner) return showToast('Нельзя применять санкции к Создателю / Владельцу Банка!', 'error');
+      if (user.isOwner || user.username.toLowerCase() === OWNER_USERNAME.toLowerCase()) return showToast('Нельзя применять санкции к Создателю / Владельцу Банка!', 'error');
 
       const uKey = user.username.toLowerCase();
 
@@ -2805,7 +2851,8 @@
     }
 
     function navigateTab(tab) {
-      if (tab === 'admin' && !isCurrentUserAdmin()) {
+      const hasAdminAccess = isCurrentUserAdmin();
+      if (tab === 'admin' && !hasAdminAccess) {
         tab = 'dashboard';
         showToast('Доступ к Казначейству ограничен!', 'error');
       }
@@ -2814,14 +2861,21 @@
         const sec = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
         if (sec) sec.classList.add('hidden');
-        if (btn) btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap';
+        if (btn) {
+          if (t === 'admin') {
+            btn.className = `${hasAdminAccess ? '' : 'hidden '}px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap`;
+          } else {
+            btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap';
+          }
+        }
       });
+
       const tSec = document.getElementById(`tabContent-${tab}`);
       const tBtn = document.getElementById(`tabBtn-${tab}`);
       if (tSec) tSec.classList.remove('hidden');
       if (tBtn) {
         if (tab === 'admin') {
-          tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold text-emerald-950 font-black shadow-md whitespace-nowrap';
+          tBtn.className = `${hasAdminAccess ? '' : 'hidden '}px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold text-emerald-950 font-black shadow-md whitespace-nowrap`;
         } else {
           tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-emerald-700 text-white shadow-md whitespace-nowrap';
         }
