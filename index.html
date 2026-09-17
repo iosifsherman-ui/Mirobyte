@@ -365,7 +365,7 @@
       </section>
 
       <!-- TAB 3: LEADERBOARD -->
-      <section id="tabContent-leaderboard" class="space-y-6">
+      <section id="tabContent-leaderboard" class="hidden space-y-6">
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex items-center justify-between mb-6">
             <h3 class="font-royal text-xl font-bold text-bank-gold flex items-center gap-2">
@@ -391,7 +391,7 @@
       </section>
 
       <!-- TAB 4: BANKNOTES -->
-      <section id="tabContent-banknotes" class="space-y-6">
+      <section id="tabContent-banknotes" class="hidden space-y-6">
         <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 sm:p-8 guilloche-panel">
           <div class="flex items-center justify-between mb-6">
             <div>
@@ -1698,7 +1698,7 @@
         renderBox.innerHTML = `
           <div class="flex items-start justify-between relative z-10">
             <div>
-              <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold">${note.value}</div>
+              <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold" id="modalSvgValTop">${note.value}</div>
               <div class="text-[9px] font-mono tracking-widest text-emerald-400 font-bold">${note.titleEn}</div>
             </div>
             <div class="text-center font-royal font-bold text-xs sm:text-sm text-white border-b border-bank-gold/50 pb-0.5">BANK OF MIROBYTE</div>
@@ -1706,14 +1706,14 @@
           </div>
           <div class="my-auto text-center relative z-10 py-2">
             <div class="inline-block p-4 rounded-full border border-bank-gold/40 bg-black/40 mb-2">
-              <i class="fa-solid ${note.icon} text-4xl text-bank-gold"></i>
+              <i id="modalNoteIcon" class="fa-solid ${note.icon} text-4xl text-bank-gold"></i>
             </div>
-            <div class="font-royal font-bold text-sm sm:text-base text-white">${note.motif}</div>
+            <div id="modalMotifName" class="font-royal font-bold text-sm sm:text-base text-white">${note.motif}</div>
           </div>
           <div class="flex items-end justify-between relative z-10 text-[10px] font-mono text-emerald-400/80">
-            <span>СЕРИЯ MB-${note.value * 144}-2026</span>
+            <span id="modalSerial">СЕРИЯ MB-${note.value * 144}-2026</span>
             <span class="font-royal font-bold text-bank-gold">${note.titleRu}</span>
-            <span>${note.value} ฿</span>
+            <span id="modalSvgValBot">${note.value} ฿</span>
           </div>
         `;
       }
