@@ -940,7 +940,7 @@
           </div>
         </div>
 
-        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ АДМИН-ПАНЕЛИ (ПЕРЕНЕСЕНО СЮДА) -->
+        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ АДМИНИСТРАТОРА НАДЗОРА (ПЕРЕНЕСЕНО СЮДА) -->
         <div id="ownerDelegationSection" class="hidden bg-bank-surface border-2 border-purple-500/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -994,7 +994,7 @@
         <h4 class="font-royal text-lg font-bold text-bank-gold">⚙️ Настройки Гражданина</h4>
       </div>
 
-      <!-- Контейнер с исправленным скроллом (не вылезает за рамку) -->
+      <!-- Контейнер с исправленным скроллом -->
       <div class="overflow-y-auto custom-scrollbar pr-2 py-3 space-y-4 flex-grow rounded-2xl">
         <!-- Avatar Upload -->
         <div class="p-4 rounded-2xl bg-bank-darkest border border-bank-border/80 flex items-center justify-between">
@@ -1519,10 +1519,15 @@
       }
     });
 
-    // 4. Уведомления
-    db.ref('bankData/messages').limitToLast(100).on('value', (snap) => {
+    // 4. Уведомления (синхронизация с Firebase)
+    db.ref('bankData/messages').on('value', (snap) => {
       const val = snap.val() || {};
-      appData.messages = Array.isArray(val) ? val : Object.values(val).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
+      // Нормализуем в массив объектов с гарантированным сохранением ключа Firebase (_dbKey)
+      appData.messages = Object.entries(val).map(([k, item]) => ({
+        ...item,
+        _dbKey: k
+      })).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
+      
       renderNavBarRight();
     });
 
@@ -1658,7 +1663,7 @@
                 ${isCurrent ? '<span class="text-[9px] px-1 bg-emerald-800 text-white rounded">Вы</span>' : ''}
                 ${u.isOwner ? '<i class="fa-solid fa-crown text-[9px] text-yellow-400" title="Владелец Банка"></i>' : (u.isSuperAdmin ? '<i class="fa-solid fa-user-shield text-[9px] text-purple-400" title="Администратор"></i>' : (u.isAdmin ? '<i class="fa-solid fa-crown text-[9px] text-bank-gold" title="Казначей"></i>' : ''))}
                 ${u.isBlocked ? '<i class="fa-solid fa-lock text-[9px] text-rose-500" title="Заблокирован"></i>' : ''}
-                ${u.hiddenFromAll ? '<i class="fa-solid fa-eye-slash text-[9px] text-indigo-400" title="Скрыт"></i>' : ''}
+                ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
               </div>
               <div class="text-[10px] text-emerald-400/70 font-mono">${(u.balance || 0).toLocaleString()} ฿</div>
             </div>
@@ -1839,7 +1844,6 @@
         }
       }
 
-      // Доступ к форме делегирования админки только для владельца
       const ownerDelSec = document.getElementById('ownerDelegationSection');
       if (ownerDelSec) {
         if (isOwner) {
@@ -3178,15 +3182,27 @@
       return db.ref('bankData/messages').push(msg);
     }
 
+    // Проверка, должно ли сообщение отображаться пользователю
+    function isMessageVisibleForUser(m, uLow) {
+      if (!m) return false;
+      const user = findUser(uLow);
+      const clearedBefore = Number(user?.clearedMessagesBefore || 0);
+      if (clearedBefore && (m.timestampMs || 0) <= clearedBefore) {
+        return false;
+      }
+      if (Array.isArray(m.deletedFor) && m.deletedFor.includes(uLow)) {
+        return false;
+      }
+      return m.to === 'all' || normalizeLogin(m.to) === uLow;
+    }
+
     function getUnreadMessagesCount(username) {
       if (!username) return 0;
       const uLow = username.toLowerCase();
       return (appData.messages || []).filter(m => {
-        if (!m) return false;
-        if (Array.isArray(m.deletedFor) && m.deletedFor.includes(uLow)) return false;
-        const isForMe = (m.to === 'all' || normalizeLogin(m.to) === uLow);
+        if (!isMessageVisibleForUser(m, uLow)) return false;
         const isRead = Array.isArray(m.readBy) && m.readBy.includes(uLow);
-        return isForMe && !isRead;
+        return !isRead;
       }).length;
     }
 
@@ -3196,11 +3212,7 @@
       const container = document.getElementById('messagesListContainer');
       container.innerHTML = '';
       
-      const list = (appData.messages || []).filter(m => {
-        if (!m) return false;
-        if (Array.isArray(m.deletedFor) && m.deletedFor.includes(uLow)) return false;
-        return m.to === 'all' || normalizeLogin(m.to) === uLow;
-      });
+      const list = (appData.messages || []).filter(m => isMessageVisibleForUser(m, uLow));
 
       if (list.length === 0) {
         container.innerHTML = `<div class="text-center py-8 text-emerald-500/60 text-xs">Уведомлений пока нет</div>`;
@@ -3218,18 +3230,13 @@
             <p class="text-emerald-100">${escapeHtml(m.text)}</p>
           `;
           container.appendChild(el);
-        });
 
-        // Отмечаем прочитанными в Firebase для этого пользователя
-        Object.entries(appData.messages || {}).forEach(([key, msg]) => {
-          if (!msg) return;
-          if (msg.to === 'all' || normalizeLogin(msg.to) === uLow) {
-            const curRead = Array.isArray(msg.readBy) ? msg.readBy : [];
-            if (!curRead.includes(uLow)) {
-              readUpdates[`bankData/messages/${key}/readBy`] = [...curRead, uLow];
-            }
+          if (isUnread && m._dbKey) {
+            const curRead = Array.isArray(m.readBy) ? m.readBy : [];
+            readUpdates[`bankData/messages/${m._dbKey}/readBy`] = [...curRead, uLow];
           }
         });
+
         if (Object.keys(readUpdates).length) {
           db.ref().update(readUpdates);
         }
@@ -3245,40 +3252,50 @@
       renderNavBarRight();
     }
 
-    // ИСПРАВЛЕННАЯ ОЧИСТКА УВЕДОМЛЕНИЙ (ГАРАНТИРОВАННО НЕ ВОЗВРАЩАЕТСЯ ПОСЛЕ F5)
+    // ПОЛНОЕ УДАЛЕНИЕ ИЗ FIREBASE: ЛИЧНЫЕ УДАЛЯЮТСЯ НАВСЕГДА, ОБЩИЕ ОТРЕЗАЮТСЯ МЕТКОЙ ВРЕМЕНИ
     async function clearUserMessages() {
       if (!currentUser) return;
       const uLow = normalizeLogin(currentUser);
-      const updates = {};
-
-      Object.entries(appData.messages || {}).forEach(([key, m]) => {
-        if (!m) return;
-        if (normalizeLogin(m.to) === uLow) {
-          // Личные сообщения удаляем полностью
-          updates[`bankData/messages/${key}`] = null;
-        } else if (m.to === 'all') {
-          // Общие сообщения помечаем скрытыми для этого пользователя
-          const delList = Array.isArray(m.deletedFor) ? m.deletedFor : [];
-          if (!delList.includes(uLow)) {
-            updates[`bankData/messages/${key}/deletedFor`] = [...delList, uLow];
-          }
-          const readList = Array.isArray(m.readBy) ? m.readBy : [];
-          if (!readList.includes(uLow)) {
-            updates[`bankData/messages/${key}/readBy`] = [...readList, uLow];
-          }
-        }
-      });
 
       try {
-        if (Object.keys(updates).length) {
-          await db.ref().update(updates);
+        const snap = await db.ref('bankData/messages').once('value');
+        const data = snap.val() || {};
+        const updates = {};
+        const now = Date.now();
+
+        Object.entries(data).forEach(([key, m]) => {
+          if (!m) return;
+          if (normalizeLogin(m.to) === uLow) {
+            // Личное сообщение удаляется из базы полностью
+            updates[`bankData/messages/${key}`] = null;
+          } else if (m.to === 'all') {
+            // Общие системные сообщения скрываем для пользователя
+            const delList = Array.isArray(m.deletedFor) ? m.deletedFor : [];
+            if (!delList.includes(uLow)) {
+              updates[`bankData/messages/${key}/deletedFor`] = [...delList, uLow];
+            }
+            const readList = Array.isArray(m.readBy) ? m.readBy : [];
+            if (!readList.includes(uLow)) {
+              updates[`bankData/messages/${key}/readBy`] = [...readList, uLow];
+            }
+          }
+        });
+
+        // Записываем дату очистки в профиль пользователя, чтобы старые сообщения никогда не возродились
+        updates[`bankData/users/${uLow}/clearedMessagesBefore`] = now;
+
+        await db.ref().update(updates);
+
+        if (appData.users[uLow]) {
+          appData.users[uLow].clearedMessagesBefore = now;
         }
+
         document.getElementById('messagesListContainer').innerHTML = `<div class="text-center py-8 text-emerald-500/60 text-xs">Уведомления очищены</div>`;
         renderNavBarRight();
-        showToast('История уведомлений успешно очищена!', 'info');
+        showToast('История уведомлений навсегда удалена!', 'info');
       } catch (err) {
-        console.error(err);
-        showToast('Не удалось очистить уведомления.', 'error');
+        console.error('Ошибка очистки сообщений в Firebase:', err);
+        showToast('Не удалось полностью удалить уведомления.', 'error');
       }
     }
 
@@ -3308,7 +3325,6 @@
       document.getElementById('statsModal').classList.remove('hidden');
       document.getElementById('statsModal').classList.add('flex');
 
-      // Отрисовка Canvas графика динамики
       setTimeout(() => {
         drawBalanceChart(txs, currentBal, uLow);
       }, 50);
@@ -3327,11 +3343,9 @@
       const h = rect.height;
       ctx.clearRect(0, 0, w, h);
 
-      // Восстанавливаем хронологическую цепочку баланса
       let points = [];
       let runningBalance = finalBalance;
 
-      // Идем назад от текущего баланса
       for (let i = txs.length - 1; i >= 0; i--) {
         points.unshift(runningBalance);
         const t = txs[i];
@@ -3342,7 +3356,7 @@
           runningBalance += amt;
         }
       }
-      points.unshift(runningBalance); // стартовая точка
+      points.unshift(runningBalance);
 
       if (points.length < 2) {
         points = [Math.max(0, finalBalance - 50), finalBalance];
@@ -3353,7 +3367,6 @@
       const paddingX = 20;
       const paddingY = 18;
 
-      // Рисуем легкую сетку
       ctx.strokeStyle = 'rgba(26, 71, 53, 0.4)';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -3364,7 +3377,6 @@
       const getX = (index) => paddingX + (index / (points.length - 1)) * (w - paddingX * 2);
       const getY = (val) => h - paddingY - ((val - minVal) / (maxVal - minVal)) * (h - paddingY * 2);
 
-      // Заливка градиентом под графиком
       const grad = ctx.createLinearGradient(0, paddingY, 0, h - paddingY);
       grad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
       grad.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
@@ -3380,7 +3392,6 @@
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Линия графика
       ctx.beginPath();
       ctx.moveTo(getX(0), getY(points[0]));
       for (let i = 1; i < points.length; i++) {
@@ -3393,7 +3404,6 @@
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Точки значений
       points.forEach((val, i) => {
         const px = getX(i);
         const py = getY(val);
