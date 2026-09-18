@@ -184,8 +184,13 @@
           <button onclick="navigateTab('banknotes')" id="tabBtn-banknotes" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
             <i class="fa-solid fa-money-bill-wave mr-1"></i> Купюры Байти
           </button>
+          <!-- Казначейство -->
           <button onclick="navigateTab('admin')" id="tabBtn-admin" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap">
             <i class="fa-solid fa-crown mr-1"></i> Казначейство
+          </button>
+          <!-- НОВАЯ АДМИН-ПАНЕЛЬ (НАДЗОР И МОНИТОРИНГ) -->
+          <button onclick="navigateTab('superadmin')" id="tabBtn-superadmin" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-purple-950/80 text-purple-300 border border-purple-500/50 hover:bg-purple-900 whitespace-nowrap">
+            <i class="fa-solid fa-user-shield mr-1"></i> Надзор (Админ)
           </button>
         </div>
         <div class="text-[11px] font-mono text-emerald-400/80 hidden md:flex items-center gap-2 flex-shrink-0">
@@ -406,7 +411,7 @@
         </div>
       </section>
 
-      <!-- TAB 5: TREASURY (ADMIN ONLY) -->
+      <!-- TAB 5: TREASURY (КАЗНАЧЕЙСТВО) -->
       <section id="tabContent-admin" class="hidden space-y-6">
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -734,6 +739,93 @@
         </div>
 
       </section>
+
+      <!-- TAB 6: SUPERADMIN / АДМИН-ПАНЕЛЬ НАДЗОРА (ТОЛЬКО ДЛЯ АДМИНИСТРАЦИИ) -->
+      <section id="tabContent-superadmin" class="hidden space-y-6">
+        <!-- Шапка Админ-панели -->
+        <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#170826] via-[#10031d] to-[#0a1b14] border-2 border-purple-500/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-900/60 text-purple-300 text-[10px] font-bold uppercase border border-purple-400/40 mb-2">
+              <i class="fa-solid fa-user-shield"></i> Панель Главного Администратора
+            </div>
+            <h2 class="text-2xl font-royal font-black text-white">Мониторинг, Чаты и Модерация</h2>
+            <p class="text-xs text-purple-200/80 mt-1">Полный контроль за транзакциями, переписками граждан и выдачей предупреждений</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-xl bg-purple-900/40 border border-purple-400/30 text-purple-200 text-xs font-mono font-bold">
+              <i class="fa-solid fa-eye text-bank-gold mr-1"></i> Режим надзора активен
+            </span>
+          </div>
+        </div>
+
+        <!-- БЫСТРАЯ МОДЕРАЦИЯ И ВЫДАЧА ПРЕДУПРЕЖДЕНИЙ -->
+        <div class="bg-bank-surface border border-purple-500/40 rounded-3xl p-6 sm:p-7 guilloche-panel">
+          <h3 class="font-royal text-base font-bold text-purple-300 flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-bullhorn text-purple-400"></i> Прямое Предупреждение от Администратора
+          </h3>
+          <p class="text-xs text-emerald-400/70 mb-4">Сообщение поступит нарушителю лично в Центр Сообщений с отметкой Администрации Банка.</p>
+          
+          <form onsubmit="handleSendAdminWarning(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div class="relative">
+              <input type="text" id="adminWarnTarget" required autocomplete="off" onfocus="handleAutocompleteFocus(event)" oninput="handleAutocompleteInput(event)" placeholder="Логин нарушителя..." class="w-full bg-bank-darkest border border-purple-500/50 rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+              <div id="adminWarnTarget-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-bank-darkest/95 border border-bank-gold/60 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto custom-scrollbar hidden"></div>
+            </div>
+            <input type="text" id="adminWarnTitle" required placeholder="Тема: Нарушение правил..." class="bg-bank-darkest border border-purple-500/50 rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none">
+            <input type="text" id="adminWarnText" required placeholder="Текст предупреждения..." class="bg-bank-darkest border border-purple-500/50 rounded-xl py-2 px-3 text-xs text-emerald-100 focus:outline-none sm:col-span-1">
+            <button type="submit" class="py-2 px-4 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+              <i class="fa-solid fa-paper-plane mr-1"></i> Выдать предупреждение
+            </button>
+          </form>
+        </div>
+
+        <!-- МОНИТОРИНГ ПЕРЕВОДОВ И ТРАНЗАКЦИЙ -->
+        <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-bank-border pb-3">
+            <div>
+              <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-transfer text-emerald-400"></i> Журнал Всех Переводов Граждан (Live)
+              </h3>
+              <p class="text-xs text-emerald-400/70">Каждый перевод в системе фиксируется здесь в реальном времени</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="adminTxFilterInput" oninput="renderAdminTransactionsTable()" placeholder="Поиск по логину..." class="bg-bank-darkest border border-bank-border rounded-xl py-1.5 px-3 text-xs text-emerald-100 focus:outline-none">
+              <button onclick="promptClearAllTransactions()" class="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-700/50 text-rose-300 font-bold rounded-xl text-xs whitespace-nowrap transition-colors">
+                <i class="fa-solid fa-trash mr-1"></i> Очистить историю
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar max-h-96">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-bank-border text-emerald-400/60 uppercase tracking-wider font-semibold">
+                  <th class="pb-2.5 px-3">Время</th>
+                  <th class="pb-2.5 px-3">Отправитель</th>
+                  <th class="pb-2.5 px-3">Получатель</th>
+                  <th class="pb-2.5 px-3 text-right">Сумма</th>
+                  <th class="pb-2.5 px-3">Назначение</th>
+                </tr>
+              </thead>
+              <tbody id="adminLiveTxBody" class="divide-y divide-bank-border/30 text-emerald-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- МОНИТОРИНГ ПЕРЕПИСОК (ТЕЛЕГРАММЫ МЕЖДУ ВСЕМИ) -->
+        <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 guilloche-panel space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-bank-border pb-3">
+            <div>
+              <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-comments text-purple-400"></i> Перехват Телеграмм и Сообщений
+              </h3>
+              <p class="text-xs text-emerald-400/70">Просмотр депеш между гражданами для пресечения нарушений и мошенничества</p>
+            </div>
+            <span class="text-xs font-mono bg-bank-darkest border border-bank-border px-3 py-1 rounded-full text-purple-300 font-semibold" id="adminTotalMailsBadge">0 сообщений</span>
+          </div>
+
+          <div id="adminAllMailsContainer" class="space-y-3 max-h-[450px] overflow-y-auto custom-scrollbar pr-1"></div>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -948,7 +1040,6 @@
     const MAX_COMMENT_LENGTH = 300;
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-    // Логин Создателя и Владельца Банка
     const OWNER_USERNAME = 'iosif';
 
     function normalizeLogin(value) {
@@ -1108,12 +1199,13 @@
         }
 
         const admBtn = document.getElementById('tabBtn-admin');
-        if (admBtn) {
-          if (cachedProfile.isAdmin || cachedProfile.isOwner) {
-            admBtn.classList.remove('hidden');
-          } else {
-            admBtn.classList.add('hidden');
-          }
+        const superAdmBtn = document.getElementById('tabBtn-superadmin');
+        if (cachedProfile.isAdmin || cachedProfile.isOwner) {
+          if (admBtn) admBtn.classList.remove('hidden');
+          if (superAdmBtn) superAdmBtn.classList.remove('hidden');
+        } else {
+          if (admBtn) admBtn.classList.add('hidden');
+          if (superAdmBtn) superAdmBtn.classList.add('hidden');
         }
 
         renderNavBarRightDirect(cachedProfile.username, cachedProfile.balance, cachedProfile.isAdmin || cachedProfile.isOwner, cachedProfile.avatar, 0);
@@ -1181,16 +1273,22 @@
     });
 
     // 2. Транзакции
-    db.ref('bankData/transactions').limitToLast(100).on('value', (snap) => {
+    db.ref('bankData/transactions').limitToLast(150).on('value', (snap) => {
       const val = snap.val() || {};
       appData.transactions = Array.isArray(val) ? val : Object.values(val).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
       requestRender();
+      if (isCurrentUserAdmin()) {
+        renderAdminTransactionsTable();
+      }
     });
 
     // 3. Почта
     db.ref('bankData/mailBox').on('value', (snap) => {
       appData.mailBox = snap.val() || {};
       renderMailView();
+      if (isCurrentUserAdmin()) {
+        renderAdminAllMailsView();
+      }
     });
 
     // 4. Уведомления
@@ -1348,7 +1446,7 @@
     }
 
     document.addEventListener('click', (e) => {
-      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser', 'accessTargetUser'].forEach(id => {
+      ['transferTarget', 'proxySenderLogin', 'mailRecipient', 'treasuryTargetUser', 'fineTargetUser', 'statusTargetUser', 'sanctionTargetUser', 'accessTargetUser', 'adminWarnTarget'].forEach(id => {
         const input = document.getElementById(id);
         const dropdown = document.getElementById(`${id}-dropdown`);
         if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
@@ -1484,19 +1582,20 @@
       appSec.classList.remove('hidden');
 
       const admTabBtn = document.getElementById('tabBtn-admin');
-      if (admTabBtn) {
-        if (isAdmin) {
-          admTabBtn.classList.remove('hidden');
-        } else {
-          admTabBtn.classList.add('hidden');
-          const adminSection = document.getElementById('tabContent-admin');
-          if (adminSection && !adminSection.classList.contains('hidden')) {
-            navigateTab('dashboard');
-          }
+      const superAdmTabBtn = document.getElementById('tabBtn-superadmin');
+      if (isAdmin) {
+        if (admTabBtn) admTabBtn.classList.remove('hidden');
+        if (superAdmTabBtn) superAdmTabBtn.classList.remove('hidden');
+      } else {
+        if (admTabBtn) admTabBtn.classList.add('hidden');
+        if (superAdmTabBtn) superAdmTabBtn.classList.add('hidden');
+        const adminSection = document.getElementById('tabContent-admin');
+        const superSection = document.getElementById('tabContent-superadmin');
+        if ((adminSection && !adminSection.classList.contains('hidden')) || (superSection && !superSection.classList.contains('hidden'))) {
+          navigateTab('dashboard');
         }
       }
 
-      // Показ/скрытие блока делегирования полномочий ТОЛЬКО для Владельца
       const ownerDelSec = document.getElementById('ownerDelegationSection');
       if (ownerDelSec) {
         if (isOwner) {
@@ -1515,6 +1614,8 @@
         renderAdminView();
         populateIncomeTargetDropdown();
         renderTreasuryCardDesigns();
+        renderAdminTransactionsTable();
+        renderAdminAllMailsView();
       }
     }
 
@@ -1896,6 +1997,128 @@
       }
     }
 
+    // НОВЫЕ ФУНКЦИИ МОНИТОРИНГА АДМИН-ПАНЕЛИ
+    function renderAdminTransactionsTable() {
+      const tbody = document.getElementById('adminLiveTxBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const filterTerm = (document.getElementById('adminTxFilterInput')?.value || '').trim().toLowerCase();
+      let txs = appData.transactions || [];
+
+      if (filterTerm) {
+        txs = txs.filter(t => (t.from && t.from.toLowerCase().includes(filterTerm)) || (t.to && t.to.toLowerCase().includes(filterTerm)) || (t.comment && t.comment.toLowerCase().includes(filterTerm)));
+      }
+
+      if (txs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-emerald-500/60">Переводов не обнаружено</td></tr>`;
+        return;
+      }
+
+      txs.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-bank-card/60 transition-colors';
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-[10px] text-emerald-500/80 font-mono whitespace-nowrap">${escapeHtml(t.timestamp || '—')}</td>
+          <td class="py-2 px-3 font-bold text-white"><span class="cursor-pointer hover:text-bank-gold" onclick="fillAdminTarget('${t.from}')">@${escapeHtml(t.from)}</span></td>
+          <td class="py-2 px-3 font-bold text-emerald-300"><span class="cursor-pointer hover:text-bank-gold" onclick="fillAdminTarget('${t.to}')">@${escapeHtml(t.to)}</span></td>
+          <td class="py-2 px-3 text-right font-mono font-bold text-bank-gold">+${(Number(t.amount)||0).toLocaleString()} ฿</td>
+          <td class="py-2 px-3 text-[11px] text-emerald-200/80 max-w-xs truncate" title="${escapeHtml(t.comment || '')}">${escapeHtml(t.comment || '—')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAdminAllMailsView() {
+      const container = document.getElementById('adminAllMailsContainer');
+      const badge = document.getElementById('adminTotalMailsBadge');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const rawBox = appData.mailBox || {};
+      const allMails = Object.entries(rawBox).map(([key, item]) => ({ ...item, _dbKey: key })).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
+
+      if (badge) badge.innerText = `${allMails.length} сообщений`;
+
+      if (allMails.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-emerald-500/60 text-xs">В телеграфе пока нет отправленных депеш.</div>`;
+        return;
+      }
+
+      allMails.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'p-3.5 rounded-2xl bg-bank-darkest border border-purple-500/30 space-y-2 text-xs shadow-md';
+        div.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] border-b border-bank-border/40 pb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="text-purple-300 font-bold cursor-pointer hover:underline" onclick="fillAdminTarget('${m.from}')">От: @${escapeHtml(m.from)}</span>
+              <i class="fa-solid fa-arrow-right text-[9px] text-emerald-500"></i>
+              <span class="text-bank-gold font-bold cursor-pointer hover:underline" onclick="fillAdminTarget('${m.to}')">Кому: @${escapeHtml(m.to)}</span>
+            </div>
+            <div class="text-[10px] text-emerald-500/70 font-mono">${escapeHtml(m.timestamp || '')} | Тариф: ${m.cost || 1} ฿</div>
+          </div>
+          <p class="text-white whitespace-pre-wrap leading-relaxed text-xs bg-bank-surface/50 p-2.5 rounded-xl border border-bank-border/40">${escapeHtml(m.text)}</p>
+          <div class="flex items-center justify-between pt-1">
+            <div class="text-[10px] text-emerald-400/60">Действия с автором:</div>
+            <div class="flex items-center gap-2">
+              <button onclick="fillAdminTarget('${m.from}'); navigateTab('superadmin');" class="px-2 py-0.5 bg-purple-950/70 border border-purple-500/40 text-purple-200 rounded text-[10px] hover:text-white">
+                <i class="fa-solid fa-bullhorn mr-1"></i> Предупредить
+              </button>
+              <button onclick="deleteAdminMailDirect('${m._dbKey}')" class="px-2 py-0.5 bg-rose-950/70 border border-rose-600/40 text-rose-300 rounded text-[10px] hover:text-white">
+                <i class="fa-solid fa-trash-can mr-1"></i> Удалить из базы
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function deleteAdminMailDirect(mailKey) {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
+      if (!confirm('Удалить эту депешу из базы данных Банка навсегда?')) return;
+      db.ref(`bankData/mailBox/${mailKey}`).remove().then(() => {
+        showToast('Депеша удалена из базы администратором!', 'info');
+      });
+    }
+
+    function promptClearAllTransactions() {
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
+      if (!confirm('ВНИМАНИЕ: Вы действительно хотите очистить всю историю переводов в Банке?')) return;
+      db.ref('bankData/transactions').set(null).then(() => {
+        showToast('История переводов полностью очищена!', 'info');
+      });
+    }
+
+    function fillAdminTarget(username) {
+      const clean = String(username || '').replace('@','').trim();
+      if (!clean) return;
+      const targetInput = document.getElementById('adminWarnTarget');
+      if (targetInput) targetInput.value = clean;
+      const fineTarget = document.getElementById('fineTargetUser');
+      if (fineTarget) fineTarget.value = clean;
+      const sanctionTarget = document.getElementById('sanctionTargetUser');
+      if (sanctionTarget) sanctionTarget.value = clean;
+      showToast(`Гражданин @${clean} выбран для действий`, 'info');
+    }
+
+    function handleSendAdminWarning(e) {
+      e.preventDefault();
+      if (!isCurrentUserAdmin()) return showToast('Доступ запрещён!', 'error');
+      const target = document.getElementById('adminWarnTarget').value.trim();
+      const title = document.getElementById('adminWarnTitle').value.trim();
+      const text = document.getElementById('adminWarnText').value.trim();
+
+      const user = findUser(target);
+      if (!user) return showToast('Гражданин не найден!', 'error');
+
+      addSystemMessage(user.username, `⚠️ [АДМИНИСТРАЦИЯ]: ${title}`, `${text} (Выдано Администратором @${currentUser})`).then(() => {
+        showToast(`Официальное предупреждение отправлено гражданину @${user.username}!`, 'success');
+        document.getElementById('adminWarnTitle').value = '';
+        document.getElementById('adminWarnText').value = '';
+      });
+    }
+
     function quickRevokeAdmin(username) {
       if (!isCurrentUserOwner()) return showToast('Только Владелец Банка может отбирать полномочия!', 'error');
       if (!confirm(`Отобрать права Казначея у пользователя @${username}?`)) return;
@@ -2263,7 +2486,7 @@
       document.getElementById('bankReserveModal').classList.remove('hidden');
       document.getElementById('bankReserveModal').classList.add('flex');
     }
-    function closeBankreserveModal() {
+    function closeBankReserveModal() {
       document.getElementById('bankReserveModal').classList.add('hidden');
       document.getElementById('bankReserveModal').classList.remove('flex');
     }
@@ -2273,7 +2496,7 @@
       const val = parseInt(document.getElementById('inputBankReserveAmount').value, 10);
       if (isNaN(val) || val < 0) return showToast('Введите корректную сумму!', 'error');
       db.ref('bankData/bankReserve').set(val).then(() => {
-        closeBankreserveModal();
+        closeBankReserveModal();
         showToast(`Казна Банка обновлена: ${val.toLocaleString()} ฿`, 'success');
       });
     }
@@ -2850,20 +3073,23 @@
       reader.readAsDataURL(file);
     }
 
+    // НАВИГАЦИЯ МЕЖДУ СТРАНИЦАМИ С ПРЕДОТВРАЩЕНИЕМ НАЛОЖЕНИЯ
     function navigateTab(tab) {
       const hasAdminAccess = isCurrentUserAdmin();
-      if (tab === 'admin' && !hasAdminAccess) {
+      if ((tab === 'admin' || tab === 'superadmin') && !hasAdminAccess) {
         tab = 'dashboard';
-        showToast('Доступ к Казначейству ограничен!', 'error');
+        showToast('Доступ к служебным разделам ограничен!', 'error');
       }
 
-      ['dashboard', 'mail', 'leaderboard', 'banknotes', 'admin'].forEach(t => {
+      ['dashboard', 'mail', 'leaderboard', 'banknotes', 'admin', 'superadmin'].forEach(t => {
         const sec = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
         if (sec) sec.classList.add('hidden');
         if (btn) {
           if (t === 'admin') {
             btn.className = `${hasAdminAccess ? '' : 'hidden '}px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap`;
+          } else if (t === 'superadmin') {
+            btn.className = `${hasAdminAccess ? '' : 'hidden '}px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-purple-950/80 text-purple-300 border border-purple-500/50 hover:bg-purple-900 whitespace-nowrap`;
           } else {
             btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap';
           }
@@ -2876,9 +3102,16 @@
       if (tBtn) {
         if (tab === 'admin') {
           tBtn.className = `${hasAdminAccess ? '' : 'hidden '}px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold text-emerald-950 font-black shadow-md whitespace-nowrap`;
+        } else if (tab === 'superadmin') {
+          tBtn.className = `${hasAdminAccess ? '' : 'hidden '}px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-purple-600 text-white font-black shadow-lg whitespace-nowrap`;
         } else {
           tBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-emerald-700 text-white shadow-md whitespace-nowrap';
         }
+      }
+
+      if (tab === 'superadmin' && hasAdminAccess) {
+        renderAdminTransactionsTable();
+        renderAdminAllMailsView();
       }
     }
 
