@@ -81,6 +81,9 @@
       background: #1a4735;
       border-radius: 4px;
     }
+    details summary::-webkit-details-marker {
+      display: none;
+    }
   </style>
 </head>
 <body class="text-emerald-100 flex flex-col justify-between selection:bg-emerald-800 selection:text-white antialiased">
@@ -183,6 +186,10 @@
           </button>
           <button onclick="navigateTab('banknotes')" id="tabBtn-banknotes" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
             <i class="fa-solid fa-money-bill-wave mr-1"></i> Купюры Байти
+          </button>
+          <!-- Вкладка Свод Законов (Правила) -->
+          <button onclick="navigateTab('rules')" id="tabBtn-rules" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap">
+            <i class="fa-solid fa-scale-balanced mr-1 text-bank-gold"></i> Свод Законов
           </button>
           <!-- Казначейство -->
           <button onclick="navigateTab('admin')" id="tabBtn-admin" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/20 text-bank-gold border border-bank-gold/40 hover:bg-bank-gold/30 whitespace-nowrap">
@@ -411,7 +418,150 @@
         </div>
       </section>
 
-      <!-- TAB 5: TREASURY (КАЗНАЧЕЙСТВО) -->
+      <!-- TAB 5: RULES (СВОД ЗАКОНОВ БАНКА) -->
+      <section id="tabContent-rules" class="hidden space-y-6">
+        <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bank-gold/20 text-bank-gold text-[10px] font-bold uppercase border border-bank-gold/40 mb-2">
+              <i class="fa-solid fa-scale-balanced"></i> Государственный Кодекс
+            </div>
+            <h2 class="text-2xl font-royal font-black text-white">Свод Законов и Правил Банка Миробайт</h2>
+            <p class="text-xs text-emerald-300/80 mt-1">Официальные статьи порядка, безопасности переводов и система государственных взысканий</p>
+          </div>
+          <span class="px-3.5 py-1.5 rounded-xl bg-bank-darkest/90 border border-bank-gold/50 text-bank-gold text-xs font-mono font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-gavel"></i> Действует с 2026 г.
+          </span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Раздел 1 -->
+          <div class="bg-bank-surface border border-bank-border rounded-3xl p-5 sm:p-7 guilloche-panel space-y-3">
+            <div class="text-sm font-royal font-bold text-bank-gold flex items-center gap-2 border-b border-bank-border pb-2.5">
+              <i class="fa-solid fa-shield-cat text-emerald-400"></i> РАЗДЕЛ 1. КУЛЬТУРА И ОБЩЕНИЕ В ТЕЛЕГРАФЕ
+            </div>
+
+            <!-- Статья 1.1 -->
+            <details class="group bg-bank-darkest/70 border border-bank-border/70 rounded-2xl p-4 transition-all">
+              <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/40 text-bank-gold font-royal font-black flex items-center justify-center text-xs">1.1</span>
+                  <span class="font-bold text-xs sm:text-sm text-white">Оскорбления, грубость, мат и травля</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] px-2.5 py-0.5 bg-rose-950/80 border border-rose-600/40 text-rose-300 rounded-full font-mono font-bold">Штраф 50 – 1 000 ฿</span>
+                  <i class="fa-solid fa-chevron-down text-emerald-400 text-xs transition-transform group-open:rotate-180"></i>
+                </div>
+              </summary>
+              <div class="pt-3.5 mt-3 border-t border-bank-border/50 text-xs text-emerald-200/90 space-y-2">
+                <p><b>Суть закона:</b> Категорически запрещено оскорблять других граждан, использовать нецензурную лексику, угрожать, проявлять неуважение или устраивать травлю в депешах Телеграфа и в комментариях к переводам.</p>
+                <div class="p-2.5 rounded-xl bg-bank-card/70 border border-bank-border/80 text-[11px] space-y-1">
+                  <div>• <b>1-е нарушение:</b> Официальное предупреждение в Центр Сообщений.</div>
+                  <div>• <b>2-е нарушение:</b> Взыскание штрафа от <b>50 ฿ до 1 000 ฿</b> в государственную Казну Банка.</div>
+                  <div>• <b>3-е нарушение:</b> Блокировка аккаунта (бан) на срок до 7 дней.</div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Статья 1.2 -->
+            <details class="group bg-bank-darkest/70 border border-bank-border/70 rounded-2xl p-4 transition-all">
+              <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/40 text-bank-gold font-royal font-black flex items-center justify-center text-xs">1.2</span>
+                  <span class="font-bold text-xs sm:text-sm text-white">Спам, засорение связи и флуд</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] px-2.5 py-0.5 bg-amber-950/80 border border-amber-600/40 text-amber-300 rounded-full font-mono font-bold">Штраф 25 – 2 000 ฿</span>
+                  <i class="fa-solid fa-chevron-down text-emerald-400 text-xs transition-transform group-open:rotate-180"></i>
+                </div>
+              </summary>
+              <div class="pt-3.5 mt-3 border-t border-bank-border/50 text-xs text-emerald-200/90 space-y-2">
+                <p><b>Суть закона:</b> Запрещается массовая отправка бессмысленных сообщений, многократное дублирование одинаковых телеграмм, засорение государственного канала связи или отправка пустых микро-переводов ради спама.</p>
+                <div class="p-2.5 rounded-xl bg-bank-card/70 border border-bank-border/80 text-[11px] space-y-1">
+                  <div>• <b>Санкция:</b> Взыскание штрафа от <b>25 ฿ до 2 000 ฿</b> в зависимости от тяжести спама, а также полное удаление сообщений из базы данных.</div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Раздел 2 -->
+          <div class="bg-bank-surface border border-bank-border rounded-3xl p-5 sm:p-7 guilloche-panel space-y-3">
+            <div class="text-sm font-royal font-bold text-bank-gold flex items-center gap-2 border-b border-bank-border pb-2.5">
+              <i class="fa-solid fa-sack-dollar text-emerald-400"></i> РАЗДЕЛ 2. ЭКОНОМИЧЕСКАЯ БЕЗОПАСНОСТЬ И ПЕРЕВОДЫ
+            </div>
+
+            <!-- Статья 2.1 -->
+            <details class="group bg-bank-darkest/70 border border-bank-border/70 rounded-2xl p-4 transition-all">
+              <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/40 text-bank-gold font-royal font-black flex items-center justify-center text-xs">2.1</span>
+                  <span class="font-bold text-xs sm:text-sm text-white">Обман, мошенничество и шантаж</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] px-2.5 py-0.5 bg-rose-950/80 border border-rose-600/40 text-rose-300 rounded-full font-mono font-bold">Возврат + Бан 7 дней</span>
+                  <i class="fa-solid fa-chevron-down text-emerald-400 text-xs transition-transform group-open:rotate-180"></i>
+                </div>
+              </summary>
+              <div class="pt-3.5 mt-3 border-t border-bank-border/50 text-xs text-emerald-200/90 space-y-2">
+                <p><b>Суть закона:</b> Запрещается обманным путем выманивать Байти у других участников, давать ложные обещания по товарам/услугам или требовать переводы путём угроз.</p>
+                <div class="p-2.5 rounded-xl bg-bank-card/70 border border-bank-border/80 text-[11px] space-y-1">
+                  <div>• <b>Санкция:</b> Принудительный возврат всей суммы пострадавшему + штраф в размере суммы обмана в Казну. При повторении — блокировка счёта на 7 дней.</div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Статья 2.2 -->
+            <details class="group bg-bank-darkest/70 border border-bank-border/70 rounded-2xl p-4 transition-all">
+              <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/40 text-bank-gold font-royal font-black flex items-center justify-center text-xs">2.2</span>
+                  <span class="font-bold text-xs sm:text-sm text-white">Списание без спроса (злоупотребление доверием)</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] px-2.5 py-0.5 bg-rose-950/80 border border-rose-600/40 text-rose-300 rounded-full font-mono font-bold">Штраф 100 ฿ / Бан</span>
+                  <i class="fa-solid fa-chevron-down text-emerald-400 text-xs transition-transform group-open:rotate-180"></i>
+                </div>
+              </summary>
+              <div class="pt-3.5 mt-3 border-t border-bank-border/50 text-xs text-emerald-200/90 space-y-2">
+                <p><b>Суть закона:</b> Функция «Списать у другого гражданина» создана для взаимного удобства (когда у второго человека нет телефона). Использование чужого логина и пароля без прямого согласия владельца запрещено.</p>
+                <div class="p-2.5 rounded-xl bg-bank-card/70 border border-bank-border/80 text-[11px] space-y-1">
+                  <div>• <b>1-е нарушение:</b> Возврат средств + Штраф <b>100 ฿</b>.</div>
+                  <div>• <b>Повторное:</b> Блокировка аккаунта нарушителя на 14 дней.</div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Раздел 3 -->
+          <div class="bg-bank-surface border border-bank-border rounded-3xl p-5 sm:p-7 guilloche-panel space-y-3">
+            <div class="text-sm font-royal font-bold text-rose-400 flex items-center gap-2 border-b border-bank-border pb-2.5">
+              <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> РАЗДЕЛ 3. ЧИТЫ, ВЗЛОМ И ВЫСШАЯ МЕРА (ОБНУЛЕНИЕ)
+            </div>
+
+            <!-- Статья 3.1 -->
+            <details class="group bg-bank-darkest/70 border border-rose-900/60 rounded-2xl p-4 transition-all">
+              <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-lg bg-rose-950 border border-rose-600/40 text-rose-300 font-royal font-black flex items-center justify-center text-xs">3.1</span>
+                  <span class="font-bold text-xs sm:text-sm text-white">Использование уязвимостей, накрутка и вредительство</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] px-2.5 py-0.5 bg-rose-600 text-white rounded-full font-mono font-bold uppercase tracking-wider">Обнуление счёта</span>
+                  <i class="fa-solid fa-chevron-down text-rose-400 text-xs transition-transform group-open:rotate-180"></i>
+                </div>
+              </summary>
+              <div class="pt-3.5 mt-3 border-t border-bank-border/50 text-xs text-emerald-200/90 space-y-2">
+                <p><b>Суть закона:</b> Попытки взлома, регистрация бот-аккаунтов ради стартовых 50 ฿, сокрытие багов с целью обогащения или саботаж работы системы караются высшей мерой наказания.</p>
+                <div class="p-3 rounded-xl bg-rose-950/40 border border-rose-600/50 text-rose-200 text-[11px] space-y-1">
+                  <div>⚠️ <b>ВЫСШАЯ МЕРА:</b> <b>ПОЛНОЕ И БЕЗВОЗВРАТНОЕ ОБНУЛЕНИЕ СЧЁТА</b>.</div>
+                  <div class="text-[10px] text-rose-300/80">* Все Байти конфискуются в государственную Казну Банка без права апелляции и без возможности возврата. Дополнительно накладывается бан на 30 дней или удаление счёта.</div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: TREASURY (КАЗНАЧЕЙСТВО) -->
       <section id="tabContent-admin" class="hidden space-y-6">
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -740,7 +890,7 @@
 
       </section>
 
-      <!-- TAB 6: SUPERADMIN / АДМИН-ПАНЕЛЬ НАДЗОРА (ТОЛЬКО ДЛЯ АДМИНИСТРАЦИИ) -->
+      <!-- TAB 7: SUPERADMIN / АДМИН-ПАНЕЛЬ НАДЗОРА (ТОЛЬКО ДЛЯ АДМИНИСТРАЦИИ) -->
       <section id="tabContent-superadmin" class="hidden space-y-6">
         <!-- Шапка Админ-панели -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#170826] via-[#10031d] to-[#0a1b14] border-2 border-purple-500/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -971,17 +1121,17 @@
       <div id="modalBanknoteRender" class="w-full aspect-[16/9] rounded-2xl border-2 border-bank-gold/50 bg-[#081f16] p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl my-2 banknote-pattern">
         <div class="flex items-start justify-between relative z-10">
           <div>
-            <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold" id="modalSvgValTop">100</div>
-            <div class="text-[9px] font-mono tracking-widest text-emerald-400 font-bold" id="modalSvgEnTop">ONE HUNDRED BAITY</div>
+            <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold" id="modalSvgValTop">${note.value}</div>
+            <div class="text-[9px] font-mono tracking-widest text-emerald-400 font-bold">${note.titleEn}</div>
           </div>
           <div class="text-center font-royal font-bold text-xs sm:text-sm text-white border-b border-bank-gold/50 pb-0.5">BANK OF MIROBYTE</div>
           <div class="font-royal font-black text-2xl sm:text-3xl text-bank-gold">฿</div>
         </div>
         <div class="my-auto text-center relative z-10 py-2">
           <div class="inline-block p-4 rounded-full border border-bank-gold/40 bg-black/40 mb-2">
-            <i id="modalNoteIcon" class="fa-solid fa-landmark text-4xl text-bank-gold"></i>
+            <i id="modalNoteIcon" class="fa-solid ${note.icon} text-4xl text-bank-gold"></i>
           </div>
-          <div id="modalMotifName" class="font-royal font-bold text-sm sm:text-base text-white">Мотив Купюры</div>
+          <div id="modalMotifName" class="font-royal font-bold text-sm sm:text-base text-white">${note.motif}</div>
         </div>
         <div class="flex items-end justify-between relative z-10 text-[10px] font-mono text-emerald-400/80">
           <span id="modalSerial">СЕРИЯ MB-2026-N</span>
@@ -1022,8 +1172,78 @@
     </div>
   </div>
 
-  <footer class="border-t border-bank-border/50 bg-bank-darkest/90 py-5 text-center text-xs text-emerald-600">
-    <span class="font-royal font-bold text-bank-gold">BANK OF MIROBYTE</span> © 2026. Казначей & Владелец: <span class="text-bank-gold font-bold">Iosif</span>
+  <!-- FOOTER: ДИСКЛЕЙМЕР И КОНТАКТНАЯ ИНФОРМАЦИЯ -->
+  <footer class="border-t border-bank-border/70 bg-bank-darkest/95 backdrop-blur-md mt-10 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- Официальный дисклеймер -->
+      <div class="p-5 rounded-2xl bg-[#030d08] border border-bank-border/80 text-center max-w-3xl mx-auto shadow-inner">
+        <div class="font-royal font-bold text-xs uppercase tracking-widest text-bank-gold flex items-center justify-center gap-2 mb-2">
+          <i class="fa-solid fa-circle-info text-emerald-400 text-sm"></i> Официальное Уведомление
+        </div>
+        <p class="text-[11px] leading-relaxed text-emerald-300/80">
+          Данный проект («BANK OF MIROBYTE») был создан исключительно в <b>развлекательных, игровых и ознакомительных целях</b> и ни в коем случае не является официальным банком, финансово-кредитным учреждением или платежной системой. Внутренняя расчетная единица «Байти» (฿) является виртуальным игровым знаком и не имеет реального денежного эквивалента.
+        </p>
+      </div>
+
+      <!-- Контакты Создателя с неоновыми изумрудными иконками -->
+      <div>
+        <div class="text-center font-royal font-bold text-xs uppercase tracking-wider text-emerald-400/90 mb-3">
+          Связь с Автором и Создателем Проекта
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">
+          
+          <!-- Telegram -->
+          <a href="https://t.me/MrJolif" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
+            <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
+              <i class="fa-brands fa-telegram"></i>
+            </div>
+            <div class="truncate text-left">
+              <div class="text-[9px] uppercase font-bold text-emerald-500/70">Telegram</div>
+              <div class="text-xs font-semibold text-white group-hover:text-emerald-300 truncate">@MrJolif</div>
+            </div>
+          </a>
+
+          <!-- VK -->
+          <a href="https://vk.me/id894077045" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
+            <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
+              <i class="fa-brands fa-vk"></i>
+            </div>
+            <div class="truncate text-left">
+              <div class="text-[9px] uppercase font-bold text-emerald-500/70">ВКонтакте</div>
+              <div class="text-xs font-semibold text-white group-hover:text-emerald-300 truncate">id894077045</div>
+            </div>
+          </a>
+
+          <!-- Телефон -->
+          <a href="tel:+79288273125" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
+            <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
+              <i class="fa-solid fa-phone"></i>
+            </div>
+            <div class="truncate text-left">
+              <div class="text-[9px] uppercase font-bold text-emerald-500/70">Телефон</div>
+              <div class="text-xs font-mono font-semibold text-white group-hover:text-emerald-300 truncate">+7 928 827-31-25</div>
+            </div>
+          </a>
+
+          <!-- Email -->
+          <a href="mailto:iosifsherman@gmail.com" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
+            <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
+              <i class="fa-solid fa-envelope"></i>
+            </div>
+            <div class="truncate text-left">
+              <div class="text-[9px] uppercase font-bold text-emerald-500/70">Почта</div>
+              <div class="text-xs font-semibold text-white group-hover:text-emerald-300 truncate">iosifsherman@gmail.com</div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-bank-border/50 text-center text-[11px] text-emerald-600">
+        <span class="font-royal font-bold text-bank-gold">BANK OF MIROBYTE</span> © 2026. Казначей & Владелец: <span class="text-bank-gold font-bold">Iosif</span>
+      </div>
+    </div>
   </footer>
 
   <script>
@@ -1424,7 +1644,7 @@
                 ${isCurrent ? '<span class="text-[9px] px-1 bg-emerald-800 text-white rounded">Вы</span>' : ''}
                 ${u.isOwner ? '<i class="fa-solid fa-crown text-[9px] text-yellow-400" title="Владелец Банка"></i>' : (u.isAdmin ? '<i class="fa-solid fa-crown text-[9px] text-bank-gold" title="Казначей"></i>' : '')}
                 ${u.isBlocked ? '<i class="fa-solid fa-lock text-[9px] text-rose-500" title="Заблокирован"></i>' : ''}
-                ${u.hiddenFromAll ? '<i class="fa-solid fa-eye-slash text-[9px] text-indigo-400" title="Скрыт"></i>' : ''}
+                ${u.hiddenFromAll ? '<span class="text-[9px] px-1 bg-indigo-900 text-indigo-300 border border-indigo-500/40 rounded">Скрыт</span>' : ''}
               </div>
               <div class="text-[10px] text-emerald-400/70 font-mono">${(u.balance || 0).toLocaleString()} ฿</div>
             </div>
@@ -3081,7 +3301,7 @@
         showToast('Доступ к служебным разделам ограничен!', 'error');
       }
 
-      ['dashboard', 'mail', 'leaderboard', 'banknotes', 'admin', 'superadmin'].forEach(t => {
+      ['dashboard', 'mail', 'leaderboard', 'banknotes', 'rules', 'admin', 'superadmin'].forEach(t => {
         const sec = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
         if (sec) sec.classList.add('hidden');
@@ -3160,4 +3380,3 @@
   </script>
 </body>
 </html>
-
