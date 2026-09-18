@@ -903,7 +903,7 @@
           <div id="adminAllMailsContainer" class="space-y-3 max-h-[450px] overflow-y-auto custom-scrollbar pr-1"></div>
         </div>
 
-        <!-- ПАНЕЛЬ САНКЦИЙ, СКРЫТИЯ И УДАЛЕНИЯ (ПЕРЕНЕСЕНО СЮДА) -->
+        <!-- ПАНЕЛЬ САНКЦИЙ, СКРЫТИЯ И УДАЛЕНИЯ -->
         <div class="bg-bank-surface border-2 border-rose-900/60 rounded-3xl p-6 sm:p-8 guilloche-panel space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
@@ -940,15 +940,15 @@
           </div>
         </div>
 
-        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ АДМИНИСТРАТОРА НАДЗОРА (ПЕРЕНЕСЕНО СЮДА) -->
+        <!-- ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ КАЗНАЧЕЙСТВА И АДМИНИСТРАТОРА НАДЗОРА -->
         <div id="ownerDelegationSection" class="hidden bg-bank-surface border-2 border-purple-500/60 rounded-3xl p-6 sm:p-8 guilloche-gold space-y-4">
           <div class="flex items-center justify-between border-b border-bank-border/80 pb-3">
             <div>
               <h3 class="font-royal text-base sm:text-lg font-bold text-purple-300 flex items-center gap-2">
-                <i class="fa-solid fa-key text-bank-gold"></i> Делегирование Полномочий Администратора Надзора
+                <i class="fa-solid fa-key text-bank-gold"></i> Делегирование Полномочий: Казначейство и Надзор
               </h3>
               <p class="text-xs text-emerald-400/70 mt-0.5">
-                Выдача или отзыв доступа к Панели Надзора (Админке). Раздел доступен строго Создателю Банка при подтверждении пароля.
+                Выдача и отзыв доступа к управлению Казначейством (эмиссия, счета, дизайны) или Панелью Надзора (админка). Доступно строго Создателю Банка при подтверждении пароля.
               </p>
             </div>
           </div>
@@ -961,10 +961,12 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Действие</label>
+              <label class="block text-[11px] font-semibold text-emerald-400 uppercase mb-1">Полномочие и Действие</label>
               <select id="accessActionSelect" class="w-full bg-bank-darkest border border-bank-border focus:border-purple-500 rounded-xl py-2 px-3 text-xs text-emerald-100 font-bold focus:outline-none">
-                <option value="grant" class="text-purple-300">🛡️ Дать доступ в Админ-панель</option>
-                <option value="revoke" class="text-rose-400">🚫 Отобрать доступ к Админке</option>
+                <option value="grant_treasury" class="text-bank-gold">👑 Назначить Казначеем (Доступ в Казну)</option>
+                <option value="revoke_treasury" class="text-amber-400">🚫 Забрать полномочия Казначея</option>
+                <option value="grant_superadmin" class="text-purple-300">🛡️ Дать доступ в Админ-панель (Надзор)</option>
+                <option value="revoke_superadmin" class="text-rose-400">🚫 Отобрать доступ к Админ-панели</option>
               </select>
             </div>
 
@@ -1522,7 +1524,6 @@
     // 4. Уведомления (синхронизация с Firebase)
     db.ref('bankData/messages').on('value', (snap) => {
       const val = snap.val() || {};
-      // Нормализуем в массив объектов с гарантированным сохранением ключа Firebase (_dbKey)
       appData.messages = Object.entries(val).map(([k, item]) => ({
         ...item,
         _dbKey: k
@@ -2615,10 +2616,10 @@
       } catch(err){ console.error(err); showToast('Операция не выполнена.', 'error'); }
     }
 
-    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ АДМИНИСТРАТОРА НАДЗОРА (ТОЛЬКО ВЛАДЕЛЕЦ)
+    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ КАЗНАЧЕЙСТВА И АДМИНИСТРАТОРА НАДЗОРА (ТОЛЬКО ВЛАДЕЛЕЦ)
     async function handleManageAdminAccess(e) {
       e.preventDefault();
-      if (!isCurrentUserOwner()) return showToast('Доступ запрещён! Только Владелец Банка может изменять доступ к Админке.', 'error');
+      if (!isCurrentUserOwner()) return showToast('Доступ запрещён! Только Владелец Банка может изменять полномочия.', 'error');
 
       const targetUser = document.getElementById('accessTargetUser').value.trim();
       const action = document.getElementById('accessActionSelect').value;
@@ -2637,18 +2638,37 @@
       if (!target) return showToast(`Гражданин @${targetUser} не найден!`, 'error');
 
       const targetKey = target.username.toLowerCase();
-      if ((target.isOwner || targetKey === OWNER_USERNAME.toLowerCase()) && action === 'revoke') {
+      if ((target.isOwner || targetKey === OWNER_USERNAME.toLowerCase()) && (action === 'revoke_superadmin' || action === 'revoke_treasury')) {
         return showToast('Нельзя забрать права у самого Владельца Банка!', 'error');
       }
 
-      const isGrant = (action === 'grant');
-      db.ref(`bankData/users/${targetKey}/isSuperAdmin`).set(isGrant).then(() => {
+      let updates = {};
+      let msg = '';
+      let sysTitle = 'Изменение полномочий';
+      let sysText = '';
+
+      if (action === 'grant_treasury') {
+        updates[`bankData/users/${targetKey}/isAdmin`] = true;
+        msg = `Гражданину @${target.username} успешно ПРЕДОСТАВЛЕН доступ к Казначейству!`;
+        sysText = 'Вам предоставлены государственные полномочия Казначея Банка Миробайт (доступ в Казначейство).';
+      } else if (action === 'revoke_treasury') {
+        updates[`bankData/users/${targetKey}/isAdmin`] = false;
+        msg = `У гражданина @${target.username} ОТОЗВАН доступ к Казначейству.`;
+        sysText = 'Ваши государственные полномочия Казначея Банка были отозваны.';
+      } else if (action === 'grant_superadmin') {
+        updates[`bankData/users/${targetKey}/isSuperAdmin`] = true;
+        msg = `Гражданину @${target.username} успешно ПРЕДОСТАВЛЕН доступ к Панели Надзора!`;
+        sysText = 'Вам предоставлен доступ к Панели Главного Администратора (Надзор).';
+      } else if (action === 'revoke_superadmin') {
+        updates[`bankData/users/${targetKey}/isSuperAdmin`] = false;
+        msg = `У гражданина @${target.username} ОТОЗВАН доступ к Панели Надзора.`;
+        sysText = 'Ваш доступ к Панели Надзора был отозван.';
+      }
+
+      db.ref().update(updates).then(() => {
         document.getElementById('accessAdminPasswordConfirm').value = '';
-        const msg = isGrant 
-          ? `Гражданину @${target.username} успешно ПРЕДОСТАВЛЕН доступ к Панели Надзора!` 
-          : `У гражданина @${target.username} ОТОЗВАН доступ к Панели Надзора.`;
-        showToast(msg, isGrant ? 'success' : 'info');
-        addSystemMessage(target.username, 'Изменение прав доступа', isGrant ? 'Вам предоставлен доступ к Панели Главного Администратора (Надзор).' : 'Ваш доступ к Панели Надзора был отозван.');
+        showToast(msg, action.startsWith('grant') ? 'success' : 'info');
+        addSystemMessage(target.username, sysTitle, sysText);
       });
     }
 
@@ -3182,7 +3202,6 @@
       return db.ref('bankData/messages').push(msg);
     }
 
-    // Проверка, должно ли сообщение отображаться пользователю
     function isMessageVisibleForUser(m, uLow) {
       if (!m) return false;
       const user = findUser(uLow);
@@ -3252,7 +3271,6 @@
       renderNavBarRight();
     }
 
-    // ПОЛНОЕ УДАЛЕНИЕ ИЗ FIREBASE: ЛИЧНЫЕ УДАЛЯЮТСЯ НАВСЕГДА, ОБЩИЕ ОТРЕЗАЮТСЯ МЕТКОЙ ВРЕМЕНИ
     async function clearUserMessages() {
       if (!currentUser) return;
       const uLow = normalizeLogin(currentUser);
@@ -3266,10 +3284,8 @@
         Object.entries(data).forEach(([key, m]) => {
           if (!m) return;
           if (normalizeLogin(m.to) === uLow) {
-            // Личное сообщение удаляется из базы полностью
             updates[`bankData/messages/${key}`] = null;
           } else if (m.to === 'all') {
-            // Общие системные сообщения скрываем для пользователя
             const delList = Array.isArray(m.deletedFor) ? m.deletedFor : [];
             if (!delList.includes(uLow)) {
               updates[`bankData/messages/${key}/deletedFor`] = [...delList, uLow];
@@ -3281,7 +3297,6 @@
           }
         });
 
-        // Записываем дату очистки в профиль пользователя, чтобы старые сообщения никогда не возродились
         updates[`bankData/users/${uLow}/clearedMessagesBefore`] = now;
 
         await db.ref().update(updates);
@@ -3299,7 +3314,6 @@
       }
     }
 
-    // ИНТЕРАКТИВНЫЙ ГРАФИК ДИНАМИКИ БАЛАНСА В ОКНЕ СТАТИСТИКИ
     function openStatsModal() {
       if (!currentUser) return;
       const uLow = normalizeLogin(currentUser);
