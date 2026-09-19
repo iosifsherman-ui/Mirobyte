@@ -86,7 +86,6 @@
 
   <!-- ОСНОВНОЙ ПУЛЬТ АДМИНИСТРАЦИИ -->
   <main id="adminMainScreen" class="hidden flex-grow max-w-7xl mx-auto w-full px-4 py-6 space-y-6">
-    <!-- Навигационные кнопки вкладок -->
     <div class="flex items-center gap-2 border-b border-bank-border pb-3">
       <button id="navTabTreasury" onclick="switchAdminSubTab('treasury')" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-bank-gold text-black shadow-md flex items-center gap-1.5">
         <i class="fa-solid fa-crown"></i> Казначейство
@@ -96,7 +95,7 @@
       </button>
     </div>
 
-    <!-- РАЗДЕЛ 1: КАЗНАЧЕЙСТВО (ДОСТУПНО КАЗНАЧЕЯМ И ВЛАДЕЛЬЦУ) -->
+    <!-- РАЗДЕЛ 1: КАЗНАЧЕЙСТВО -->
     <section id="sectionTreasury" class="space-y-6">
       <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#04120c] via-[#092b1e] to-bank-surface border-2 border-bank-gold/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -224,7 +223,7 @@
       </div>
     </section>
 
-    <!-- РАЗДЕЛ 2: НАДЗОР (ДОСТУПНО СУПЕР-АДМИНАМ И ВЛАДЕЛЬЦУ) -->
+    <!-- РАЗДЕЛ 2: НАДЗОР -->
     <section id="sectionSuperadmin" class="hidden space-y-6">
       <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#170826] via-[#10031d] to-[#0a1b14] border-2 border-purple-500/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -324,6 +323,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    const PASSWORD_ITERATIONS = 120000;
     const OWNER_USERNAME = 'iosif';
     let currentUser = localStorage.getItem('mirobyte_active_user') || null;
     let treasuryMode = 'grant';
@@ -331,6 +331,26 @@
 
     function normalizeLogin(val) { return String(val || '').trim().toLowerCase(); }
     function escapeHtml(val) { return String(val ?? '').replace(/[&<>'"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[ch])); }
+
+    function base64ToBytes(base64) { const binary = atob(base64); return Uint8Array.from(binary, ch => ch.charCodeAt(0)); }
+    function bytesToBase64(bytes) { let binary = ''; bytes.forEach(b => binary += String.fromCharCode(b)); return btoa(binary); }
+
+    async function derivePasswordHash(password, saltBase64) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+      const salt = base64ToBytes(saltBase64);
+      const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt, iterations:PASSWORD_ITERATIONS, hash:'SHA-256'}, keyMaterial, 256);
+      return bytesToBase64(new Uint8Array(bits));
+    }
+
+    async function verifyPassword(user, password) {
+      if (!user || typeof password !== 'string') return false;
+      if (user.passwordHash && user.passwordSalt) {
+        const hash = await derivePasswordHash(password, user.passwordSalt);
+        return hash === user.passwordHash;
+      }
+      return typeof user.password === 'string' && user.password === password;
+    }
 
     function findUser(login) {
       if (!login) return null;
@@ -362,6 +382,10 @@
     db.ref('bankData/bankReserve').on('value', snap => {
       appData.bankReserve = snap.val() || 5000000;
       document.getElementById('statBankReserve').innerText = `${appData.bankReserve.toLocaleString()} ฿`;
+    });
+
+    db.ref('bankData/autoIncomeConfig').on('value', snap => {
+      appData.autoIncomeConfig = snap.val() || { targetUser: 'ALL', amount: 10, intervalMinutes: 1440, lastPayout: 0 };
     });
 
     function checkAccessAndRender() {
@@ -452,8 +476,8 @@
           <td class="py-2.5 px-3 text-[10px] text-emerald-400">${u.isOwner?'Владелец':(u.isSuperAdmin?'Администратор':(u.isAdmin?'Казначей':'Гражданин'))}</td>
           <td class="py-2.5 px-3 font-mono font-bold text-bank-gold">${(u.balance||0).toLocaleString()} ฿</td>
           <td class="py-2.5 px-3 text-right space-x-1">
-            <button onclick="adminQuick(${u.balance}, '${u.username}', 100, 'grant')" class="px-2 py-0.5 bg-emerald-900 text-emerald-200 rounded text-[10px]">+100</button>
-            <button onclick="adminQuick(${u.balance}, '${u.username}', 50, 'deduct')" class="px-2 py-0.5 bg-rose-950 text-rose-300 rounded text-[10px]">-50</button>
+            <button onclick="adminQuick(${u.balance}, '${u.username}', 100, 'grant')" class="px-2 py-0.5 bg-emerald-900 text-emerald-200 rounded text-[10px] font-bold">+100</button>
+            <button onclick="adminQuick(${u.balance}, '${u.username}', 50, 'deduct')" class="px-2 py-0.5 bg-rose-950 text-rose-300 rounded text-[10px] font-bold">-50</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -504,7 +528,7 @@
         div.className = 'p-3 rounded-2xl bg-bank-darkest border border-purple-500/30 text-xs space-y-1';
         div.innerHTML = `
           <div class="flex justify-between text-[10px] text-purple-300">
-            <span>От: @${escapeHtml(m.from)} $\rightarrow$ Кому: @${escapeHtml(m.to)}</span>
+            <span>От: @${escapeHtml(m.from)} → Кому: @${escapeHtml(m.to)}</span>
             <span>${escapeHtml(m.timestamp)}</span>
           </div>
           <p class="text-white">${escapeHtml(m.text)}</p>
@@ -607,6 +631,12 @@
       const targetUser = document.getElementById('accessTargetUser').value.trim();
       const action = document.getElementById('accessActionSelect').value;
       const pass = document.getElementById('accessAdminPasswordConfirm').value;
+      const ownerUser = findUser(OWNER_USERNAME);
+
+      if (!ownerUser || !(await verifyPassword(ownerUser, pass))) {
+        return showToast('Неверный пароль Владельца Банка!', 'error');
+      }
+
       const target = findUser(targetUser);
       if (!target) return showToast('Гражданин не найден!', 'error');
 
@@ -632,8 +662,18 @@
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          db.ref(`bankData/cardDesigns/${designId}`).set({ id: designId, name: name, theme: theme, bgImage: evt.target.result });
-          showToast('Дизайн с изображением сохранён!', 'success');
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.getElementById('cardBgCanvas');
+            let w = img.width, h = img.height;
+            if (w > 800) { h = Math.round((h * 800) / w); w = 800; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const compressed = canvas.toDataURL('image/jpeg', 0.82);
+            db.ref(`bankData/cardDesigns/${designId}`).set({ id: designId, name: name, theme: theme, bgImage: compressed });
+            showToast('Дизайн с изображением сохранён!', 'success');
+          };
+          img.src = evt.target.result;
         };
         reader.readAsDataURL(file);
       } else {
@@ -659,7 +699,15 @@
       if (!file) return showToast('Выберите файл герба!', 'error');
       const reader = new FileReader();
       reader.onload = function(evt) {
-        db.ref('bankData/bankEmblemImage').set(evt.target.result).then(() => showToast('Герб обновлён!', 'success'));
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById('emblemCanvas');
+          canvas.width = 160; canvas.height = 160;
+          canvas.getContext('2d').drawImage(img, 0, 0, 160, 160);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          db.ref('bankData/bankEmblemImage').set(compressed).then(() => showToast('Герб обновлён!', 'success'));
+        };
+        img.src = evt.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -692,10 +740,20 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
-        db.ref(`bankData/banknoteImages/${denom}`).set(evt.target.result).then(() => {
-          closeBanknoteManagerModal();
-          showToast(`Купюра ${denom} ฿ сохранена!`, 'success');
-        });
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById('banknoteCanvas');
+          let w = img.width, h = img.height;
+          if (w > 800) { h = Math.round((h * 800) / w); w = 800; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          db.ref(`bankData/banknoteImages/${denom}`).set(compressed).then(() => {
+            closeBanknoteManagerModal();
+            showToast(`Купюра ${denom} ฿ сохранена!`, 'success');
+          });
+        };
+        img.src = evt.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -712,7 +770,7 @@
     function showToast(msg, type = 'success') {
       const c = document.getElementById('toastContainer');
       const t = document.createElement('div');
-      t.className = 'pointer-events-auto bg-[#071911] border border-bank-gold/40 text-emerald-100 px-4 py-3 rounded-2xl text-xs shadow-2xl';
+      t.className = 'pointer-events-auto bg-[#071911] border border-bank-gold/40 text-emerald-100 px-4 py-3 rounded-2xl text-xs shadow-2xl transition-all';
       t.innerText = msg;
       c.appendChild(t);
       setTimeout(() => t.remove(), 3500);
