@@ -817,7 +817,7 @@
 
       </section>
 
-      <!-- TAB 7: SUPERADMIN / АДМИН-ПАНЕЛЬ НАДЗОРА (ТОЛЬКО ДЛЯ АДМИНИСТРАЦИИ) -->
+      <!-- TAB 7: SUPERADMIN / АДМИН-ПАНЕЛЬ НАДЗОРА -->
       <section id="tabContent-superadmin" class="hidden space-y-6">
         <!-- Шапка Админ-панели -->
         <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#170826] via-[#10031d] to-[#0a1b14] border-2 border-purple-500/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -996,7 +996,6 @@
         <h4 class="font-royal text-lg font-bold text-bank-gold">⚙️ Настройки Гражданина</h4>
       </div>
 
-      <!-- Контейнер с исправленным скроллом -->
       <div class="overflow-y-auto custom-scrollbar pr-2 py-3 space-y-4 flex-grow rounded-2xl">
         <!-- Avatar Upload -->
         <div class="p-4 rounded-2xl bg-bank-darkest border border-bank-border/80 flex items-center justify-between">
@@ -1154,7 +1153,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Statistics С ИНТЕРАКТИВНЫМ ГРАФИКОМ -->
+  <!-- MODAL: Statistics -->
   <div id="statsModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative guilloche-gold">
       <button onclick="closeStatsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest text-emerald-400 flex items-center justify-center">✕</button>
@@ -1162,7 +1161,6 @@
         <i class="fa-solid fa-chart-line text-emerald-400"></i> Динамика и Статистика Счёта
       </h4>
 
-      <!-- Canvas График Динамики Баланса -->
       <div class="p-3 bg-bank-darkest/90 border border-bank-border rounded-2xl mb-4">
         <div class="flex items-center justify-between text-[10px] text-emerald-400/80 mb-2 font-mono">
           <span>График движения Байти (฿)</span>
@@ -1192,14 +1190,13 @@
         </p>
       </div>
 
-      <!-- Контакты Создателя с неоновыми изумрудными иконками -->
+      <!-- Контакты Создателя -->
       <div>
         <div class="text-center font-royal font-bold text-xs uppercase tracking-wider text-emerald-400/90 mb-3">
           Связь с Автором и Создателем Проекта
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">
           
-          <!-- Telegram -->
           <a href="https://t.me/MrJolif" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
             <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
               <i class="fa-brands fa-telegram"></i>
@@ -1210,7 +1207,6 @@
             </div>
           </a>
 
-          <!-- VK -->
           <a href="https://vk.me/id894077045" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
             <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
               <i class="fa-brands fa-vk"></i>
@@ -1221,7 +1217,6 @@
             </div>
           </a>
 
-          <!-- Телефон -->
           <a href="tel:+79288273125" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
             <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
               <i class="fa-solid fa-phone"></i>
@@ -1232,7 +1227,6 @@
             </div>
           </a>
 
-          <!-- Email -->
           <a href="mailto:iosifsherman@gmail.com" class="flex items-center gap-3 p-3 rounded-2xl bg-bank-surface/60 border border-bank-border hover:border-emerald-400 hover:bg-bank-card/80 transition-all group shadow-md">
             <div class="w-9 h-9 rounded-xl bg-bank-darkest border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:shadow-[0_0_18px_rgba(16,185,129,0.6)] group-hover:border-emerald-300 transition-all">
               <i class="fa-solid fa-envelope"></i>
@@ -1304,21 +1298,65 @@
       return { passwordHash: await derivePasswordHash(password, saltBase64), passwordSalt: saltBase64, passwordVersion: 2 };
     }
 
-    async function verifyPassword(user, password) {
-      if (!user || typeof password !== 'string') return false;
-      if (user.passwordHash && user.passwordSalt) {
-        const hash = await derivePasswordHash(password, user.passwordSalt);
-        return hash === user.passwordHash;
+    // ========================================================
+    // ИЗОЛИРОВАННАЯ СИСТЕМА УЧЕТНЫХ ДАННЫХ
+    // ========================================================
+
+    async function fetchUserCredentials(username, fallbackUserObj = null) {
+      const key = normalizeLogin(username);
+      try {
+        const snap = await db.ref(`bankSecurity/credentials/${key}`).once('value');
+        const creds = snap.val();
+        if (creds && creds.passwordHash && creds.passwordSalt) {
+          return creds;
+        }
+      } catch (e) {
+        console.warn('Запрос к bankSecurity:', e);
       }
-      if (typeof user.password === 'string' && user.password === password) return true;
+
+      // Бесшовная миграция старых записей
+      const fallback = fallbackUserObj || findUser(username);
+      if (fallback) {
+        if (fallback.passwordHash && fallback.passwordSalt) {
+          return {
+            passwordHash: fallback.passwordHash,
+            passwordSalt: fallback.passwordSalt,
+            passwordVersion: fallback.passwordVersion || 1,
+            _isLegacy: true
+          };
+        }
+        if (typeof fallback.password === 'string') {
+          return {
+            plainPassword: fallback.password,
+            _isPlainLegacy: true
+          };
+        }
+      }
+      return null;
+    }
+
+    async function verifyPasswordRecord(credentials, inputPassword) {
+      if (!credentials || typeof inputPassword !== 'string') return false;
+      if (credentials._isPlainLegacy) {
+        return credentials.plainPassword === inputPassword;
+      }
+      if (credentials.passwordHash && credentials.passwordSalt) {
+        const hash = await derivePasswordHash(inputPassword, credentials.passwordSalt);
+        return hash === credentials.passwordHash;
+      }
       return false;
     }
 
-    async function migrateLegacyPassword(user, password) {
-      if (!user || !user.password || user.passwordHash) return;
+    async function migrateUserCredentialsToSecureNode(username, password) {
+      const key = normalizeLogin(username);
       const record = await createPasswordRecord(password);
-      const key = normalizeLogin(user.username);
-      await db.ref(`bankData/users/${key}`).update({ ...record, password: null });
+      await db.ref(`bankSecurity/credentials/${key}`).set(record);
+      await db.ref(`bankData/users/${key}`).update({
+        password: null,
+        passwordHash: null,
+        passwordSalt: null,
+        passwordVersion: null
+      });
     }
 
     function validAmount(value) {
@@ -1348,7 +1386,7 @@
     }
 
     window.addEventListener('unhandledrejection', e => {
-      console.error('Unhandled Firebase/app error:', e.reason);
+      console.error('Unhandled Firebase error:', e.reason);
       showToast('Произошла ошибка операции. Данные не были подтверждены.', 'error');
     });
 
@@ -1467,7 +1505,7 @@
       }
     }
 
-    // 1. Пользователи
+    // 1. Синхронизация публичных пользователей
     db.ref('bankData/users').on('value', (snap) => {
       appData.users = snap.val() || {};
       
@@ -1521,14 +1559,13 @@
       }
     });
 
-    // 4. Уведомления (синхронизация с Firebase)
+    // 4. Уведомления
     db.ref('bankData/messages').on('value', (snap) => {
       const val = snap.val() || {};
       appData.messages = Object.entries(val).map(([k, item]) => ({
         ...item,
         _dbKey: k
       })).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
-      
       renderNavBarRight();
     });
 
@@ -1546,7 +1583,7 @@
       }
     });
 
-    // 7. Государственная эмблема
+    // 7. Эмблема
     db.ref('bankData/bankEmblemImage').on('value', (snap) => {
       appData.bankEmblemImage = snap.val() || null;
       if (appData.bankEmblemImage) {
@@ -1569,7 +1606,7 @@
       }
     });
 
-    // 9. Казна Банка
+    // 9. Резерв Казны
     db.ref('bankData/bankReserve').on('value', (snap) => {
       const val = snap.val();
       appData.bankReserve = val !== null && val !== undefined ? val : 5000000;
@@ -1577,7 +1614,7 @@
       if (statRes) statRes.innerText = `${appData.bankReserve.toLocaleString()} ฿`;
     });
 
-    // 10. Ручная масса
+    // 10. Денежная масса
     db.ref('bankData/customMoneySupply').on('value', (snap) => {
       const val = snap.val();
       appData.customMoneySupply = val !== undefined ? val : null;
@@ -2244,7 +2281,6 @@
       }
     }
 
-    // МОНИТОРИНГ АДМИН-ПАНЕЛИ
     function renderAdminTransactionsTable() {
       const tbody = document.getElementById('adminLiveTxBody');
       if (!tbody) return;
@@ -2616,7 +2652,7 @@
       } catch(err){ console.error(err); showToast('Операция не выполнена.', 'error'); }
     }
 
-    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ КАЗНАЧЕЙСТВА И АДМИНИСТРАТОРА НАДЗОРА (ТОЛЬКО ВЛАДЕЛЕЦ)
+    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ
     async function handleManageAdminAccess(e) {
       e.preventDefault();
       if (!isCurrentUserOwner()) return showToast('Доступ запрещён! Только Владелец Банка может изменять полномочия.', 'error');
@@ -2630,7 +2666,8 @@
       const ownerUser = getSystemOwner();
       if (!ownerUser) return showToast('Владелец Банка не найден в системе!', 'error');
 
-      if (!(await verifyPassword(ownerUser, passConfirm))) {
+      const ownerCreds = await fetchUserCredentials(ownerUser.username, ownerUser);
+      if (!(await verifyPasswordRecord(ownerCreds, passConfirm))) {
         return showToast('Неверный текущий пароль Владельца Банка! Доступ заблокирован.', 'error');
       }
 
@@ -2729,6 +2766,7 @@
         if (!confirm(`Вы действительно хотите БЕЗВОЗВРАТНО удалить аккаунт @${user.username}?`)) return;
         
         db.ref(`bankData/users/${uKey}`).remove().then(() => {
+          db.ref(`bankSecurity/credentials/${uKey}`).remove();
           targetInput.value = '';
           showToast(`Аккаунт @${user.username} успешно удалён из Банка!`, 'success');
         });
@@ -2792,6 +2830,7 @@
       document.getElementById('authSubmitBtn').innerText = m === 'login' ? 'Войти в Личный Кабинет' : 'Создать счёт (+50 ฿)';
     }
 
+    // ВХОД И РЕГИСТРАЦИЯ
     async function processAuthForm(e) {
       e.preventDefault();
       const u = document.getElementById('inputUsername').value.trim();
@@ -2803,9 +2842,21 @@
       const existing = findUser(u);
 
       if (authMode === 'login') {
-        if (existing && await verifyPassword(existing, p)) {
-          if (existing.isBlocked) return showToast('Ваш счёт заблокирован решением Банка!', 'error');
-          try { await migrateLegacyPassword(existing, p); } catch (err) { console.error(err); }
+        if (!existing) return showToast('Гражданин с таким логином не найден!', 'error');
+        if (existing.isBlocked) return showToast('Ваш счёт заблокирован решением Банка!', 'error');
+
+        const creds = await fetchUserCredentials(existing.username, existing);
+        const isValid = await verifyPasswordRecord(creds, p);
+
+        if (isValid) {
+          if (creds._isLegacy || creds._isPlainLegacy || existing.passwordHash || existing.password) {
+            try {
+              await migrateUserCredentialsToSecureNode(existing.username, p);
+            } catch (err) {
+              console.error('Ошибка миграции:', err);
+            }
+          }
+
           currentUser = existing.username;
           localStorage.setItem('mirobyte_active_user', currentUser);
           localStorage.removeItem('mirobyte_cached_profile');
@@ -2817,16 +2868,19 @@
       } else {
         if (existing) return showToast('Логин уже занят!', 'error');
         if (p.length < 6) return showToast('Для нового счёта пароль должен быть не менее 6 символов!', 'error');
+
         const key = normalizeLogin(u);
         const isOwnerAcc = (key === OWNER_USERNAME.toLowerCase());
-        const record = await createPasswordRecord(p);
+        const passwordRecord = await createPasswordRecord(p);
+
         try {
+          await db.ref(`bankSecurity/credentials/${key}`).set(passwordRecord);
+
           const newUserRef = db.ref(`bankData/users/${key}`);
           const createResult = await newUserRef.transaction(existingValue => {
             if (existingValue !== null) return;
             return { 
               username: u, 
-              ...record, 
               balance: isOwnerAcc ? 100000 : 50, 
               isAdmin: isOwnerAcc, 
               isSuperAdmin: isOwnerAcc,
@@ -2839,7 +2893,12 @@
               hiddenFromAll: false 
             };
           });
-          if (!createResult.committed) return showToast('Логин уже занят!', 'error');
+
+          if (!createResult.committed) {
+            await db.ref(`bankSecurity/credentials/${key}`).remove();
+            return showToast('Логин уже занят!', 'error');
+          }
+
           currentUser = u;
           localStorage.setItem('mirobyte_active_user', currentUser);
           addSystemMessage(u, 'Открытие счёта', isOwnerAcc ? 'Добро пожаловать, Создатель Банка!' : 'Счёт успешно открыт! Вам начислено 50 ฿ стартового баланса.');
@@ -2852,6 +2911,7 @@
       }
     }
 
+    // ПЕРЕВОД БАЙТИ
     async function executeTransfer(e) {
       e.preventDefault();
       const to = document.getElementById('transferTarget').value.trim();
@@ -2870,8 +2930,11 @@
         const pLog = document.getElementById('proxySenderLogin').value.trim();
         const pPass = document.getElementById('proxySenderPassword').value;
         const pUser = findUser(pLog);
-        if (!pUser || !(await verifyPassword(pUser, pPass))) return showToast('Неверные данные плательщика!', 'error');
-        try { await migrateLegacyPassword(pUser, pPass); } catch (err) { console.error(err); }
+        if (!pUser) return showToast('Плательщик не найден!', 'error');
+
+        const creds = await fetchUserCredentials(pUser.username, pUser);
+        const isAuthOk = await verifyPasswordRecord(creds, pPass);
+        if (!isAuthOk) return showToast('Неверные данные плательщика!', 'error');
         sender = pUser;
       }
 
@@ -2953,7 +3016,6 @@
       if (!recipient) return showToast('Получатель не найден!', 'error');
       if ((sender.balance || 0) < cost) return showToast('Недостаточно Байти!', 'error');
 
-      const sKey = sender.username.toLowerCase();
       const mailId = newOperationId('MAIL');
       if (!await atomicBalanceChange(sender.username, -cost, {requireFunds:true})) return showToast('Баланс изменился. Повторите отправку.', 'error');
       await db.ref('bankData/bankReserve').transaction(v => Number(v || 0) + cost);
@@ -3130,6 +3192,7 @@
       reader.readAsDataURL(file);
     }
 
+    // СМЕНА НИКНЕЙМА
     async function processChangeNickname(e) {
       e.preventDefault();
       const newNick = document.getElementById('inputNewNickname').value.trim();
@@ -3137,19 +3200,34 @@
       const u = findUser(currentUser);
 
       if (!newNick || newNick.length < 3) return showToast('Логин должен быть не менее 3 символов!', 'error');
-      if (!(await verifyPassword(u, pass))) return showToast('Неверный текущий пароль!', 'error');
+      const creds = await fetchUserCredentials(currentUser, u);
+      if (!(await verifyPasswordRecord(creds, pass))) return showToast('Неверный текущий пароль!', 'error');
       if (findUser(newNick)) return showToast('Ник уже занят!', 'error');
       if ((u.balance || 0) < 150) return showToast('Недостаточно средств (пошлина 150 ฿)!', 'error');
 
-      const oldKey = currentUser.toLowerCase();
-      const newKey = newNick.toLowerCase();
+      const oldKey = normalizeLogin(currentUser);
+      const newKey = normalizeLogin(newNick);
       const txId = newOperationId('TX');
 
       if (!await atomicBalanceChange(u.username, -150, {requireFunds:true})) return showToast('Баланс изменился. Повторите операцию.', 'error');
-      const newObj = { ...u, username: newNick, balance: Number(u.balance || 0) - 150 };
+      const newProfileObj = { ...u, username: newNick, balance: Number(u.balance || 0) - 150 };
+      delete newProfileObj.password;
+      delete newProfileObj.passwordHash;
+      delete newProfileObj.passwordSalt;
+
       const updates = {};
-      updates[`bankData/users/${newKey}`] = newObj;
+      updates[`bankData/users/${newKey}`] = newProfileObj;
       updates[`bankData/users/${oldKey}`] = null;
+
+      const secureCredsSnap = await db.ref(`bankSecurity/credentials/${oldKey}`).once('value');
+      const secureCreds = secureCredsSnap.val() || creds;
+      if (secureCreds) {
+        delete secureCreds._isLegacy;
+        delete secureCreds._isPlainLegacy;
+        updates[`bankSecurity/credentials/${newKey}`] = secureCreds;
+        updates[`bankSecurity/credentials/${oldKey}`] = null;
+      }
+
       await db.ref('bankData/bankReserve').transaction(v => Number(v || 0) + 150);
       updates[`bankData/transactions/${txId}`] = {
         id: txId,
@@ -3169,20 +3247,31 @@
       });
     }
 
+    // СМЕНА ПАРОЛЯ
     async function processPasswordChange(e) {
       e.preventDefault();
       const oldP = document.getElementById('inputOldPassword').value;
       const newP = document.getElementById('inputNewPassword').value;
-      const u = findUser(currentUser);
+      if (!currentUser) return;
 
-      if (!(await verifyPassword(u, oldP))) return showToast('Неверный текущий пароль!', 'error');
+      const key = normalizeLogin(currentUser);
+      const creds = await fetchUserCredentials(currentUser);
+
+      if (!(await verifyPasswordRecord(creds, oldP))) return showToast('Неверный текущий пароль!', 'error');
       if (!newP || newP.length < 6) return showToast('Новый пароль должен быть не менее 6 символов!', 'error');
 
-      const record = await createPasswordRecord(newP);
+      const newRecord = await createPasswordRecord(newP);
       try {
-        await db.ref(`bankData/users/${currentUser.toLowerCase()}`).update({ ...record, password: null });
+        await db.ref(`bankSecurity/credentials/${key}`).set(newRecord);
+        await db.ref(`bankData/users/${key}`).update({
+          password: null,
+          passwordHash: null,
+          passwordSalt: null,
+          passwordVersion: null
+        });
+
         closeSettingsModal();
-        showToast('Пароль успешно обновлён!', 'success');
+        showToast('Пароль успешно обновлён в защищённом хранилище!', 'success');
       } catch (err) {
         console.error(err);
         showToast('Не удалось обновить пароль.', 'error');
@@ -3469,7 +3558,6 @@
       reader.readAsDataURL(file);
     }
 
-    // НАВИГАЦИЯ МЕЖДУ СТРАНИЦАМИ
     function navigateTab(tab) {
       const hasAdminAccess = isCurrentUserAdmin();
       const hasSuperAdminAccess = isCurrentUserSuperAdmin();
