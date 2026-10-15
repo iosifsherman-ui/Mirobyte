@@ -11,8 +11,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <!-- QR Code Generation & Scanning Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -61,6 +66,7 @@
     .guilloche-panel {
       border: 1px solid #1a4735;
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(16, 185, 129, 0.03);
+      content-visibility: auto;
     }
     .guilloche-gold {
       border: 1px solid rgba(212, 175, 55, 0.4);
@@ -89,6 +95,21 @@
     }
     details summary::-webkit-details-marker {
       display: none;
+    }
+    @keyframes qrScanLaser {
+      0% { top: 8%; opacity: 0.4; }
+      50% { top: 88%; opacity: 1; }
+      100% { top: 8%; opacity: 0.4; }
+    }
+    .qr-laser-line {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ffd700, #10b981, #ffd700, transparent);
+      box-shadow: 0 0 12px #ffd700, 0 0 20px #10b981;
+      animation: qrScanLaser 2.4s ease-in-out infinite;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -124,11 +145,15 @@
     </div>
   </header>
 
+  <!-- Hidden Helper Canvases & Inputs -->
   <canvas id="avatarCanvas" class="hidden"></canvas>
   <canvas id="banknoteCanvas" class="hidden"></canvas>
   <canvas id="emblemCanvas" class="hidden"></canvas>
   <canvas id="cardBgCanvas" class="hidden"></canvas>
+  <canvas id="qrScanCanvas" class="hidden"></canvas>
+  <canvas id="qrExportCanvas" class="hidden"></canvas>
   <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarSelected(event)">
+  <input type="file" id="qrImageFileInput" accept="image/*" class="hidden" onchange="handleQrImageUpload(event)">
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-5">
@@ -165,10 +190,20 @@
           <label class="block text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Пароль доступа</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-emerald-500/60 text-xs"><i class="fa-solid fa-lock"></i></span>
-            <input type="password" id="inputPassword" required placeholder="••••••••••••" autocomplete="current-password" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-10 pr-10 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
+            <input type="password" id="inputPassword" required oninput="updateAuthPasswordStrength()" placeholder="••••••••••••" autocomplete="current-password" class="w-full bg-bank-darkest border border-bank-border focus:border-bank-gold rounded-xl py-2.5 pl-10 pr-10 text-emerald-100 placeholder-emerald-800 text-sm focus:outline-none transition-all">
             <button type="button" onclick="togglePassVisibility('inputPassword', 'eyeAuth')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-emerald-500/60 hover:text-bank-gold transition-colors">
               <i id="eyeAuth" class="fa-solid fa-eye text-sm"></i>
             </button>
+          </div>
+          <!-- Индикатор надёжности пароля при регистрации -->
+          <div id="authPassStrengthBox" class="hidden mt-2 space-y-1">
+            <div class="h-1.5 w-full bg-bank-darkest rounded-full overflow-hidden border border-bank-border/60">
+              <div id="authPassStrengthBar" class="h-full w-0 bg-rose-500 transition-all duration-300"></div>
+            </div>
+            <div class="flex justify-between text-[10px]">
+              <span class="text-emerald-400/70">Защита PBKDF2-SHA256</span>
+              <span id="authPassStrengthText" class="font-semibold text-emerald-400">Введите пароль (мин. 6 симв.)</span>
+            </div>
           </div>
         </div>
         <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-emerald-950 font-royal font-bold rounded-xl transition-all shadow-lg text-xs uppercase tracking-wider mt-2">
@@ -183,6 +218,9 @@
         <div class="flex items-center space-x-2 flex-nowrap">
           <button onclick="navigateTab('dashboard')" id="tabBtn-dashboard" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-emerald-700 text-white shadow-md whitespace-nowrap">
             <i class="fa-solid fa-wallet mr-1"></i> Мой Кошелёк
+          </button>
+          <button onclick="openQrModal('myqr')" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-gold/15 text-bank-gold border border-bank-gold/50 hover:bg-bank-gold/25 whitespace-nowrap shadow-sm">
+            <i class="fa-solid fa-qrcode mr-1"></i> QR-Оплата
           </button>
           <button onclick="navigateTab('mail')" id="tabBtn-mail" class="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 hover:bg-bank-card whitespace-nowrap relative">
             <i class="fa-solid fa-paper-plane mr-1"></i> Телеграф Миробайт
@@ -216,17 +254,28 @@
       <section id="tabContent-dashboard" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div id="citizenMainCard" class="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-bank-gold/50 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[260px] transition-all duration-300 bg-cover bg-center">
-            <div class="flex items-center justify-between relative z-10">
-              <div class="flex items-center space-x-2.5">
+            <div class="flex items-center justify-between relative z-10 gap-2">
+              <div class="flex items-center flex-wrap gap-2">
                 <span class="px-3 py-1 bg-bank-gold/15 border border-bank-gold/40 text-bank-gold text-[10px] uppercase font-royal tracking-widest rounded-full font-bold backdrop-blur-sm">
                   Mirobyte Royal Reserve
                 </span>
                 <span id="cardRoleBadge" class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-full font-semibold backdrop-blur-sm"></span>
               </div>
-              <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group" title="Нажмите для настроек профиля">
-                <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
-                  <i class="fa-solid fa-gear"></i>
+              <div class="flex items-center gap-2">
+                <!-- Быстрые кнопки QR прямо на банковской карте -->
+                <button type="button" onclick="openQrModal('myqr')" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-black/75 hover:bg-black border border-bank-gold/60 text-bank-gold hover:text-white flex flex-col items-center justify-center shadow-lg transition-all active:scale-95" title="Показать мой QR-код для получения Байти">
+                  <i class="fa-solid fa-qrcode text-base sm:text-lg"></i>
+                  <span class="text-[8px] font-bold uppercase tracking-tighter">Мой QR</span>
+                </button>
+                <button type="button" onclick="openQrModal('scan')" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-950/85 hover:bg-emerald-900 border border-emerald-400/60 text-emerald-300 hover:text-white flex flex-col items-center justify-center shadow-lg transition-all active:scale-95" title="Сканировать QR-код для оплаты">
+                  <i class="fa-solid fa-camera text-sm sm:text-base"></i>
+                  <span class="text-[8px] font-bold uppercase tracking-tighter">Скан QR</span>
+                </button>
+                <div id="cardAvatarContainer" onclick="openSettingsModal()" class="w-14 h-14 rounded-2xl ring-2 ring-bank-gold/70 overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer hover:ring-bank-gold transition-all relative group flex-shrink-0" title="Нажмите для настроек профиля">
+                  <i class="fa-solid fa-user-astronaut text-2xl text-bank-gold"></i>
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs">
+                    <i class="fa-solid fa-gear"></i>
+                  </div>
                 </div>
               </div>
             </div>
@@ -256,7 +305,7 @@
               <div class="text-right">
                 <span class="text-emerald-500 block text-[9px] uppercase font-bold tracking-wider">Счёт</span>
                 <span class="text-emerald-400 font-semibold flex items-center justify-end gap-1 font-mono">
-                  <i class="fa-solid fa-circle-check text-[10px]"></i> Защищён
+                  <i class="fa-solid fa-shield-halved text-[10px] text-bank-gold"></i> Защищён PBKDF2
                 </span>
               </div>
             </div>
@@ -264,11 +313,16 @@
 
           <div class="bg-bank-surface border border-bank-border rounded-3xl p-6 flex flex-col justify-between guilloche-panel">
             <div>
-              <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center justify-between mb-3">
                 <h3 class="font-royal text-base font-bold text-bank-gold flex items-center gap-2">
                   <i class="fa-solid fa-paper-plane text-emerald-400 text-sm"></i> Перевод Байти
                 </h3>
-                <span class="text-[10px] text-emerald-400/60 uppercase font-mono">Комиссия 0%</span>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="openQrModal('scan')" class="px-2.5 py-1 rounded-lg bg-bank-gold/15 hover:bg-bank-gold/30 border border-bank-gold/50 text-bank-gold text-[10px] font-bold flex items-center gap-1 transition-all" title="Оплатить по QR-коду">
+                    <i class="fa-solid fa-qrcode"></i> По QR
+                  </button>
+                  <span class="text-[10px] text-emerald-400/60 uppercase font-mono">0%</span>
+                </div>
               </div>
               
               <form id="transferForm" onsubmit="executeTransfer(event)" class="space-y-3">
@@ -312,9 +366,14 @@
                   </div>
                 </div>
 
-                <button type="submit" class="w-full mt-2 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
-                  Отправить Байти (฿)
-                </button>
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                  <button type="submit" class="col-span-2 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-emerald-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md">
+                    Отправить (฿)
+                  </button>
+                  <button type="button" onclick="openQrModal('myqr', true)" class="py-2.5 bg-bank-darkest hover:bg-bank-card border border-bank-gold/50 text-bank-gold font-bold rounded-xl text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-1" title="Создать QR-счёт на указанную сумму">
+                    <i class="fa-solid fa-qrcode"></i> Счёт
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -500,7 +559,7 @@
               <summary class="flex items-center justify-between cursor-pointer list-none select-none">
                 <div class="flex items-center gap-2.5">
                   <span class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/40 text-bank-gold font-royal font-black flex items-center justify-center text-xs">2.1</span>
-                  <span class="font-bold text-xs sm:text-sm text-white">Обман, мошенничество и шантаж</span>
+                  <span class="font-bold text-xs sm:text-sm text-white">Обман, мошенничество и подделка QR-счетов</span>
                 </div>
                 <div class="flex items-center gap-3">
                   <span class="text-[10px] px-2.5 py-0.5 bg-rose-950/80 border border-rose-600/40 text-rose-300 rounded-full font-mono font-bold">Возврат + Бан 7 дней</span>
@@ -508,7 +567,7 @@
                 </div>
               </summary>
               <div class="pt-3.5 mt-3 border-t border-bank-border/50 text-xs text-emerald-200/90 space-y-2">
-                <p><b>Суть закона:</b> Запрещается обманным путем выманивать Байти у других участников, давать ложные обещания по товарам/услугам или требовать переводы путём угроз.</p>
+                <p><b>Суть закона:</b> Запрещается обманным путем выманивать Байти у других участников, подменять сумму в QR-коде при сделке, давать ложные обещания по товарам/услугам или требовать переводы путём угроз.</p>
                 <div class="p-2.5 rounded-xl bg-bank-card/70 border border-bank-border/80 text-[11px] space-y-1">
                   <div>• <b>Санкция:</b> Принудительный возврат всей суммы пострадавшему + штраф в размере суммы обмана в Казну. При повторении — блокировка счёта на 7 дней.</div>
                 </div>
@@ -988,6 +1047,183 @@
     </div>
   </main>
 
+  <!-- MODAL: QR Payment Center (Мой QR-код & Сканер QR) -->
+  <div id="qrModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative guilloche-gold max-h-[92vh] overflow-hidden flex flex-col">
+      <button onclick="closeQrModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-bank-darkest border border-bank-border text-emerald-400 hover:text-white flex items-center justify-center z-10">✕</button>
+      
+      <div class="flex items-center space-x-3 border-b border-bank-border pb-3 flex-shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-black border border-bank-gold flex items-center justify-center text-bank-gold shadow-md">
+          <i class="fa-solid fa-qrcode text-lg"></i>
+        </div>
+        <div>
+          <h4 class="font-royal text-base sm:text-lg font-bold text-bank-gold">Система QR-Платежей Байти (฿)</h4>
+          <p class="text-[11px] text-emerald-400/70">Мгновенный приём переводов и оплата по QR-коду</p>
+        </div>
+      </div>
+
+      <!-- Переключатель режима QR -->
+      <div class="grid grid-cols-2 gap-2 bg-bank-darkest p-1.5 rounded-2xl border border-bank-border my-3 flex-shrink-0">
+        <button type="button" id="qrTabBtnMy" onclick="switchQrTab('myqr')" class="py-2 rounded-xl text-xs font-royal font-bold uppercase transition-all bg-bank-gold text-black shadow-md">
+          <i class="fa-solid fa-qrcode mr-1"></i> Мой QR / Счёт
+        </button>
+        <button type="button" id="qrTabBtnScan" onclick="switchQrTab('scan')" class="py-2 rounded-xl text-xs font-royal font-bold uppercase transition-all text-emerald-300 hover:text-white">
+          <i class="fa-solid fa-camera mr-1"></i> Сканировать QR
+        </button>
+      </div>
+
+      <div class="overflow-y-auto custom-scrollbar pr-1 space-y-4 flex-grow">
+        <!-- Вкладка 1: Генерация своего QR / Выставление счёта -->
+        <div id="qrViewMy" class="space-y-4">
+          <div class="bg-bank-darkest/90 border border-bank-gold/50 rounded-2xl p-4 flex flex-col items-center text-center relative banknote-pattern">
+            <div class="text-[10px] font-royal uppercase tracking-widest text-bank-gold mb-1">BANK OF MIROBYTE • QR-СЧЁТ</div>
+            <div id="qrMyUsernameLabel" class="font-royal font-black text-base text-white mb-2">@CITIZEN</div>
+            
+            <!-- Контейнер самого QR-кода -->
+            <div class="p-3.5 bg-white rounded-2xl shadow-[0_0_25px_rgba(230,200,117,0.25)] border-2 border-bank-gold relative inline-flex items-center justify-center">
+              <div id="qrCodeRenderBox" class="w-48 h-48 flex items-center justify-center"></div>
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-10 h-10 rounded-xl bg-[#05110c] border-2 border-bank-gold flex items-center justify-center shadow-md">
+                  <span class="font-royal font-black text-bank-gold text-lg">฿</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="qrInvoiceSummaryBadge" class="mt-3 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold">
+              Свободная сумма перевода
+            </div>
+          </div>
+
+          <!-- Настройка суммы и комментария для QR-счёта -->
+          <div class="p-3.5 rounded-2xl bg-bank-darkest border border-bank-border space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-bank-gold uppercase tracking-wider">Настроить сумму счёта (необязательно)</span>
+              <button type="button" onclick="resetMyQrFields()" class="text-[10px] text-emerald-400 hover:text-bank-gold underline">Сбросить</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[10px] text-emerald-400/80 uppercase mb-1">Запросить сумму (฿)</label>
+                <input type="number" id="qrReqAmount" min="1" step="1" oninput="generateMyQrCode()" placeholder="Любая сумма..." class="w-full bg-bank-surface border border-bank-border focus:border-bank-gold rounded-xl py-1.5 px-3 text-xs font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] text-emerald-400/80 uppercase mb-1">Назначение платежа</label>
+                <input type="text" id="qrReqComment" maxlength="120" oninput="generateMyQrCode()" placeholder="За товар / подарок..." class="w-full bg-bank-surface border border-bank-border focus:border-bank-gold rounded-xl py-1.5 px-3 text-xs text-white focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Кнопки скачивания и копирования -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" onclick="downloadMyQrCard()" class="py-2.5 px-3 bg-gradient-to-r from-bank-gold to-yellow-600 hover:brightness-110 text-black font-royal font-bold rounded-xl text-xs uppercase shadow-md flex items-center justify-center gap-1.5 transition-all">
+              <i class="fa-solid fa-download"></i> Скачать QR-карту
+            </button>
+            <button type="button" onclick="copyMyQrPaymentLink()" class="py-2.5 px-3 bg-bank-darkest hover:bg-bank-card border border-emerald-500/40 text-emerald-300 font-bold rounded-xl text-xs uppercase flex items-center justify-center gap-1.5 transition-all">
+              <i class="fa-solid fa-link"></i> Скопировать ссылку
+            </button>
+          </div>
+        </div>
+
+        <!-- Вкладка 2: Сканирование QR-кода (Камера + Фото) -->
+        <div id="qrViewScan" class="hidden space-y-4">
+          <div class="relative rounded-2xl overflow-hidden bg-black border-2 border-bank-gold/60 aspect-square max-h-64 mx-auto flex flex-col items-center justify-center">
+            <video id="qrVideoPreview" class="w-full h-full object-cover hidden" playsinline muted></video>
+            <div id="qrScannerOverlay" class="hidden absolute inset-0 pointer-events-none">
+              <div class="qr-laser-line"></div>
+              <div class="absolute inset-6 border-2 border-bank-gold/60 rounded-2xl"></div>
+            </div>
+            <div id="qrCameraPlaceholder" class="p-6 text-center space-y-3">
+              <div class="w-14 h-14 rounded-2xl bg-bank-darkest border border-bank-gold/50 text-bank-gold flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-camera-viewfinder"></i>
+              </div>
+              <div class="text-xs text-emerald-200 font-semibold">Наведите камеру на QR-код гражданина или загрузите скриншот</div>
+              <div class="flex flex-wrap justify-center gap-2">
+                <button type="button" onclick="startQrCameraScanner()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-emerald-950 font-royal font-bold rounded-xl text-xs uppercase shadow-md transition-all">
+                  <i class="fa-solid fa-video mr-1"></i> Включить камеру
+                </button>
+                <button type="button" onclick="document.getElementById('qrImageFileInput').click()" class="px-4 py-2 bg-bank-darkest hover:bg-bank-card border border-bank-gold/50 text-bank-gold font-bold rounded-xl text-xs uppercase transition-all">
+                  <i class="fa-solid fa-image mr-1"></i> Скриншот / Фото
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-2">
+            <button type="button" id="btnStopQrCam" onclick="stopQrCameraScanner()" class="hidden flex-1 py-2 bg-rose-950/70 border border-rose-600/40 text-rose-300 rounded-xl text-xs font-bold uppercase">
+              <i class="fa-solid fa-video-slash mr-1"></i> Остановить камеру
+            </button>
+            <button type="button" onclick="document.getElementById('qrImageFileInput').click()" class="flex-1 py-2 bg-bank-darkest hover:bg-bank-card border border-bank-border text-emerald-300 rounded-xl text-xs font-semibold">
+              <i class="fa-solid fa-file-arrow-up mr-1 text-bank-gold"></i> Загрузить QR из галереи
+            </button>
+          </div>
+
+          <!-- Блок подтверждения найденного QR-платежа -->
+          <div id="qrScannedResultBox" class="hidden p-4 rounded-2xl bg-gradient-to-br from-[#0a291e] to-[#04120c] border-2 border-bank-gold shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-bank-border pb-2">
+              <span class="text-[10px] font-royal uppercase tracking-wider text-bank-gold font-bold">
+                <i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> QR-Счёт распознан
+              </span>
+              <span id="qrScanTargetStatus" class="text-[10px] text-emerald-400 font-mono">Проверен</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div id="qrScanTargetAvatar" class="w-11 h-11 rounded-xl bg-black ring-2 ring-bank-gold/60 overflow-hidden flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-user text-bank-gold"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] text-emerald-400/70 uppercase">Получатель платежа</div>
+                <div id="qrScanTargetName" class="font-royal font-black text-base text-white truncate">@USER</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-emerald-400 uppercase mb-1">Сумма к оплате (฿)</label>
+                <input type="number" id="qrScanPayAmount" min="1" step="1" required placeholder="Введите сумму..." class="w-full bg-bank-darkest border border-bank-gold/60 rounded-xl py-1.5 px-3 text-sm font-black text-bank-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] text-emerald-400 uppercase mb-1">Комментарий</label>
+                <input type="text" id="qrScanPayComment" placeholder="Оплата по QR-коду" class="w-full bg-bank-darkest border border-bank-border rounded-xl py-1.5 px-3 text-xs text-white focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="executeInstantQrPayment()" class="py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:brightness-110 text-emerald-950 font-royal font-black rounded-xl text-xs uppercase shadow-lg transition-all">
+                <i class="fa-solid fa-bolt mr-1"></i> Оплатить мгновенно
+              </button>
+              <button type="button" onclick="applyQrToTransferForm()" class="py-2.5 bg-bank-darkest hover:bg-bank-card border border-bank-border text-emerald-300 font-bold rounded-xl text-xs uppercase transition-all">
+                Вставить в форму
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Royal Confirmation Dialog (Безопасное модальное подтверждение вместо браузерного confirm) -->
+  <div id="royalConfirmModal" class="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-md w-full p-6 shadow-2xl relative guilloche-gold space-y-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-black border border-bank-gold flex items-center justify-center text-bank-gold flex-shrink-0">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h4 id="royalConfirmTitle" class="font-royal text-base font-bold text-bank-gold">Подтверждение операции</h4>
+          <p class="text-[10px] text-emerald-400/70 uppercase tracking-wider">Служба Безопасности Банка Миробайт</p>
+        </div>
+      </div>
+      <p id="royalConfirmMessage" class="text-xs text-emerald-100 leading-relaxed whitespace-pre-line bg-bank-darkest/80 p-3.5 rounded-2xl border border-bank-border"></p>
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" id="royalConfirmCancelBtn" class="px-4 py-2 rounded-xl bg-bank-darkest hover:bg-bank-card border border-bank-border text-emerald-300 text-xs font-semibold transition-all">
+          Отмена
+        </button>
+        <button type="button" id="royalConfirmOkBtn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold text-xs uppercase shadow-md transition-all">
+          Подтвердить
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Settings -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-bank-surface border-2 border-bank-gold/70 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative guilloche-gold max-h-[90vh] overflow-hidden flex flex-col">
@@ -1025,7 +1261,10 @@
 
         <!-- Change Password -->
         <div class="p-4 rounded-2xl bg-bank-darkest border border-bank-border/80 space-y-2.5">
-          <span class="text-xs font-bold text-bank-gold">Безопасность Счёта (Смена Пароля)</span>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-bank-gold">Безопасность Счёта (Смена Пароля)</span>
+            <span class="text-[10px] font-mono text-emerald-400"><i class="fa-solid fa-lock mr-1"></i>PBKDF2 120k</span>
+          </div>
           <div class="relative">
             <input type="password" id="inputOldPassword" placeholder="Текущий пароль..." class="w-full bg-bank-surface border border-bank-border rounded-xl py-2 px-3 pr-8 text-emerald-100 text-xs">
             <button type="button" onclick="togglePassVisibility('inputOldPassword', 'eyeOldPass')" class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-emerald-500/60 hover:text-bank-gold">
@@ -1033,11 +1272,12 @@
             </button>
           </div>
           <div class="relative">
-            <input type="password" id="inputNewPassword" placeholder="Новый пароль..." class="w-full bg-bank-surface border border-bank-border rounded-xl py-2 px-3 pr-8 text-emerald-100 text-xs">
+            <input type="password" id="inputNewPassword" oninput="updateSettingsPasswordStrength()" placeholder="Новый пароль (мин. 6 символов)..." class="w-full bg-bank-surface border border-bank-border rounded-xl py-2 px-3 pr-8 text-emerald-100 text-xs">
             <button type="button" onclick="togglePassVisibility('inputNewPassword', 'eyeNewPass')" class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-emerald-500/60 hover:text-bank-gold">
               <i id="eyeNewPass" class="fa-solid fa-eye text-xs"></i>
             </button>
           </div>
+          <div id="settingsPassStrengthLabel" class="text-[10px] text-emerald-400/70">Рекомендуется использовать буквы и цифры</div>
           <button onclick="processPasswordChange(event)" class="w-full py-2 bg-bank-surface hover:bg-bank-card border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs uppercase">Сохранить новый пароль</button>
         </div>
 
@@ -1259,8 +1499,50 @@
     const MAX_LOGIN_LENGTH = 32;
     const MAX_COMMENT_LENGTH = 300;
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-
     const OWNER_USERNAME = 'iosif';
+
+    // Защита от брутфорса (перебора паролей)
+    const AUTH_RATE_LIMIT = {
+      maxAttempts: 5,
+      baseLockMs: 30000
+    };
+
+    function getRateLimitState(scopeKey) {
+      try {
+        return JSON.parse(sessionStorage.getItem(`mb_rl_${scopeKey}`) || '{"fails":0,"lockUntil":0}');
+      } catch (e) {
+        return { fails: 0, lockUntil: 0 };
+      }
+    }
+
+    function checkRateLimitAllowed(scopeKey) {
+      const state = getRateLimitState(scopeKey);
+      const now = Date.now();
+      if (state.lockUntil && now < state.lockUntil) {
+        const waitSec = Math.ceil((state.lockUntil - now) / 1000);
+        showToast(`Защита от перебора: подождите ${waitSec} сек. перед следующей попыткой.`, 'error');
+        return false;
+      }
+      return true;
+    }
+
+    function recordAuthFailure(scopeKey) {
+      const state = getRateLimitState(scopeKey);
+      state.fails = (state.fails || 0) + 1;
+      if (state.fails >= AUTH_RATE_LIMIT.maxAttempts) {
+        const multiplier = Math.min(8, Math.pow(2, state.fails - AUTH_RATE_LIMIT.maxAttempts));
+        state.lockUntil = Date.now() + AUTH_RATE_LIMIT.baseLockMs * multiplier;
+      }
+      try {
+        sessionStorage.setItem(`mb_rl_${scopeKey}`, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function resetAuthFailures(scopeKey) {
+      try {
+        sessionStorage.removeItem(`mb_rl_${scopeKey}`);
+      } catch (e) {}
+    }
 
     function normalizeLogin(value) {
       return String(value || '').trim().toLowerCase();
@@ -1274,13 +1556,27 @@
 
     function bytesToBase64(bytes) {
       let binary = '';
-      bytes.forEach(b => binary += String.fromCharCode(b));
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
       return btoa(binary);
     }
 
     function base64ToBytes(base64) {
       const binary = atob(base64);
       return Uint8Array.from(binary, ch => ch.charCodeAt(0));
+    }
+
+    // Constant-time сравнение строк (защита от timing-атак на хеш пароля)
+    function timingSafeEqualString(a, b) {
+      const strA = String(a || '');
+      const strB = String(b || '');
+      const len = Math.max(strA.length, strB.length);
+      let diff = strA.length ^ strB.length;
+      for (let i = 0; i < len; i++) {
+        diff |= (strA.charCodeAt(i) || 0) ^ (strB.charCodeAt(i) || 0);
+      }
+      return diff === 0;
     }
 
     async function derivePasswordHash(password, saltBase64) {
@@ -1295,13 +1591,68 @@
       const salt = new Uint8Array(16);
       crypto.getRandomValues(salt);
       const saltBase64 = bytesToBase64(salt);
-      return { passwordHash: await derivePasswordHash(password, saltBase64), passwordSalt: saltBase64, passwordVersion: 2 };
+      return {
+        passwordHash: await derivePasswordHash(password, saltBase64),
+        passwordSalt: saltBase64,
+        passwordVersion: 2,
+        updatedAt: Date.now()
+      };
+    }
+
+    // Оценка надёжности пароля
+    function evaluatePasswordStrength(password, username = '') {
+      const p = String(password || '');
+      if (p.length < 6) {
+        return { score: 15, label: 'Слишком короткий (мин. 6 симв.)', color: 'bg-rose-500', valid: false };
+      }
+      const weakList = ['123456', '12345678', '123456789', 'password', 'qwerty', '111111', '000000', 'пароль'];
+      if (weakList.includes(p.toLowerCase()) || (username && p.toLowerCase() === username.trim().toLowerCase())) {
+        return { score: 25, label: 'Слишком простой пароль!', color: 'bg-rose-500', valid: false };
+      }
+      let score = 40;
+      if (p.length >= 8) score += 20;
+      if (p.length >= 12) score += 15;
+      if (/[A-ZА-ЯЁ]/.test(p) && /[a-zа-яё]/.test(p)) score += 10;
+      if (/\d/.test(p)) score += 10;
+      if (/[^A-Za-zА-Яа-яЁё0-9]/.test(p)) score += 5;
+
+      if (score < 60) return { score, label: 'Средний (добавьте цифры/буквы)', color: 'bg-amber-400', valid: true };
+      if (score < 85) return { score, label: 'Надёжный пароль', color: 'bg-emerald-400', valid: true };
+      return { score: 100, label: 'Максимальная защита ฿', color: 'bg-bank-gold', valid: true };
+    }
+
+    function updateAuthPasswordStrength() {
+      const box = document.getElementById('authPassStrengthBox');
+      if (!box || authMode !== 'register') return;
+      const pass = document.getElementById('inputPassword').value;
+      const user = document.getElementById('inputUsername').value;
+      const res = evaluatePasswordStrength(pass, user);
+      const bar = document.getElementById('authPassStrengthBar');
+      const txt = document.getElementById('authPassStrengthText');
+      if (bar) {
+        bar.style.width = `${res.score}%`;
+        bar.className = `h-full transition-all duration-300 ${res.color}`;
+      }
+      if (txt) txt.innerText = res.label;
+    }
+
+    function updateSettingsPasswordStrength() {
+      const pass = document.getElementById('inputNewPassword')?.value || '';
+      const lbl = document.getElementById('settingsPassStrengthLabel');
+      if (!lbl) return;
+      if (!pass) {
+        lbl.innerText = 'Рекомендуется использовать буквы и цифры';
+        lbl.className = 'text-[10px] text-emerald-400/70';
+        return;
+      }
+      const res = evaluatePasswordStrength(pass, currentUser || '');
+      lbl.innerText = `Надёжность: ${res.label}`;
+      lbl.className = `text-[10px] font-semibold ${res.valid ? 'text-emerald-400' : 'text-rose-400'}`;
     }
 
     // ========================================================
     // ИЗОЛИРОВАННАЯ СИСТЕМА УЧЕТНЫХ ДАННЫХ
     // ========================================================
-
     async function fetchUserCredentials(username, fallbackUserObj = null) {
       const key = normalizeLogin(username);
       try {
@@ -1338,11 +1689,11 @@
     async function verifyPasswordRecord(credentials, inputPassword) {
       if (!credentials || typeof inputPassword !== 'string') return false;
       if (credentials._isPlainLegacy) {
-        return credentials.plainPassword === inputPassword;
+        return timingSafeEqualString(credentials.plainPassword, inputPassword);
       }
       if (credentials.passwordHash && credentials.passwordSalt) {
         const hash = await derivePasswordHash(inputPassword, credentials.passwordSalt);
-        return hash === credentials.passwordHash;
+        return timingSafeEqualString(hash, credentials.passwordHash);
       }
       return false;
     }
@@ -1356,6 +1707,40 @@
         passwordHash: null,
         passwordSalt: null,
         passwordVersion: null
+      });
+    }
+
+    // Кастомное модальное окно подтверждения вместо confirm()
+    function askRoyalConfirm({ title = 'Подтверждение операции', message = 'Вы уверены?', okText = 'Подтвердить', cancelText = 'Отмена', isDanger = false }) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('royalConfirmModal');
+        const titleEl = document.getElementById('royalConfirmTitle');
+        const msgEl = document.getElementById('royalConfirmMessage');
+        const okBtn = document.getElementById('royalConfirmOkBtn');
+        const cancelBtn = document.getElementById('royalConfirmCancelBtn');
+
+        titleEl.innerText = title;
+        msgEl.innerText = message;
+        okBtn.innerText = okText;
+        cancelBtn.innerText = cancelText;
+
+        okBtn.className = isDanger
+          ? 'px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-800 text-white font-royal font-bold text-xs uppercase shadow-md transition-all'
+          : 'px-5 py-2 rounded-xl bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold text-xs uppercase shadow-md transition-all';
+
+        const cleanup = (result) => {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          okBtn.onclick = null;
+          cancelBtn.onclick = null;
+          resolve(result);
+        };
+
+        okBtn.onclick = () => cleanup(true);
+        cancelBtn.onclick = () => cleanup(false);
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
       });
     }
 
@@ -1418,6 +1803,13 @@
     let authMode = 'login';
     let mailFilter = 'inbox';
     let treasuryMode = 'grant';
+    let activeTabName = 'dashboard';
+
+    // Состояние QR-сканера
+    let qrVideoStream = null;
+    let qrScanRafId = null;
+    let lastScannedQrData = null;
+
     let appData = {
       users: {},
       transactions: [],
@@ -1505,6 +1897,8 @@
       }
     }
 
+    let hasCheckedUrlQrParams = false;
+
     // 1. Синхронизация публичных пользователей
     db.ref('bankData/users').on('value', (snap) => {
       appData.users = snap.val() || {};
@@ -1535,6 +1929,11 @@
       }
       updateOnlineIndicator(true);
       requestRender();
+
+      if (!hasCheckedUrlQrParams && Object.keys(appData.users).length > 0) {
+        hasCheckedUrlQrParams = true;
+        checkUrlPaymentParams();
+      }
     }, (err) => {
       console.error('Users sync error:', err);
       updateOnlineIndicator(false);
@@ -1544,8 +1943,7 @@
     db.ref('bankData/transactions').limitToLast(150).on('value', (snap) => {
       const val = snap.val() || {};
       appData.transactions = Array.isArray(val) ? val : Object.values(val).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
-      requestRender();
-      if (isCurrentUserSuperAdmin()) {
+      if (activeTabName === 'superadmin' && isCurrentUserSuperAdmin()) {
         renderAdminTransactionsTable();
       }
     });
@@ -1553,8 +1951,8 @@
     // 3. Почта
     db.ref('bankData/mailBox').on('value', (snap) => {
       appData.mailBox = snap.val() || {};
-      renderMailView();
-      if (isCurrentUserSuperAdmin()) {
+      if (activeTabName === 'mail') renderMailView();
+      if (activeTabName === 'superadmin' && isCurrentUserSuperAdmin()) {
         renderAdminAllMailsView();
       }
     });
@@ -1627,9 +2025,511 @@
       checkAutoIncomeCycle();
     }, 60000);
 
+    // ========================================================
+    // СИСТЕМА QR-КОДОВ И МГНОВЕННОЙ ОПЛАТЫ ПО QR
+    // ========================================================
+    function buildQrPaymentPayload(username, amount, comment) {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const params = new URLSearchParams();
+      params.set('payTo', username);
+      if (amount && Number(amount) > 0) params.set('amount', String(amount));
+      if (comment && comment.trim()) params.set('comment', comment.trim());
+      return `${baseUrl}?${params.toString()}`;
+    }
+
+    function parseQrPayloadString(rawText) {
+      const raw = String(rawText || '').trim();
+      if (!raw) return null;
+
+      // 1. Проверка URL с параметром ?payTo=...
+      try {
+        if (raw.startsWith('http://') || raw.startsWith('https://') || raw.includes('?payTo=')) {
+          const url = new URL(raw, window.location.origin);
+          const to = url.searchParams.get('payTo');
+          if (to) {
+            return {
+              to: to.trim(),
+              amount: parseInt(url.searchParams.get('amount') || '0', 10) || null,
+              comment: (url.searchParams.get('comment') || '').trim()
+            };
+          }
+        }
+      } catch (e) {}
+
+      // 2. Проверка JSON или фирменного формата MIROBYTE_QR
+      try {
+        const cleanJson = raw.startsWith('MIROBYTE:') ? raw.slice(9) : raw;
+        const parsed = JSON.parse(cleanJson);
+        if (parsed && parsed.to) {
+          return {
+            to: String(parsed.to).trim(),
+            amount: parseInt(parsed.amount || '0', 10) || null,
+            comment: String(parsed.comment || '').trim()
+          };
+        }
+      } catch (e) {}
+
+      // 3. Если в QR просто записан @username или логин гражданина
+      const cleanedLogin = raw.replace(/^@/, '').trim();
+      const matchedUser = findUser(cleanedLogin);
+      if (matchedUser) {
+        return {
+          to: matchedUser.username,
+          amount: null,
+          comment: ''
+        };
+      }
+      return null;
+    }
+
+    function openQrModal(mode = 'myqr', prefillFromTransferForm = false) {
+      if (!currentUser) {
+        showToast('Войдите в свой счёт для использования QR-платежей!', 'error');
+        return;
+      }
+
+      if (prefillFromTransferForm) {
+        const formAmt = document.getElementById('transferAmount')?.value || '';
+        const formCom = document.getElementById('transferComment')?.value || '';
+        document.getElementById('qrReqAmount').value = formAmt;
+        document.getElementById('qrReqComment').value = formCom;
+      }
+
+      const modal = document.getElementById('qrModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      switchQrTab(mode);
+    }
+
+    function closeQrModal() {
+      stopQrCameraScanner();
+      const modal = document.getElementById('qrModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function switchQrTab(mode) {
+      const myView = document.getElementById('qrViewMy');
+      const scanView = document.getElementById('qrViewScan');
+      const btnMy = document.getElementById('qrTabBtnMy');
+      const btnScan = document.getElementById('qrTabBtnScan');
+
+      if (mode === 'myqr') {
+        stopQrCameraScanner();
+        myView.classList.remove('hidden');
+        scanView.classList.add('hidden');
+        btnMy.className = 'py-2 rounded-xl text-xs font-royal font-bold uppercase transition-all bg-bank-gold text-black shadow-md';
+        btnScan.className = 'py-2 rounded-xl text-xs font-royal font-bold uppercase transition-all text-emerald-300 hover:text-white';
+        generateMyQrCode();
+      } else {
+        myView.classList.add('hidden');
+        scanView.classList.remove('hidden');
+        btnScan.className = 'py-2 rounded-xl text-xs font-royal font-bold uppercase transition-all bg-emerald-600 text-emerald-950 shadow-md';
+        btnMy.className = 'py-2 rounded-xl text-xs font-royal font-bold uppercase transition-all text-emerald-300 hover:text-white';
+      }
+    }
+
+    function resetMyQrFields() {
+      document.getElementById('qrReqAmount').value = '';
+      document.getElementById('qrReqComment').value = '';
+      generateMyQrCode();
+    }
+
+    function generateMyQrCode() {
+      if (!currentUser) return;
+      const amt = parseInt(document.getElementById('qrReqAmount')?.value || '0', 10);
+      const comment = (document.getElementById('qrReqComment')?.value || '').trim();
+      const box = document.getElementById('qrCodeRenderBox');
+      const nameLbl = document.getElementById('qrMyUsernameLabel');
+      const summaryBadge = document.getElementById('qrInvoiceSummaryBadge');
+
+      if (nameLbl) nameLbl.innerText = `@${currentUser.toUpperCase()}`;
+
+      if (summaryBadge) {
+        if (amt > 0) {
+          summaryBadge.innerText = `Сумма счёта: ${amt.toLocaleString()} ฿${comment ? ' • ' + comment : ''}`;
+          summaryBadge.className = 'mt-3 px-3 py-1 rounded-full bg-bank-gold/20 border border-bank-gold text-bank-gold text-xs font-mono font-bold';
+        } else {
+          summaryBadge.innerText = comment ? `Назначение: ${comment}` : 'Свободная сумма перевода';
+          summaryBadge.className = 'mt-3 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold';
+        }
+      }
+
+      if (!box) return;
+      box.innerHTML = '';
+
+      const payload = buildQrPaymentPayload(currentUser, amt > 0 ? amt : null, comment);
+
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(box, {
+          text: payload,
+          width: 192,
+          height: 192,
+          colorDark: '#04120c',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
+    }
+
+    function copyMyQrPaymentLink() {
+      if (!currentUser) return;
+      const amt = parseInt(document.getElementById('qrReqAmount')?.value || '0', 10);
+      const comment = (document.getElementById('qrReqComment')?.value || '').trim();
+      const link = buildQrPaymentPayload(currentUser, amt > 0 ? amt : null, comment);
+      navigator.clipboard.writeText(link).then(() => {
+        showToast('Платёжная QR-ссылка скопирована в буфер обмена!', 'success');
+      }).catch(() => {
+        showToast('Не удалось скопировать ссылку.', 'error');
+      });
+    }
+
+    function downloadMyQrCard() {
+      if (!currentUser) return;
+      const qrBox = document.getElementById('qrCodeRenderBox');
+      const qrCanvasOrImg = qrBox.querySelector('canvas') || qrBox.querySelector('img');
+      if (!qrCanvasOrImg) return showToast('Сначала сгенерируйте QR-код!', 'error');
+
+      const amt = parseInt(document.getElementById('qrReqAmount')?.value || '0', 10);
+      const comment = (document.getElementById('qrReqComment')?.value || '').trim();
+
+      const canvas = document.getElementById('qrExportCanvas');
+      canvas.width = 600;
+      canvas.height = 780;
+      const ctx = canvas.getContext('2d');
+
+      // Фон карточки
+      const grad = ctx.createLinearGradient(0, 0, 600, 780);
+      grad.addColorStop(0, '#071f16');
+      grad.addColorStop(0.5, '#04120c');
+      grad.addColorStop(1, '#020805');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 600, 780);
+
+      // Золотая рамка
+      ctx.strokeStyle = '#e6c875';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(20, 20, 560, 740);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(30, 30, 540, 720);
+
+      // Заголовок Банка
+      ctx.fillStyle = '#e6c875';
+      ctx.font = '900 28px Cinzel, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('BANK OF MIROBYTE', 300, 85);
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = '600 14px Inter, sans-serif';
+      ctx.fillText('ОФИЦИАЛЬНЫЙ ПЛАТЁЖНЫЙ QR-КОД (฿)', 300, 115);
+
+      // Белая подложка под QR
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(130, 150, 340, 340);
+      ctx.strokeStyle = '#e6c875';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(130, 150, 340, 340);
+
+      // Отрисовка QR
+      ctx.drawImage(qrCanvasOrImg, 150, 170, 300, 300);
+
+      // Знак Байти в центре QR
+      ctx.fillStyle = '#05110c';
+      ctx.fillRect(272, 292, 56, 56);
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(272, 292, 56, 56);
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '900 30px Cinzel, serif';
+      ctx.fillText('฿', 300, 331);
+
+      // Получатель
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 26px Cinzel, serif';
+      ctx.fillText(`@${currentUser.toUpperCase()}`, 300, 545);
+
+      if (amt > 0) {
+        ctx.fillStyle = '#ffd700';
+        ctx.font = '800 32px Cinzel, serif';
+        ctx.fillText(`СУММА: ${amt.toLocaleString()} ฿`, 300, 595);
+      } else {
+        ctx.fillStyle = '#6ee7b7';
+        ctx.font = '600 18px Inter, sans-serif';
+        ctx.fillText('Свободная сумма перевода', 300, 590);
+      }
+
+      if (comment) {
+        ctx.fillStyle = '#a7f3d0';
+        ctx.font = '500 16px Inter, sans-serif';
+        ctx.fillText(`Назначение: ${comment.slice(0, 40)}`, 300, 635);
+      }
+
+      ctx.fillStyle = 'rgba(230, 200, 117, 0.6)';
+      ctx.font = '500 12px Inter, sans-serif';
+      ctx.fillText('Отсканируйте камерой в разделе «QR-Оплата» Банка Миробайт', 300, 715);
+
+      const link = document.createElement('a');
+      link.download = `Mirobyte_QR_${currentUser}${amt > 0 ? '_' + amt : ''}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('Фирменная QR-карточка успешно скачана!', 'success');
+    }
+
+    async function startQrCameraScanner() {
+      const video = document.getElementById('qrVideoPreview');
+      const overlay = document.getElementById('qrScannerOverlay');
+      const placeholder = document.getElementById('qrCameraPlaceholder');
+      const stopBtn = document.getElementById('btnStopQrCam');
+
+      stopQrCameraScanner();
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return showToast('Камера недоступна в этом браузере. Загрузите фото/скриншот QR!', 'error');
+      }
+
+      try {
+        qrVideoStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        });
+        video.srcObject = qrVideoStream;
+        await video.play();
+
+        video.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        stopBtn.classList.remove('hidden');
+
+        const scanCanvas = document.getElementById('qrScanCanvas');
+        const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+
+        const tick = () => {
+          if (!qrVideoStream) return;
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            scanCanvas.width = video.videoWidth;
+            scanCanvas.height = video.videoHeight;
+            scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+            const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+            if (typeof jsQR !== 'undefined') {
+              const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert'
+              });
+              if (code && code.data) {
+                const parsed = parseQrPayloadString(code.data);
+                if (parsed) {
+                  stopQrCameraScanner();
+                  presentScannedQrResult(parsed);
+                  return;
+                }
+              }
+            }
+          }
+          qrScanRafId = requestAnimationFrame(tick);
+        };
+
+        qrScanRafId = requestAnimationFrame(tick);
+      } catch (err) {
+        console.warn('Camera error:', err);
+        showToast('Не удалось включить камеру. Вы можете загрузить скриншот QR-кода!', 'error');
+      }
+    }
+
+    function stopQrCameraScanner() {
+      if (qrScanRafId) {
+        cancelAnimationFrame(qrScanRafId);
+        qrScanRafId = null;
+      }
+      if (qrVideoStream) {
+        qrVideoStream.getTracks().forEach(t => t.stop());
+        qrVideoStream = null;
+      }
+      const video = document.getElementById('qrVideoPreview');
+      const overlay = document.getElementById('qrScannerOverlay');
+      const placeholder = document.getElementById('qrCameraPlaceholder');
+      const stopBtn = document.getElementById('btnStopQrCam');
+      if (video) {
+        video.pause();
+        video.srcObject = null;
+        video.classList.add('hidden');
+      }
+      if (overlay) overlay.classList.add('hidden');
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (stopBtn) stopBtn.classList.add('hidden');
+    }
+
+    function handleQrImageUpload(e) {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById('qrScanCanvas');
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          if (typeof jsQR === 'undefined') {
+            return showToast('Модуль распознавания QR ещё загружается...', 'error');
+          }
+
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'attemptBoth'
+          });
+
+          if (!code || !code.data) {
+            return showToast('QR-код на изображении не найден! Попробуйте более чёткий скриншот.', 'error');
+          }
+
+          const parsed = parseQrPayloadString(code.data);
+          if (!parsed) {
+            return showToast('Этот QR-код не принадлежит системе Банка Миробайт!', 'error');
+          }
+
+          stopQrCameraScanner();
+          presentScannedQrResult(parsed);
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function presentScannedQrResult(parsed) {
+      const targetUser = findUser(parsed.to);
+      if (!targetUser) {
+        return showToast(`Гражданин @${parsed.to} из QR-кода не найден в Банке!`, 'error');
+      }
+
+      lastScannedQrData = {
+        to: targetUser.username,
+        amount: parsed.amount || '',
+        comment: parsed.comment || ''
+      };
+
+      const box = document.getElementById('qrScannedResultBox');
+      const nameEl = document.getElementById('qrScanTargetName');
+      const avatarEl = document.getElementById('qrScanTargetAvatar');
+      const statusEl = document.getElementById('qrScanTargetStatus');
+      const amtInp = document.getElementById('qrScanPayAmount');
+      const comInp = document.getElementById('qrScanPayComment');
+
+      nameEl.innerText = `@${targetUser.username}`;
+      statusEl.innerText = targetUser.customStatus || 'Гражданин';
+      avatarEl.innerHTML = targetUser.avatar
+        ? `<img src="${targetUser.avatar}" class="w-full h-full object-cover">`
+        : `<i class="fa-solid fa-user text-bank-gold"></i>`;
+
+      amtInp.value = parsed.amount || '';
+      comInp.value = parsed.comment || 'Оплата по QR-коду';
+
+      box.classList.remove('hidden');
+      showToast(`QR-код @${targetUser.username} успешно считан!`, 'success');
+    }
+
+    function applyQrToTransferForm() {
+      if (!lastScannedQrData) return;
+      document.getElementById('transferTarget').value = lastScannedQrData.to;
+      document.getElementById('transferAmount').value = document.getElementById('qrScanPayAmount').value || '';
+      document.getElementById('transferComment').value = document.getElementById('qrScanPayComment').value || 'Оплата по QR-коду';
+      closeQrModal();
+      navigateTab('dashboard');
+      showToast(`Реквизиты @${lastScannedQrData.to} подставлены в форму перевода!`, 'info');
+    }
+
+    async function executeInstantQrPayment() {
+      if (!lastScannedQrData || !currentUser) return;
+      const to = lastScannedQrData.to;
+      const amt = parseInt(document.getElementById('qrScanPayAmount').value, 10);
+      const comment = (document.getElementById('qrScanPayComment').value || 'Оплата по QR-коду').trim().slice(0, MAX_COMMENT_LENGTH);
+
+      if (!validPositiveAmount(amt)) {
+        return showToast('Укажите корректную сумму Байти для оплаты по QR!', 'error');
+      }
+
+      const sender = findUser(currentUser);
+      const recipient = findUser(to);
+      if (!sender || !recipient) return showToast('Участник перевода не найден!', 'error');
+      if (sender.isBlocked || recipient.isBlocked) return showToast('Счёт одного из участников заблокирован!', 'error');
+      if (normalizeLogin(sender.username) === normalizeLogin(recipient.username)) {
+        return showToast('Нельзя оплатить собственный QR-счёт!', 'error');
+      }
+
+      const sKey = normalizeLogin(sender.username);
+      const rKey = normalizeLogin(recipient.username);
+      const senderRef = db.ref(`bankData/users/${sKey}/balance`);
+      let debited = false;
+
+      try {
+        const result = await senderRef.transaction(balance => {
+          const current = Number(balance || 0);
+          if (current < amt) return;
+          debited = true;
+          return current - amt;
+        });
+        if (!result.committed || !debited) {
+          return showToast('Недостаточно Байти на вашем счёте!', 'error');
+        }
+
+        const creditResult = await db.ref(`bankData/users/${rKey}/balance`).transaction(balance => {
+          const current = Number(balance || 0);
+          const next = current + amt;
+          return Number.isSafeInteger(next) ? next : undefined;
+        });
+        if (!creditResult.committed) throw new Error('QR recipient credit failed');
+
+        const tx = {
+          id: newOperationId('QR'),
+          from: sender.username,
+          to: recipient.username,
+          amount: amt,
+          comment: `📱 [QR-Оплата]: ${comment}`,
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
+        await db.ref(`bankData/transactions/${tx.id}`).set(tx);
+        addSystemMessage(recipient.username, 'Поступление по QR-коду', `Вам поступила QR-оплата +${amt} ฿ от @${sender.username}. ${comment}`);
+
+        document.getElementById('qrScannedResultBox').classList.add('hidden');
+        closeQrModal();
+        showToast(`QR-счёт оплачен: ${amt.toLocaleString()} ฿ отправлено @${recipient.username}!`, 'success');
+      } catch (err) {
+        console.error(err);
+        if (debited) await senderRef.transaction(balance => Number(balance || 0) + amt);
+        showToast('Ошибка при оплате QR-кода. Средства сохранены.', 'error');
+      }
+    }
+
+    function checkUrlPaymentParams() {
+      try {
+        const url = new URL(window.location.href);
+        const payTo = url.searchParams.get('payTo');
+        if (!payTo) return;
+
+        const amount = parseInt(url.searchParams.get('amount') || '0', 10) || null;
+        const comment = (url.searchParams.get('comment') || '').trim();
+
+        // Очищаем адресную строку, чтобы при перезагрузке окно не открывалось повторно
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        if (currentUser) {
+          openQrModal('scan');
+          presentScannedQrResult({ to: payTo, amount, comment });
+        } else {
+          showToast(`Войдите в счёт, чтобы завершить QR-перевод для @${payTo}`, 'info');
+        }
+      } catch (e) {}
+    }
+
     function findUser(login) {
       if (!login) return null;
-      const key = Object.keys(appData.users).find(k => k.toLowerCase() === login.trim().toLowerCase());
+      const clean = login.trim().toLowerCase();
+      if (appData.users[clean]) return appData.users[clean];
+      const key = Object.keys(appData.users).find(k => k.toLowerCase() === clean);
       return key ? appData.users[key] : null;
     }
 
@@ -1681,11 +2581,11 @@
         return;
       }
 
-      dropdown.innerHTML = '';
+      const frag = document.createDocumentFragment();
       filtered.forEach(u => {
         const isCurrent = currentUser && u.username.toLowerCase() === currentUser.toLowerCase();
         const avatarMini = u.avatar 
-          ? `<img src="${u.avatar}" class="w-full h-full object-cover">`
+          ? `<img src="${u.avatar}" class="w-full h-full object-cover" loading="lazy">`
           : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
 
         const row = document.createElement('div');
@@ -1716,9 +2616,11 @@
           input.focus();
         };
 
-        dropdown.appendChild(row);
+        frag.appendChild(row);
       });
 
+      dropdown.innerHTML = '';
+      dropdown.appendChild(frag);
       dropdown.classList.remove('hidden');
     }
 
@@ -1913,7 +2815,7 @@
       const avatarHtml = avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs text-bank-gold"></i>`;
 
       box.innerHTML = `
-        <div class="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+        <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
           <div class="flex items-center gap-1.5 cursor-pointer p-1 rounded-xl hover:bg-bank-card/50 transition-colors" onclick="openSettingsModal()" title="Настройки">
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl ring-1 ring-bank-gold/60 overflow-hidden bg-black flex items-center justify-center flex-shrink-0">
               ${avatarHtml}
@@ -1926,6 +2828,8 @@
               <div class="text-[11px] font-mono text-bank-gold font-bold">${(balance || 0).toLocaleString()} ฿</div>
             </div>
           </div>
+
+          <button onclick="openQrModal('myqr')" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/50 text-bank-gold hover:text-white flex items-center justify-center transition-all flex-shrink-0" title="Мой QR-код и Сканер"><i class="fa-solid fa-qrcode text-xs sm:text-sm"></i></button>
 
           <button onclick="openStatsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all flex-shrink-0" title="Статистика"><i class="fa-solid fa-chart-simple text-xs sm:text-sm"></i></button>
 
@@ -1983,23 +2887,26 @@
       }
 
       const qBar = document.getElementById('quickDenominationsBar');
-      qBar.innerHTML = '';
-      BANKNOTES_CONFIG.forEach(n => {
-        const btn = document.createElement('button');
-        btn.className = 'px-2.5 py-1 bg-bank-darkest border border-bank-border rounded-lg text-xs font-bold text-bank-gold hover:bg-bank-card transition-colors';
-        btn.innerText = `+${n.value} ฿`;
-        btn.onclick = () => {
-          const inp = document.getElementById('transferAmount');
-          inp.value = (parseInt(inp.value) || 0) + n.value;
-          showToast(`+${n.value} ฿ добавлено к переводу`, 'info');
-        };
-        qBar.appendChild(btn);
-      });
+      if (qBar && qBar.children.length === 0) {
+        const frag = document.createDocumentFragment();
+        BANKNOTES_CONFIG.forEach(n => {
+          const btn = document.createElement('button');
+          btn.className = 'px-2.5 py-1 bg-bank-darkest border border-bank-border rounded-lg text-xs font-bold text-bank-gold hover:bg-bank-card transition-colors';
+          btn.innerText = `+${n.value} ฿`;
+          btn.onclick = () => {
+            const inp = document.getElementById('transferAmount');
+            inp.value = (parseInt(inp.value) || 0) + n.value;
+            showToast(`+${n.value} ฿ добавлено к переводу`, 'info');
+          };
+          frag.appendChild(btn);
+        });
+        qBar.appendChild(frag);
+      }
     }
 
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
-      tbody.innerHTML = '';
+      if (!tbody) return;
       
       const isAdmin = isCurrentUserAdmin() || isCurrentUserSuperAdmin();
       let usersList = Object.values(appData.users);
@@ -2011,6 +2918,7 @@
       usersList.sort((a, b) => (b.balance || 0) - (a.balance || 0));
       document.getElementById('leaderboardCountBadge').innerText = `${usersList.length} Граждан`;
 
+      const frag = document.createDocumentFragment();
       usersList.forEach((u, i) => {
         const isMe = currentUser && currentUser.toLowerCase() === u.username.toLowerCase();
         const tr = document.createElement('tr');
@@ -2022,7 +2930,7 @@
         if (i === 2) medal = `🥉 3`;
 
         const avatarMini = u.avatar 
-          ? `<img src="${u.avatar}" class="w-full h-full object-cover">`
+          ? `<img src="${u.avatar}" class="w-full h-full object-cover" loading="lazy">`
           : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
 
         tr.innerHTML = `
@@ -2044,23 +2952,27 @@
           <td class="py-2.5 px-3 text-[11px] text-bank-gold/80">${escapeHtml(u.customStatus || 'Гражданин')}</td>
           <td class="py-2.5 px-3 text-right font-mono font-bold text-bank-gold">${(u.balance || 0).toLocaleString()} ฿</td>
           <td class="py-2.5 px-3 text-right">
-            ${!isMe ? `<button onclick="document.getElementById('transferTarget').value='${u.username}'; navigateTab('dashboard');" class="px-2 py-1 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-black rounded text-[10px] font-bold">Перевести</button>` : '—'}
+            ${!isMe ? `<button onclick="document.getElementById('transferTarget').value='${escapeHtml(u.username)}'; navigateTab('dashboard');" class="px-2 py-1 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-black rounded text-[10px] font-bold">Перевести</button>` : '—'}
           </td>
         `;
-        tbody.appendChild(tr);
+        frag.appendChild(tr);
       });
+
+      tbody.innerHTML = '';
+      tbody.appendChild(frag);
     }
 
     function renderBanknotes() {
       const grid = document.getElementById('banknotesCatalogGrid');
-      grid.innerHTML = '';
+      if (!grid) return;
+      const frag = document.createDocumentFragment();
       BANKNOTES_CONFIG.forEach(n => {
         const customImg = appData.banknoteImages && appData.banknoteImages[n.value];
         const card = document.createElement('div');
         card.className = 'group bg-bank-surface border border-bank-border hover:border-bank-gold/60 rounded-2xl p-4 flex flex-col justify-between transition-all cursor-pointer';
         card.innerHTML = `
           <div class="aspect-[16/9] rounded-xl border border-bank-border bg-[#071911] p-3 flex flex-col justify-between overflow-hidden mb-3 banknote-pattern relative">
-            ${customImg ? `<img src="${customImg}" class="w-full h-full object-cover rounded-lg">` : `
+            ${customImg ? `<img src="${customImg}" class="w-full h-full object-cover rounded-lg" loading="lazy">` : `
               <div class="text-center my-auto text-bank-gold">
                 <i class="fa-solid ${n.icon} text-3xl mb-1 group-hover:scale-110 transition-transform"></i>
                 <div class="font-royal font-bold text-lg">${n.value} ฿</div>
@@ -2081,8 +2993,10 @@
           </div>
         `;
         card.onclick = () => openBanknoteModal(n.value);
-        grid.appendChild(card);
+        frag.appendChild(card);
       });
+      grid.innerHTML = '';
+      grid.appendChild(frag);
     }
 
     function addAmountToTransferInput(val) {
@@ -2148,7 +3062,6 @@
     function renderMailView() {
       const container = document.getElementById('mailItemsContainer');
       if (!container || !currentUser) return;
-      container.innerHTML = '';
       const uLow = currentUser.toLowerCase();
       
       const rawBox = appData.mailBox || {};
@@ -2163,12 +3076,13 @@
         return;
       }
 
+      const frag = document.createDocumentFragment();
       filtered.forEach(m => {
         const el = document.createElement('div');
         el.className = 'p-3 rounded-xl bg-bank-darkest border border-bank-border/80 space-y-2 text-xs shadow-md';
         el.innerHTML = `
           <div class="flex justify-between items-center text-[10px] text-emerald-500 border-b border-bank-border/40 pb-1">
-            <span>${mailFilter === 'inbox' ? 'От: @' + m.from : 'Кому: @' + m.to}</span>
+            <span>${mailFilter === 'inbox' ? 'От: @' + escapeHtml(m.from) : 'Кому: @' + escapeHtml(m.to)}</span>
             <span>${escapeHtml(m.timestamp)}</span>
           </div>
           <p class="text-white whitespace-pre-wrap">${escapeHtml(m.text)}</p>
@@ -2177,7 +3091,7 @@
               <button onclick="promptDeleteMail('${m._dbKey}', 'inbox')" class="px-2 py-0.5 bg-rose-950/60 border border-rose-700/40 text-rose-300 hover:text-white rounded text-[10px] transition-colors" title="Удалить депешу">
                 <i class="fa-solid fa-trash-can mr-1"></i> Удалить
               </button>
-              <button onclick="document.getElementById('mailRecipient').value='${m.from}'; document.getElementById('mailText').focus(); showToast('Ответ гражданину @${m.from}', 'info');" class="px-2 py-0.5 bg-emerald-950 border border-emerald-500/30 text-emerald-300 rounded text-[10px]">
+              <button onclick="document.getElementById('mailRecipient').value='${escapeHtml(m.from)}'; document.getElementById('mailText').focus(); showToast('Ответ гражданину @${escapeHtml(m.from)}', 'info');" class="px-2 py-0.5 bg-emerald-950 border border-emerald-500/30 text-emerald-300 rounded text-[10px]">
                 <i class="fa-solid fa-reply mr-1"></i> Ответить
               </button>
             ` : `
@@ -2187,13 +3101,21 @@
             `}
           </div>
         `;
-        container.appendChild(el);
+        frag.appendChild(el);
       });
+      container.innerHTML = '';
+      container.appendChild(frag);
     }
 
-    function promptDeleteMail(mailKey, originType) {
+    async function promptDeleteMail(mailKey, originType) {
       if (!mailKey) return;
-      const isEverywhere = confirm("Удалить депешу НАВСЕГДА ДЛЯ ВСЕХ?\n\n[OK] — Удалить у всех (стереть из базы)\n[Отмена] — Удалить только из моего списка");
+      const isEverywhere = await askRoyalConfirm({
+        title: 'Удаление телеграммы',
+        message: 'Вы хотите удалить эту депешу НАВСЕГДА у всех участников (стереть из базы) или скрыть только из своего списка?',
+        okText: 'Удалить у всех',
+        cancelText: 'Только у меня',
+        isDanger: true
+      });
 
       if (isEverywhere) {
         db.ref(`bankData/mailBox/${mailKey}`).remove().then(() => {
@@ -2244,10 +3166,10 @@
 
       const tbody = document.getElementById('adminUserTableBody');
       if (tbody) {
-        tbody.innerHTML = '';
+        const frag = document.createDocumentFragment();
         usersList.forEach(u => {
           const avatarMini = u.avatar 
-            ? `<img src="${u.avatar}" class="w-full h-full object-cover">`
+            ? `<img src="${u.avatar}" class="w-full h-full object-cover" loading="lazy">`
             : `<i class="fa-solid fa-user text-[10px] text-bank-gold"></i>`;
 
           const tr = document.createElement('tr');
@@ -2270,21 +3192,22 @@
             <td class="py-2.5 px-3 font-mono font-bold text-bank-gold">${(u.balance || 0).toLocaleString()} ฿</td>
             <td class="py-2.5 px-3 text-[10px] text-emerald-500">${u.registeredAt || '—'}</td>
             <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
-              <button onclick="adminQuickAction('${u.username}', 100, 'grant')" class="px-2 py-1 bg-emerald-900/50 hover:bg-emerald-800 text-emerald-300 rounded text-[10px] font-bold">+100</button>
-              <button onclick="adminQuickAction('${u.username}', 1000, 'grant')" class="px-2 py-1 bg-bank-darkest hover:bg-bank-gold/30 text-bank-gold border border-bank-gold/40 rounded text-[10px] font-bold">+1 000</button>
-              <button onclick="adminQuickAction('${u.username}', 50, 'deduct')" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold">-50</button>
-              <button onclick="adminQuickAction('${u.username}', 500, 'deduct')" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold">-500</button>
+              <button onclick="adminQuickAction('${escapeHtml(u.username)}', 100, 'grant')" class="px-2 py-1 bg-emerald-900/50 hover:bg-emerald-800 text-emerald-300 rounded text-[10px] font-bold">+100</button>
+              <button onclick="adminQuickAction('${escapeHtml(u.username)}', 1000, 'grant')" class="px-2 py-1 bg-bank-darkest hover:bg-bank-gold/30 text-bank-gold border border-bank-gold/40 rounded text-[10px] font-bold">+1 000</button>
+              <button onclick="adminQuickAction('${escapeHtml(u.username)}', 50, 'deduct')" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold">-50</button>
+              <button onclick="adminQuickAction('${escapeHtml(u.username)}', 500, 'deduct')" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold">-500</button>
             </td>
           `;
-          tbody.appendChild(tr);
+          frag.appendChild(tr);
         });
+        tbody.innerHTML = '';
+        tbody.appendChild(frag);
       }
     }
 
     function renderAdminTransactionsTable() {
       const tbody = document.getElementById('adminLiveTxBody');
       if (!tbody) return;
-      tbody.innerHTML = '';
 
       const filterTerm = (document.getElementById('adminTxFilterInput')?.value || '').trim().toLowerCase();
       let txs = appData.transactions || [];
@@ -2298,25 +3221,27 @@
         return;
       }
 
+      const frag = document.createDocumentFragment();
       txs.forEach(t => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-bank-card/60 transition-colors';
         tr.innerHTML = `
           <td class="py-2 px-3 text-[10px] text-emerald-500/80 font-mono whitespace-nowrap">${escapeHtml(t.timestamp || '—')}</td>
-          <td class="py-2 px-3 font-bold text-white"><span class="cursor-pointer hover:text-bank-gold" onclick="fillAdminTarget('${t.from}')">@${escapeHtml(t.from)}</span></td>
-          <td class="py-2 px-3 font-bold text-emerald-300"><span class="cursor-pointer hover:text-bank-gold" onclick="fillAdminTarget('${t.to}')">@${escapeHtml(t.to)}</span></td>
+          <td class="py-2 px-3 font-bold text-white"><span class="cursor-pointer hover:text-bank-gold" onclick="fillAdminTarget('${escapeHtml(t.from)}')">@${escapeHtml(t.from)}</span></td>
+          <td class="py-2 px-3 font-bold text-emerald-300"><span class="cursor-pointer hover:text-bank-gold" onclick="fillAdminTarget('${escapeHtml(t.to)}')">@${escapeHtml(t.to)}</span></td>
           <td class="py-2 px-3 text-right font-mono font-bold text-bank-gold">+${(Number(t.amount)||0).toLocaleString()} ฿</td>
           <td class="py-2 px-3 text-[11px] text-emerald-200/80 max-w-xs truncate" title="${escapeHtml(t.comment || '')}">${escapeHtml(t.comment || '—')}</td>
         `;
-        tbody.appendChild(tr);
+        frag.appendChild(tr);
       });
+      tbody.innerHTML = '';
+      tbody.appendChild(frag);
     }
 
     function renderAdminAllMailsView() {
       const container = document.getElementById('adminAllMailsContainer');
       const badge = document.getElementById('adminTotalMailsBadge');
       if (!container) return;
-      container.innerHTML = '';
 
       const rawBox = appData.mailBox || {};
       const allMails = Object.entries(rawBox).map(([key, item]) => ({ ...item, _dbKey: key })).sort((a,b) => (b.timestampMs||0) - (a.timestampMs||0));
@@ -2328,15 +3253,16 @@
         return;
       }
 
+      const frag = document.createDocumentFragment();
       allMails.forEach(m => {
         const div = document.createElement('div');
         div.className = 'p-3.5 rounded-2xl bg-bank-darkest border border-purple-500/30 space-y-2 text-xs shadow-md';
         div.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] border-b border-bank-border/40 pb-1.5">
             <div class="flex items-center gap-2">
-              <span class="text-purple-300 font-bold cursor-pointer hover:underline" onclick="fillAdminTarget('${m.from}')">От: @${escapeHtml(m.from)}</span>
+              <span class="text-purple-300 font-bold cursor-pointer hover:underline" onclick="fillAdminTarget('${escapeHtml(m.from)}')">От: @${escapeHtml(m.from)}</span>
               <i class="fa-solid fa-arrow-right text-[9px] text-emerald-500"></i>
-              <span class="text-bank-gold font-bold cursor-pointer hover:underline" onclick="fillAdminTarget('${m.to}')">Кому: @${escapeHtml(m.to)}</span>
+              <span class="text-bank-gold font-bold cursor-pointer hover:underline" onclick="fillAdminTarget('${escapeHtml(m.to)}')">Кому: @${escapeHtml(m.to)}</span>
             </div>
             <div class="text-[10px] text-emerald-500/70 font-mono">${escapeHtml(m.timestamp || '')} | Тариф: ${m.cost || 1} ฿</div>
           </div>
@@ -2344,7 +3270,7 @@
           <div class="flex items-center justify-between pt-1">
             <div class="text-[10px] text-emerald-400/60">Действия с автором:</div>
             <div class="flex items-center gap-2">
-              <button onclick="fillAdminTarget('${m.from}'); navigateTab('superadmin');" class="px-2 py-0.5 bg-purple-950/70 border border-purple-500/40 text-purple-200 rounded text-[10px] hover:text-white">
+              <button onclick="fillAdminTarget('${escapeHtml(m.from)}'); navigateTab('superadmin');" class="px-2 py-0.5 bg-purple-950/70 border border-purple-500/40 text-purple-200 rounded text-[10px] hover:text-white">
                 <i class="fa-solid fa-bullhorn mr-1"></i> Предупредить
               </button>
               <button onclick="deleteAdminMailDirect('${m._dbKey}')" class="px-2 py-0.5 bg-rose-950/70 border border-rose-600/40 text-rose-300 rounded text-[10px] hover:text-white">
@@ -2353,21 +3279,35 @@
             </div>
           </div>
         `;
-        container.appendChild(div);
+        frag.appendChild(div);
       });
+      container.innerHTML = '';
+      container.appendChild(frag);
     }
 
-    function deleteAdminMailDirect(mailKey) {
+    async function deleteAdminMailDirect(mailKey) {
       if (!isCurrentUserSuperAdmin()) return showToast('Доступ запрещён!', 'error');
-      if (!confirm('Удалить эту депешу из базы данных Банка навсегда?')) return;
+      const ok = await askRoyalConfirm({
+        title: 'Удаление депеши из базы',
+        message: 'Удалить эту депешу из базы данных Банка навсегда?',
+        okText: 'Удалить навсегда',
+        isDanger: true
+      });
+      if (!ok) return;
       db.ref(`bankData/mailBox/${mailKey}`).remove().then(() => {
         showToast('Депеша удалена из базы администратором!', 'info');
       });
     }
 
-    function promptClearAllTransactions() {
+    async function promptClearAllTransactions() {
       if (!isCurrentUserSuperAdmin()) return showToast('Доступ запрещён!', 'error');
-      if (!confirm('ВНИМАНИЕ: Вы действительно хотите очистить всю историю переводов в Банке?')) return;
+      const ok = await askRoyalConfirm({
+        title: 'Очистка журнала переводов',
+        message: 'ВНИМАНИЕ: Вы действительно хотите очистить всю историю переводов в Банке?',
+        okText: 'Очистить всё',
+        isDanger: true
+      });
+      if (!ok) return;
       db.ref('bankData/transactions').set(null).then(() => {
         showToast('История переводов полностью очищена!', 'info');
       });
@@ -2490,8 +3430,8 @@
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl ${!d.bgImage ? bgClass : ''} border border-bank-gold/40 flex-shrink-0 overflow-hidden" style="${previewStyle}"></div>
             <div>
-              <div class="text-xs font-bold text-white">${d.name}</div>
-              <div class="text-[10px] text-emerald-400/70 font-mono">${d.bgImage ? 'Фон: Изображение' : d.theme}</div>
+              <div class="text-xs font-bold text-white">${escapeHtml(d.name)}</div>
+              <div class="text-[10px] text-emerald-400/70 font-mono">${d.bgImage ? 'Фон: Изображение' : escapeHtml(d.theme)}</div>
             </div>
           </div>
           <button onclick="handleDeleteCardDesign('${d.id}')" class="text-rose-400 hover:text-white p-1 text-xs" title="Удалить стиль">
@@ -2534,7 +3474,7 @@
         <div class="flex items-center gap-3">
           <div class="w-10 h-7 rounded-lg ${!bgImage ? bgClass : ''} border border-bank-gold/50 shadow-sm flex-shrink-0 overflow-hidden" style="${previewStyle}"></div>
           <div>
-            <div class="text-xs font-bold text-white">${name}</div>
+            <div class="text-xs font-bold text-white">${escapeHtml(name)}</div>
             <div class="text-[10px] text-emerald-400/70">${isSelected ? 'Текущий активный стиль' : 'Нажмите, чтобы применить'}</div>
           </div>
         </div>
@@ -2624,18 +3564,42 @@
           if (actual <= 0 || !await atomicBalanceChange(user.username, -actual, {requireFunds:true})) return showToast('Баланс уже 0 ฿ или изменился. Повторите операцию.', 'error');
           await db.ref('bankData/bankReserve').transaction(v => Number(v || 0) + actual);
         }
-        const tx = { id: txId, from: treasuryMode === 'grant' ? 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО' : user.username, to: treasuryMode === 'grant' ? user.username : 'КАЗНА БАНКА МИРОБАЙТ', amount: actual, comment: reason || (treasuryMode === 'grant' ? 'Государственная эмиссия' : 'Списание излишков казначеем'), timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now() };
+        const tx = {
+          id: txId,
+          from: treasuryMode === 'grant' ? 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО' : user.username,
+          to: treasuryMode === 'grant' ? user.username : 'КАЗНА БАНКА МИРОБАЙТ',
+          amount: actual,
+          comment: reason || (treasuryMode === 'grant' ? 'Государственная эмиссия' : 'Списание излишков казначеем'),
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        };
         await db.ref(`bankData/transactions/${txId}`).set(tx);
-        addSystemMessage(user.username, treasuryMode === 'grant' ? 'Эмиссия средств' : 'Списание излишков', treasuryMode === 'grant' ? `Казначейство начислило вам +${actual} ฿. Основание: ${reason || 'Эмиссия'}` : `С вашего счёта списано ${actual} ฿. Причина: ${reason || 'Регулирование'}`);
-        showToast(treasuryMode === 'grant' ? `Эмиссия: +${actual} ฿ гражданину @${user.username}!` : `Списано ${actual} ฿ со счёта @${user.username}!`, treasuryMode === 'grant' ? 'success' : 'info');
-        document.getElementById('treasuryAmount').value = ''; document.getElementById('treasuryReason').value = '';
-      } catch (err) { console.error(err); showToast('Операция казначейства не выполнена.', 'error'); }
+        addSystemMessage(
+          user.username,
+          treasuryMode === 'grant' ? 'Эмиссия средств' : 'Списание излишков',
+          treasuryMode === 'grant'
+            ? `Казначейство начислило вам +${actual} ฿. Основание: ${reason || 'Эмиссия'}`
+            : `С вашего счёта списано ${actual} ฿. Причина: ${reason || 'Регулирование'}`
+        );
+        showToast(
+          treasuryMode === 'grant'
+            ? `Эмиссия: +${actual.toLocaleString()} ฿ гражданину @${user.username}!`
+            : `Списано ${actual.toLocaleString()} ฿ со счёта @${user.username}!`,
+          treasuryMode === 'grant' ? 'success' : 'info'
+        );
+        document.getElementById('treasuryAmount').value = '';
+        document.getElementById('treasuryReason').value = '';
+      } catch (err) {
+        console.error(err);
+        showToast('Операция казначейства не выполнена.', 'error');
+      }
     }
 
     async function adminQuickAction(username, val, mode) {
       if (!isCurrentUserAdmin()) return showToast('Доступ запрещён: требуется статус Казначея!', 'error');
       if (!validPositiveAmount(Number(val), 1000000000)) return showToast('Некорректная сумма.', 'error');
-      const user = findUser(username); if (!user || user.isBlocked) return;
+      const user = findUser(username);
+      if (!user || user.isBlocked) return;
       const txId = newOperationId('TX');
       try {
         let actual = Number(val);
@@ -2643,19 +3607,41 @@
           if (!await atomicBalanceChange(user.username, actual)) throw new Error('grant failed');
         } else {
           actual = Math.min(Number(user.balance || 0), actual);
-          if (actual <= 0 || !await atomicBalanceChange(user.username, -actual, {requireFunds:true})) return showToast('Баланс уже 0 ฿ или изменился.', 'error');
+          if (actual <= 0 || !await atomicBalanceChange(user.username, -actual, {requireFunds:true})) {
+            return showToast('Баланс уже 0 ฿ или изменился.', 'error');
+          }
           await db.ref('bankData/bankReserve').transaction(v => Number(v || 0) + actual);
         }
-        await db.ref(`bankData/transactions/${txId}`).set({id:txId,from:mode==='grant'?'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО':user.username,to:mode==='grant'?user.username:'КАЗНА БАНКА МИРОБАЙТ',amount:actual,comment:mode==='grant'?'Быстрое начисление Казначея':'Быстрое списание Казначеем',timestamp:new Date().toLocaleString('ru-RU'),timestampMs:Date.now()});
-        addSystemMessage(user.username, mode==='grant'?'Пополнение от Казначея':'Списание средств', mode==='grant'?`Казначей начислил вам +${actual} ฿.`:`С вашего счёта списано ${actual} ฿ по решению Казначея.`);
-        showToast(mode==='grant'?`+${actual} ฿ начислено @${user.username}!`:`Списано ${actual} ฿ у @${user.username}!`, mode==='grant'?'success':'info');
-      } catch(err){ console.error(err); showToast('Операция не выполнена.', 'error'); }
+        await db.ref(`bankData/transactions/${txId}`).set({
+          id: txId,
+          from: mode === 'grant' ? 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО' : user.username,
+          to: mode === 'grant' ? user.username : 'КАЗНА БАНКА МИРОБАЙТ',
+          amount: actual,
+          comment: mode === 'grant' ? 'Быстрое начисление Казначея' : 'Быстрое списание Казначеем',
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
+        });
+        addSystemMessage(
+          user.username,
+          mode === 'grant' ? 'Пополнение от Казначея' : 'Списание средств',
+          mode === 'grant'
+            ? `Казначей начислил вам +${actual} ฿.`
+            : `С вашего счёта списано ${actual} ฿ по решению Казначея.`
+        );
+        showToast(
+          mode === 'grant' ? `+${actual} ฿ начислено @${user.username}!` : `Списано ${actual} ฿ у @${user.username}!`,
+          mode === 'grant' ? 'success' : 'info'
+        );
+      } catch (err) {
+        console.error(err);
+        showToast('Операция не выполнена.', 'error');
+      }
     }
 
-    // ДЕЛЕГИРОВАНИЕ ПОЛНОМОЧИЙ
     async function handleManageAdminAccess(e) {
       e.preventDefault();
       if (!isCurrentUserOwner()) return showToast('Доступ запрещён! Только Владелец Банка может изменять полномочия.', 'error');
+      if (!checkRateLimitAllowed('owner_delegation')) return;
 
       const targetUser = document.getElementById('accessTargetUser').value.trim();
       const action = document.getElementById('accessActionSelect').value;
@@ -2668,8 +3654,10 @@
 
       const ownerCreds = await fetchUserCredentials(ownerUser.username, ownerUser);
       if (!(await verifyPasswordRecord(ownerCreds, passConfirm))) {
+        recordAuthFailure('owner_delegation');
         return showToast('Неверный текущий пароль Владельца Банка! Доступ заблокирован.', 'error');
       }
+      resetAuthFailures('owner_delegation');
 
       const target = findUser(targetUser);
       if (!target) return showToast(`Гражданин @${targetUser} не найден!`, 'error');
@@ -2699,7 +3687,7 @@
       } else if (action === 'revoke_superadmin') {
         updates[`bankData/users/${targetKey}/isSuperAdmin`] = false;
         msg = `У гражданина @${target.username} ОТОЗВАН доступ к Панели Надзора.`;
-        sysText = 'Ваш доступ к Панели Надзора был отозван.';
+        sysText = 'Ваш доступ к Панели Надзора был отозваны.';
       }
 
       db.ref().update(updates).then(() => {
@@ -2709,7 +3697,7 @@
       });
     }
 
-    function executeSanctionAction(action) {
+    async function executeSanctionAction(action) {
       if (!isCurrentUserSuperAdmin()) return showToast('Доступ запрещён: требуется статус Администратора Надзора!', 'error');
       const targetInput = document.getElementById('sanctionTargetUser');
       const targetName = targetInput.value.trim();
@@ -2718,13 +3706,23 @@
       const user = findUser(targetName);
       if (!user) return showToast(`Гражданин @${targetName} не найден!`, 'error');
 
-      if (user.isOwner || user.username.toLowerCase() === OWNER_USERNAME.toLowerCase()) return showToast('Нельзя применять санкции к Создателю / Владельцу Банка!', 'error');
+      if (user.isOwner || user.username.toLowerCase() === OWNER_USERNAME.toLowerCase()) {
+        return showToast('Нельзя применять санкции к Создателю / Владельцу Банка!', 'error');
+      }
 
       const uKey = user.username.toLowerCase();
 
       if (action === 'zero') {
         const curBal = user.balance || 0;
         if (curBal <= 0) return showToast(`Баланс @${user.username} уже равен 0 ฿!`, 'info');
+
+        const ok = await askRoyalConfirm({
+          title: 'Полное обнуление счёта',
+          message: `Конфисковать весь баланс @${user.username} (${curBal.toLocaleString()} ฿) в Государственную Казну?`,
+          okText: 'Обнулить счёт',
+          isDanger: true
+        });
+        if (!ok) return;
 
         const txId = newOperationId('TX');
         const updates = {};
@@ -2763,7 +3761,13 @@
         });
 
       } else if (action === 'delete') {
-        if (!confirm(`Вы действительно хотите БЕЗВОЗВРАТНО удалить аккаунт @${user.username}?`)) return;
+        const ok = await askRoyalConfirm({
+          title: 'Удаление банковского счёта',
+          message: `Вы действительно хотите БЕЗВОЗВРАТНО удалить аккаунт гражданина @${user.username}?`,
+          okText: 'Удалить навсегда',
+          isDanger: true
+        });
+        if (!ok) return;
         
         db.ref(`bankData/users/${uKey}`).remove().then(() => {
           db.ref(`bankSecurity/credentials/${uKey}`).remove();
@@ -2828,9 +3832,13 @@
       document.getElementById('authTabLogin').className = m === 'login' ? 'flex-1 pb-3 text-xs sm:text-sm font-semibold border-b-2 border-bank-gold text-bank-gold' : 'flex-1 pb-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-emerald-400/60';
       document.getElementById('authTabRegister').className = m === 'register' ? 'flex-1 pb-3 text-xs sm:text-sm font-semibold border-b-2 border-bank-gold text-bank-gold' : 'flex-1 pb-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-emerald-400/60';
       document.getElementById('authSubmitBtn').innerText = m === 'login' ? 'Войти в Личный Кабинет' : 'Создать счёт (+50 ฿)';
+      const strengthBox = document.getElementById('authPassStrengthBox');
+      if (strengthBox) {
+        strengthBox.classList.toggle('hidden', m !== 'register');
+        if (m === 'register') updateAuthPasswordStrength();
+      }
     }
 
-    // ВХОД И РЕГИСТРАЦИЯ
     async function processAuthForm(e) {
       e.preventDefault();
       const u = document.getElementById('inputUsername').value.trim();
@@ -2839,16 +3847,23 @@
       if (u.length > MAX_LOGIN_LENGTH) return showToast(`Логин слишком длинный (максимум ${MAX_LOGIN_LENGTH} символов)!`, 'error');
       if (!/^[\p{L}\p{N}_.-]+$/u.test(u)) return showToast('В логине разрешены буквы, цифры, _, . и -', 'error');
 
+      const rateKey = `login_${normalizeLogin(u)}`;
+      if (!checkRateLimitAllowed(rateKey)) return;
+
       const existing = findUser(u);
 
       if (authMode === 'login') {
-        if (!existing) return showToast('Гражданин с таким логином не найден!', 'error');
+        if (!existing) {
+          recordAuthFailure(rateKey);
+          return showToast('Гражданин с таким логином не найден!', 'error');
+        }
         if (existing.isBlocked) return showToast('Ваш счёт заблокирован решением Банка!', 'error');
 
         const creds = await fetchUserCredentials(existing.username, existing);
         const isValid = await verifyPasswordRecord(creds, p);
 
         if (isValid) {
+          resetAuthFailures(rateKey);
           if (creds._isLegacy || creds._isPlainLegacy || existing.passwordHash || existing.password) {
             try {
               await migrateUserCredentialsToSecureNode(existing.username, p);
@@ -2863,11 +3878,14 @@
           renderCurrentView();
           showToast(`Добро пожаловать, ${currentUser}!`, 'success');
         } else {
+          recordAuthFailure(rateKey);
           showToast('Неверный логин или пароль!', 'error');
         }
       } else {
         if (existing) return showToast('Логин уже занят!', 'error');
         if (p.length < 6) return showToast('Для нового счёта пароль должен быть не менее 6 символов!', 'error');
+        const strength = evaluatePasswordStrength(p, u);
+        if (!strength.valid) return showToast(strength.label, 'error');
 
         const key = normalizeLogin(u);
         const isOwnerAcc = (key === OWNER_USERNAME.toLowerCase());
@@ -2911,7 +3929,6 @@
       }
     }
 
-    // ПЕРЕВОД БАЙТИ
     async function executeTransfer(e) {
       e.preventDefault();
       const to = document.getElementById('transferTarget').value.trim();
@@ -2929,12 +3946,22 @@
       if (isProxy) {
         const pLog = document.getElementById('proxySenderLogin').value.trim();
         const pPass = document.getElementById('proxySenderPassword').value;
+        const proxyRateKey = `proxy_${normalizeLogin(pLog)}`;
+        if (!checkRateLimitAllowed(proxyRateKey)) return;
+
         const pUser = findUser(pLog);
-        if (!pUser) return showToast('Плательщик не найден!', 'error');
+        if (!pUser) {
+          recordAuthFailure(proxyRateKey);
+          return showToast('Плательщик не найден!', 'error');
+        }
 
         const creds = await fetchUserCredentials(pUser.username, pUser);
         const isAuthOk = await verifyPasswordRecord(creds, pPass);
-        if (!isAuthOk) return showToast('Неверные данные плательщика!', 'error');
+        if (!isAuthOk) {
+          recordAuthFailure(proxyRateKey);
+          return showToast('Неверные данные плательщика!', 'error');
+        }
+        resetAuthFailures(proxyRateKey);
         sender = pUser;
       }
 
@@ -2954,12 +3981,20 @@
         });
         if (!result.committed || !debited) return showToast('Недостаточно Байти или баланс уже изменился. Повторите операцию.', 'error');
 
-        const creditResult = await db.ref(`bankData/users/${rKey}/balance`).transaction(balance => { const current = Number(balance || 0); const next = current + amt; return Number.isSafeInteger(next) ? next : undefined; });
+        const creditResult = await db.ref(`bankData/users/${rKey}/balance`).transaction(balance => {
+          const current = Number(balance || 0);
+          const next = current + amt;
+          return Number.isSafeInteger(next) ? next : undefined;
+        });
         if (!creditResult.committed) throw new Error('recipient credit failed');
         const tx = {
-          id: newOperationId('TX'), from: sender.username, to: recipient.username,
-          amount: amt, comment: comment || (isProxy ? `Списание по авторизации через @${currentUser}` : 'Перевод средств'),
-          timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          id: newOperationId('TX'),
+          from: sender.username,
+          to: recipient.username,
+          amount: amt,
+          comment: comment || (isProxy ? `Списание по авторизации через @${currentUser}` : 'Перевод средств'),
+          timestamp: new Date().toLocaleString('ru-RU'),
+          timestampMs: Date.now()
         };
         await db.ref(`bankData/transactions/${tx.id}`).set(tx);
         addSystemMessage(recipient.username, 'Поступление перевода', `Вам поступил перевод на +${amt} ฿ от @${sender.username}. ${tx.comment}`);
@@ -3071,25 +4106,48 @@
       try {
         if (target === 'ALL') {
           for (const k of Object.keys(appData.users)) {
-            const u = appData.users[k]; if (!u || u.isBlocked) continue;
+            const u = appData.users[k];
+            if (!u || u.isBlocked) continue;
             if (!await atomicBalanceChange(u.username, amt)) throw new Error('income balance failed');
             addSystemMessage(u.username, 'Регулярный доход', `Вам начислен регулярный доход в размере +${amt} ฿.`);
           }
-          await db.ref(`bankData/transactions/${txId}`).set({id:txId,from:'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',to:'ВСЕМ ГРАЖДАНАМ',amount:amt,comment:'Выплата регулярного дохода',timestamp:new Date().toLocaleString('ru-RU'),timestampMs:Date.now()});
+          await db.ref(`bankData/transactions/${txId}`).set({
+            id: txId,
+            from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
+            to: 'ВСЕМ ГРАЖДАНАМ',
+            amount: amt,
+            comment: 'Выплата регулярного дохода',
+            timestamp: new Date().toLocaleString('ru-RU'),
+            timestampMs: Date.now()
+          });
           if (forceManual) showToast(`Начислено по ${amt} ฿ всем гражданам!`, 'success');
         } else {
-          const user = findUser(target); if (!user || user.isBlocked) return showToast(`Гражданин @${target} не найден или заблокирован!`, 'error');
+          const user = findUser(target);
+          if (!user || user.isBlocked) return showToast(`Гражданин @${target} не найден или заблокирован!`, 'error');
           if (!await atomicBalanceChange(user.username, amt)) throw new Error('income balance failed');
-          await db.ref(`bankData/transactions/${txId}`).set({id:txId,from:'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',to:user.username,amount:amt,comment:'Индивидуальная выплата регулярного дохода',timestamp:new Date().toLocaleString('ru-RU'),timestampMs:Date.now()});
+          await db.ref(`bankData/transactions/${txId}`).set({
+            id: txId,
+            from: 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО',
+            to: user.username,
+            amount: amt,
+            comment: 'Индивидуальная выплата регулярного дохода',
+            timestamp: new Date().toLocaleString('ru-RU'),
+            timestampMs: Date.now()
+          });
           addSystemMessage(user.username, 'Персональный доход', `Вам начислен регулярный доход в размере +${amt} ฿ от Казначейства.`);
           if (forceManual) showToast(`Начислено ${amt} ฿ гражданину @${user.username}!`, 'success');
         }
         return true;
-      } catch(err) { console.error(err); if (forceManual) showToast('Выплата дохода не выполнена полностью.', 'error'); return false; }
+      } catch (err) {
+        console.error(err);
+        if (forceManual) showToast('Выплата дохода не выполнена полностью.', 'error');
+        return false;
+      }
     }
 
     async function claimAutoIncomeSlot() {
-      const conf = appData.autoIncomeConfig; if (!conf) return false;
+      const conf = appData.autoIncomeConfig;
+      if (!conf) return false;
       const now = Date.now(), intervalMs = Number(conf.intervalMinutes) * 60000;
       if (!Number.isFinite(intervalMs) || intervalMs <= 0) return false;
       const ref = db.ref('bankData/autoIncomeConfig/lastPayout');
@@ -3105,9 +4163,14 @@
       if (!isCurrentUserAdmin() || !appData.autoIncomeConfig) return;
       const { amount, intervalMinutes, lastPayout } = appData.autoIncomeConfig;
       if (!validPositiveAmount(Number(amount)) || !Number(intervalMinutes) || Number(intervalMinutes) <= 0) return;
-      if (!lastPayout) { try { await db.ref('bankData/autoIncomeConfig/lastPayout').transaction(v => Number(v || 0) || Date.now()); } catch(e) {} return; }
+      if (!lastPayout) {
+        try { await db.ref('bankData/autoIncomeConfig/lastPayout').transaction(v => Number(v || 0) || Date.now()); } catch(e) {}
+        return;
+      }
       if (Date.now() - Number(lastPayout) >= Number(intervalMinutes) * 60000) {
-        if (await claimAutoIncomeSlot()) { await triggerManualIncomePayout(false); }
+        if (await claimAutoIncomeSlot()) {
+          await triggerManualIncomePayout(false);
+        }
       }
     }
 
@@ -3192,16 +4255,25 @@
       reader.readAsDataURL(file);
     }
 
-    // СМЕНА НИКНЕЙМА
     async function processChangeNickname(e) {
       e.preventDefault();
+      if (!checkRateLimitAllowed('change_nick')) return;
       const newNick = document.getElementById('inputNewNickname').value.trim();
       const pass = document.getElementById('inputNickConfirmPassword').value;
       const u = findUser(currentUser);
 
-      if (!newNick || newNick.length < 3) return showToast('Логин должен быть не менее 3 символов!', 'error');
+      if (!newNick || newNick.length < 3 || newNick.length > MAX_LOGIN_LENGTH) {
+        return showToast(`Логин должен быть от 3 до ${MAX_LOGIN_LENGTH} символов!`, 'error');
+      }
+      if (!/^[\p{L}\p{N}_.-]+$/u.test(newNick)) {
+        return showToast('В логине разрешены только буквы, цифры, _, . и -', 'error');
+      }
       const creds = await fetchUserCredentials(currentUser, u);
-      if (!(await verifyPasswordRecord(creds, pass))) return showToast('Неверный текущий пароль!', 'error');
+      if (!(await verifyPasswordRecord(creds, pass))) {
+        recordAuthFailure('change_nick');
+        return showToast('Неверный текущий пароль!', 'error');
+      }
+      resetAuthFailures('change_nick');
       if (findUser(newNick)) return showToast('Ник уже занят!', 'error');
       if ((u.balance || 0) < 150) return showToast('Недостаточно средств (пошлина 150 ฿)!', 'error');
 
@@ -3247,18 +4319,24 @@
       });
     }
 
-    // СМЕНА ПАРОЛЯ
     async function processPasswordChange(e) {
       e.preventDefault();
+      if (!currentUser) return;
+      if (!checkRateLimitAllowed('change_pass')) return;
+
       const oldP = document.getElementById('inputOldPassword').value;
       const newP = document.getElementById('inputNewPassword').value;
-      if (!currentUser) return;
-
       const key = normalizeLogin(currentUser);
       const creds = await fetchUserCredentials(currentUser);
 
-      if (!(await verifyPasswordRecord(creds, oldP))) return showToast('Неверный текущий пароль!', 'error');
-      if (!newP || newP.length < 6) return showToast('Новый пароль должен быть не менее 6 символов!', 'error');
+      if (!(await verifyPasswordRecord(creds, oldP))) {
+        recordAuthFailure('change_pass');
+        return showToast('Неверный текущий пароль!', 'error');
+      }
+      resetAuthFailures('change_pass');
+
+      const strength = evaluatePasswordStrength(newP, currentUser);
+      if (!strength.valid) return showToast(strength.label, 'error');
 
       const newRecord = await createPasswordRecord(newP);
       try {
@@ -3271,7 +4349,7 @@
         });
 
         closeSettingsModal();
-        showToast('Пароль успешно обновлён в защищённом хранилище!', 'success');
+        showToast('Пароль успешно обновлён в защищённом хранилище PBKDF2!', 'success');
       } catch (err) {
         console.error(err);
         showToast('Не удалось обновить пароль.', 'error');
@@ -3326,6 +4404,7 @@
         container.innerHTML = `<div class="text-center py-8 text-emerald-500/60 text-xs">Уведомлений пока нет</div>`;
       } else {
         const readUpdates = {};
+        const frag = document.createDocumentFragment();
         list.forEach(m => {
           const isUnread = !m.readBy || !m.readBy.includes(uLow);
           const el = document.createElement('div');
@@ -3337,13 +4416,14 @@
             </div>
             <p class="text-emerald-100">${escapeHtml(m.text)}</p>
           `;
-          container.appendChild(el);
+          frag.appendChild(el);
 
           if (isUnread && m._dbKey) {
             const curRead = Array.isArray(m.readBy) ? m.readBy : [];
             readUpdates[`bankData/messages/${m._dbKey}/readBy`] = [...curRead, uLow];
           }
         });
+        container.appendChild(frag);
 
         if (Object.keys(readUpdates).length) {
           db.ref().update(readUpdates);
@@ -3387,7 +4467,6 @@
         });
 
         updates[`bankData/users/${uLow}/clearedMessagesBefore`] = now;
-
         await db.ref().update(updates);
 
         if (appData.users[uLow]) {
@@ -3571,6 +4650,8 @@
         showToast('Доступ к Админ-панели ограничен!', 'error');
       }
 
+      activeTabName = tab;
+
       ['dashboard', 'mail', 'leaderboard', 'banknotes', 'rules', 'admin', 'superadmin'].forEach(t => {
         const sec = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
@@ -3599,6 +4680,7 @@
         }
       }
 
+      if (tab === 'mail') renderMailView();
       if (tab === 'superadmin' && hasSuperAdminAccess) {
         renderAdminTransactionsTable();
         renderAdminAllMailsView();
@@ -3625,6 +4707,7 @@
       document.getElementById('inputNickConfirmPassword').value = '';
       document.getElementById('inputOldPassword').value = '';
       document.getElementById('inputNewPassword').value = '';
+      updateSettingsPasswordStrength();
       const u = findUser(currentUser);
       const preview = document.getElementById('settingsAvatarPreview');
       if (u && u.avatar) {
@@ -3642,11 +4725,12 @@
     function showToast(msg, type = 'success') {
       const c = document.getElementById('toastContainer');
       const t = document.createElement('div');
-      t.className = 'pointer-events-auto bg-[#071911] border border-bank-gold/40 text-emerald-100 px-4 py-3 rounded-2xl text-xs shadow-2xl transition-all';
+      const borderColor = type === 'error' ? 'border-rose-500/70 text-rose-200' : (type === 'info' ? 'border-emerald-400/60 text-emerald-100' : 'border-bank-gold/60 text-emerald-100');
+      t.className = `pointer-events-auto bg-[#071911]/95 backdrop-blur-md border ${borderColor} px-4 py-3 rounded-2xl text-xs shadow-2xl transition-all`;
       t.innerText = msg;
       c.appendChild(t);
       setTimeout(() => t.remove(), 3500);
     }
   </script>
 </body>
-</html>
+  </html>
