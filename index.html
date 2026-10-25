@@ -2667,8 +2667,11 @@
 
       <div class="p-3.5 rounded-2xl bg-black border border-emerald-500/40 text-xs text-emerald-400 space-y-1.5 shadow-inner">
         <div id="hackMatrixLine1">&gt; Инициализация протокола дешифровки...</div>
-        <div id="hackMatrixLine2" class="text-bank-gold font-bold">&gt; Попыток осталось: <span id="hackAttemptsLeft">3</span> из 3</div>
-        <div id="hackNodesGrid" class="grid grid-cols-2 gap-3">
+       <div id="hackMatrixLine2" class="text-bank-gold font-bold">&gt; Попыток осталось: <span id="hackAttemptsLeft">3</span> из 3</div>
+        <div id="hackCooldownNotice" class="hidden text-rose-400 font-bold"></div>
+      </div>
+
+      <div id="hackNodesGrid" class="grid grid-cols-2 gap-3">
         <button onclick="attemptTerminalNodeHack(0, this)" id="hackNodeBtn0" class="tap-btn p-4 rounded-2xl bg-emerald-950/50 hover:bg-emerald-900/70 border border-emerald-500/50 text-emerald-300 flex flex-col items-center justify-center gap-1 transition-all active:scale-95">
           <i class="fa-solid fa-microchip text-xl text-bank-gold"></i>
           <span class="text-xs font-bold">ШЛЮЗ ALPHA-01</span>
@@ -7627,6 +7630,42 @@
         if ((u.balance || 0) < price) {
           return showToast(`Недостаточно Байти! Требуется ${price.toLocaleString()} ฿.`, 'error');
         }
+
+        const opId = newOperationId('LUX');
+        if (!await atomicBalanceChange(u.username, -price, { requireFunds: true, operationId: opId })) {
+          return showToast('Не удалось списать средства.', 'error');
+        }
+        await addTreasuryTaxOrProfit(price);
+
+        const uKey = normalizeLogin(u.username);
+        curInv.unshift({
+          id: item.id,
+          instanceId: newOperationId('INST'),
+          category,
+          title: item.title,
+          desc: item.author ? `${item.author} • ${item.info}` : `${item.subtitle} • ${item.info}`,
+          artwork: item.image,
+          boughtFrom: treasuryName,
+          price,
+          prestige: item.prestige || 100,
+          boughtAt: new Date().toLocaleDateString('ru-RU')
+        });
+        const nextPrestige = Number(u.prestigeScore || 0) + Number(item.prestige || 100);
+
+        // Записываем напрямую в ветки (как в Недвижимости), чтобы не конфликтовать с правилами защиты
+        await db.ref(`bankData/users/${uKey}/inventory`).set(curInv);
+        await db.ref(`bankData/users/${uKey}/prestigeScore`).set(nextPrestige);
+
+        await db.ref(`bankData/transactions/${opId}`).set({
+          id: opId, from: u.username, to: `${treasuryName} (КАЗНА)`, amount: price,
+          comment: `Покупка актива: «${item.title}» (${ownedCount + 1} шт.)`,
+          timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+        });
+
+        showToast(`🎉 «${item.title}» приобретён в вашу коллекцию (в наличии: ${ownedCount + 1} шт.)!`, 'success');
+        renderMarketView();
+      });
+    }
 
         const ok = await askRoyalConfirm({
           title: category === 'cosmos' ? 'Установление Космического Суверенитета' : (category === 'art' ? 'Приобретение Шедевра Искусства' : 'Покупка в Императорский Автопарк'),
