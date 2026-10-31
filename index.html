@@ -4,8 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#020604">
   <title>BANK OF MIROBYTE — Императорский Кибер-Банк (฿)</title>
   
+  <!-- Dynamic Favicon, Apple Touch Icon & Web App Manifest -->
+  <link id="dynamicFavicon" rel="icon" type="image/png" href="">
+  <link id="dynamicAppleTouchIcon" rel="apple-touch-icon" href="">
+  <link id="dynamicManifestLink" rel="manifest" href="">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -283,6 +289,19 @@
         </div>
       </div>
 
+      <!-- ИНФОРМАЦИОННЫЙ БАННЕР ДЕМО-РЕЖИМА (READ-ONLY) -->
+      <div id="demoModeActiveBanner" class="hidden border-t border-amber-400/60 bg-gradient-to-r from-[#261804] via-[#0c2e20] to-[#1d0f2e] px-2.5 py-1.5 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-full bg-amber-400 text-black font-royal font-black text-[9px] uppercase whitespace-nowrap">👁 ДЕМО-ОБЗОР (READ-ONLY)</span>
+            <span class="text-emerald-200 font-medium">Вы просматриваете интерфейс в гостевом режиме. Любые операции записи в БД заблокированы.</span>
+          </div>
+          <button onclick="exitDemoModeToLogin()" class="px-3 py-1 rounded-xl bg-bank-gold hover:bg-yellow-500 text-black font-royal font-black text-[10px] uppercase shadow-md transition-all">
+            <i class="fa-solid fa-right-to-bracket mr-1"></i> Войти в аккаунт
+          </button>
+        </div>
+      </div>
+
       <!-- ГЛОБАЛЬНАЯ ПЛАШКА АКТИВНОГО ИВЕНТА / АУКЦИОНА -->
       <div id="globalActiveEventBanner" class="hidden border-t border-bank-gold/50 bg-gradient-to-r from-[#291804] via-[#0b2b1d] to-[#230b33] px-2.5 py-1.5 shadow-lg">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
@@ -371,6 +390,13 @@
           <button type="submit" id="authSubmitBtn" class="tap-btn w-full py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:brightness-110 text-emerald-950 font-royal font-black rounded-xl transition-all shadow-lg text-xs uppercase tracking-wider mt-1">
             Войти в Личный Кабинет
           </button>
+
+          <!-- КНОПКА ГОСТЕВОГО ДЕМО-РЕЖИМА (READ-ONLY) -->
+          <div class="pt-2.5 border-t border-bank-border/60">
+            <button type="button" onclick="enterDemoMode()" class="tap-btn w-full py-2 bg-bank-darkest hover:bg-bank-card border border-bank-gold/60 text-bank-gold font-royal font-bold rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md">
+              👁 Демо-обзор (Без входа)
+            </button>
+          </div>
         </form>
       </section>
 
@@ -658,6 +684,63 @@
               <button onclick="openTerminalHackModal()" class="px-2.5 py-1 rounded-xl bg-black border border-bank-gold/60 text-bank-gold text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 hover:bg-bank-card transition-all">
                 <i class="fa-solid fa-terminal"></i> <span id="dashTerminalTimerText">Взлом шлюза!</span>
               </button>
+            </div>
+
+            <!-- ДАШБОРД ФИНАНСОВОЙ АНАЛИТИКИ ИГРОКА (ДОХОДЫ И РАСХОДЫ) -->
+            <div class="bg-bank-surface/95 border border-bank-gold/50 rounded-3xl p-3.5 sm:p-6 guilloche-gold space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-2.5">
+                <div>
+                  <h3 class="font-royal text-xs sm:text-base font-bold text-bank-gold flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Финансовая Аналитика Счёта (Доходы и Расходы)
+                  </h3>
+                  <p class="text-[10px] text-emerald-400/75 hidden sm:block">Автоматический учёт поступлений и затрат Байти (฿) в реальном времени</p>
+                </div>
+                <span id="analyticsNetCashflowBadge" class="px-2.5 py-1 rounded-full bg-bank-darkest border border-bank-gold/40 text-[10px] sm:text-xs font-mono font-bold text-bank-gold">
+                  Баланс потоков: 0 ฿
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-center">
+                <!-- Визуальная круговая диаграмма + сводка -->
+                <div class="lg:col-span-4 p-3 rounded-2xl bg-bank-darkest/90 border border-bank-border flex items-center gap-3.5">
+                  <div class="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 relative flex items-center justify-center">
+                    <canvas id="playerAnalyticsDonutCanvas" width="120" height="120" class="w-full h-full"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                      <span class="text-[8px] uppercase text-emerald-400/70 font-mono">Оборот</span>
+                      <span id="analyticsTotalTurnoverText" class="text-[10px] font-royal font-black text-bank-gold">0 ฿</span>
+                    </div>
+                  </div>
+                  <div class="space-y-1.5 text-xs min-w-0 flex-1">
+                    <div class="p-2 rounded-xl bg-emerald-950/50 border border-emerald-500/30">
+                      <span class="text-[9px] text-emerald-400 uppercase block">Всего Доходов</span>
+                      <span id="analyticsTotalIncomeVal" class="font-mono font-black text-emerald-300 text-xs sm:text-sm">+0 ฿</span>
+                    </div>
+                    <div class="p-2 rounded-xl bg-rose-950/50 border border-rose-500/30">
+                      <span class="text-[9px] text-rose-300 uppercase block">Всего Расходов</span>
+                      <span id="analyticsTotalExpenseVal" class="font-mono font-black text-rose-300 text-xs sm:text-sm">-0 ฿</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Детализация Доходов и Расходов по 4 и 3 статьям -->
+                <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div class="p-3 rounded-2xl bg-bank-darkest/80 border border-emerald-500/30 space-y-2">
+                    <div class="font-royal font-bold text-emerald-300 text-[11px] uppercase flex items-center justify-between border-b border-bank-border/60 pb-1">
+                      <span><i class="fa-solid fa-arrow-trend-up mr-1"></i> Структура Доходов</span>
+                      <span class="font-mono text-[10px]">฿</span>
+                    </div>
+                    <div id="analyticsIncomeBreakdownList" class="space-y-1.5"></div>
+                  </div>
+
+                  <div class="p-3 rounded-2xl bg-bank-darkest/80 border border-rose-500/30 space-y-2">
+                    <div class="font-royal font-bold text-rose-300 text-[11px] uppercase flex items-center justify-between border-b border-bank-border/60 pb-1">
+                      <span><i class="fa-solid fa-arrow-trend-down mr-1"></i> Структура Расходов</span>
+                      <span class="font-mono text-[10px]">฿</span>
+                    </div>
+                    <div id="analyticsExpenseBreakdownList" class="space-y-1.5"></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Личная Барская Сокровищница с вкладками-бланками и продажей (-25% налог) -->
@@ -990,7 +1073,7 @@
                 <i class="fa-solid fa-industry"></i> Корпоративная Империя • /earn
               </div>
               <h2 class="text-base sm:text-2xl font-royal font-black gold-gradient-text">Боярские Промыслы и Корпорации</h2>
-              <p class="text-[11px] sm:text-xs text-emerald-300/80 mt-0.5 hidden sm:block">До 10 предприятий (разрешены одинаковые корпорации!), прокачка до 20 уровня или продажа за 50% вложений. Налог Казны: <span id="earnTaxPercentLabel">5</span>%.</p>
+              <p class="text-[11px] sm:text-xs text-emerald-300/80 mt-0.5 hidden sm:block">До 10 предприятий (разрешены одинаковые корпорации!), прокачка до 20 уровня, износ и снабжение, продажа за 50%. Налог Казны: <span id="earnTaxPercentLabel">5</span>%.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
               <div class="px-3 py-1.5 rounded-2xl bg-bank-darkest border border-emerald-500/50 text-center">
@@ -1038,7 +1121,7 @@
               <h3 class="font-royal text-xs sm:text-base font-bold text-bank-gold flex items-center gap-1.5">
                 <i class="fa-solid fa-building-shield text-emerald-400"></i> Мои Предприятия (<span id="myActiveBizCountText">0</span> из 10)
               </h3>
-              <span class="text-[9px] sm:text-[10px] font-mono text-emerald-400/80 hidden sm:inline">Нажмите «Продать» для возврата 50% вложений</span>
+              <span class="text-[9px] sm:text-[10px] font-mono text-emerald-400/80 hidden sm:inline">Следите за состоянием снабжения (при износе &lt;50% доход снижается до 60%)</span>
             </div>
             <div id="businessesCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4"></div>
           </div>
@@ -1114,6 +1197,7 @@
             </div>
           </div>
         </section>
+
         <!-- ========================================================================= -->
         <!-- МАРШРУТ 3: КИБЕР-ПОЛИГОН (/club — САПЁР И КОСМИЧЕСКАЯ ЗОЛОТОДОБЫЧА)       -->
         <!-- ========================================================================= -->
@@ -1124,7 +1208,7 @@
                 <i class="fa-solid fa-shuttle-space"></i> Cyber-Polygon Missions • /club
               </div>
               <h2 class="text-base sm:text-2xl font-royal font-black gold-gradient-text">Императорский Кибер-Полигон</h2>
-              <p class="text-[10px] sm:text-[11px] text-emerald-300/80">«Кибер-Сапёр (5×5)» и «Космическая Золотодобыча» • Пакет: <span id="clubMinMaxBetText" class="text-bank-gold font-mono">10 – 50 000 ฿</span></p>
+              <p class="text-[10px] sm:text-[11px] text-emerald-300/80">«Кибер-Сапёр (5×5)» и «Космическая Золотодобыча» • Пакет: <span id="clubMinMaxBetText" class="text-bank-gold font-mono">10 – 50 000 ฿</span> • Дневной лимит профита: <span id="clubDailyProfitBadge" class="text-emerald-300 font-mono">0 / 2 500 000 ฿</span></p>
             </div>
             <div class="px-3.5 py-1.5 rounded-2xl bg-bank-darkest/90 border border-bank-gold/60 flex items-center gap-2.5 self-stretch sm:self-auto justify-between">
               <div>
@@ -1215,7 +1299,7 @@
             <div id="casinoGameView-mines" class="bg-bank-surface/95 border border-emerald-500/40 rounded-3xl p-3.5 sm:p-6 guilloche-panel space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-2.5">
                 <div>
-                  <h3 class="font-royal text-xs sm:text-base font-bold text-bank-gold flex items-center gap-1.5">
+                    <h3 class="font-royal text-xs sm:text-base font-bold text-bank-gold flex items-center gap-1.5">
                     <i class="fa-solid fa-microchip text-emerald-400"></i> Кибер-Сапёр (Матрица 5×5)
                   </h3>
                   <p class="text-[10px] text-emerald-400/75 hidden sm:block">Ищите кристаллы 💎 и обходите вирусы 💣.</p>
@@ -2159,12 +2243,12 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
               <div class="bg-bank-surface border border-bank-gold/50 rounded-3xl p-3.5 sm:p-5 guilloche-gold space-y-2.5">
                 <div class="flex items-center justify-between border-b border-bank-border pb-2">
-                  <h4 class="font-royal text-xs sm:text-sm font-bold text-white uppercase">Государственный Герб Банка</h4>
+                  <h4 class="font-royal text-xs sm:text-sm font-bold text-white uppercase">Государственный Герб & Иконка Сайта (`settings/appIcon`)</h4>
                   <div class="w-8 h-8 rounded-xl border border-bank-gold bg-black overflow-hidden" id="currentEmblemPreviewSmall"></div>
                 </div>
                 <input type="file" id="bankEmblemFileInput" accept="image/*" class="w-full text-[10px] text-emerald-300 bg-bank-darkest border border-bank-border rounded-xl p-1.5">
                 <div class="grid grid-cols-2 gap-2">
-                  <button type="button" onclick="handleSaveBankEmblem()" class="tap-btn bg-bank-gold text-black font-royal font-bold rounded-xl text-xs uppercase">Сохранить</button>
+                  <button type="button" onclick="handleSaveBankEmblem()" class="tap-btn bg-bank-gold text-black font-royal font-bold rounded-xl text-xs uppercase">Сохранить в БД</button>
                   <button type="button" onclick="handleResetBankEmblem()" class="tap-btn bg-bank-darkest border border-rose-500/40 text-rose-300 font-bold rounded-xl text-xs uppercase">Сброс на ฿</button>
                 </div>
               </div>
@@ -2434,7 +2518,7 @@
         </div>
         <div id="pubProfVisualCard" class="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-bank-gold/60 guilloche-gold banknote-pattern flex flex-col justify-between min-h-[135px] sm:min-h-[175px] bg-cover bg-center shadow-2xl">
           <div class="flex items-center justify-between relative z-10">
-            <span class="px-2 py-0.5 bg-black/60 border border-bank-gold/40 text-bank-gold text-[8px] sm:text-[9px] uppercase font-royal tracking-widest rounded-full font-bold">
+              <span class="px-2 py-0.5 bg-black/60 border border-bank-gold/40 text-bank-gold text-[8px] sm:text-[9px] uppercase font-royal tracking-widest rounded-full font-bold">
               Mirobyte Royal Reserve
             </span>
             <span class="font-royal font-black text-lg text-bank-gold">฿</span>
@@ -2976,9 +3060,9 @@
   </div>
 
   <script>
-    // ========================================================
-    // FIREBASE INITIALIZATION & CORE CONSTANTS
-    // ========================================================
+    // =========================================================================
+    // SECTION 1: FIREBASE & SERVER TIME SYNC (runTransaction + serverTimeOffset)
+    // =========================================================================
     const firebaseConfig = {
       databaseURL: "https://mirobyte-bank-default-rtdb.firebaseio.com"
     };
@@ -2986,6 +3070,25 @@
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
+
+    // Глобальный серверный оффсет времени Firebase (защита от перемотки часов на ПК/телефоне)
+    let serverTimeOffset = 0;
+    const getServerTime = () => Date.now() + serverTimeOffset;
+    const serverTimestamp = () => firebase.database.ServerValue.TIMESTAMP;
+
+    db.ref('.info/serverTimeOffset').on('value', (snap) => {
+      serverTimeOffset = Number(snap.val() || 0);
+    });
+
+    db.ref('.info/connected').on('value', (snap) => {
+      updateOnlineIndicator(!!snap.val());
+    });
+
+    // Универсальная обёртка runTransaction для Firebase v8/v9 совместимости
+    function runTransaction(refOrPath, transactionUpdateFn) {
+      const targetRef = typeof refOrPath === 'string' ? db.ref(refOrPath) : refOrPath;
+      return targetRef.transaction(transactionUpdateFn);
+    }
 
     const PASSWORD_ITERATIONS = 120000;
     const MAX_LOGIN_LENGTH = 32;
@@ -3005,9 +3108,54 @@
     const ASSET_SELL_TAX_RATE = 0.10;
     const LUXURY_RESALE_TAX_RATE = 0.25;
 
-    // ========================================================
-    // МОДУЛЬ УМНОГО КЭШИРОВАНИЯ MIROBYTECACHE
-    // ========================================================
+    // КОНСТАНТЫ АНТИЧИТА КИБЕР-ПОЛИГОНА
+    const POLYGON_MIN_MINES_TIME_MS = 1800; // Минимум 1.8 сек между стартом Сапёра и выводом выигрыша
+    const POLYGON_MIN_HACK_TIME_MS = 900;   // Минимум 0.9 сек на взлом узла
+    const POLYGON_DAILY_EARN_LIMIT = 2500000; // Дневной лимит чистой прибыли в Кибер-Полигоне (2 500 000 ฿)
+
+    // =========================================================================
+    // SECTION 2: DYNAMIC ICON & PWA MANIFEST GENERATOR
+    // =========================================================================
+    let currentManifestBlobUrl = null;
+
+    function createDefaultEmblemDataUrl() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="4"/><circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="3,3"/><rect x="30" y="30" width="40" height="40" rx="8" fill="#05140d" stroke="#ffd700" stroke-width="2.5"/><text x="50" y="58" font-family="Cinzel, serif" font-size="26" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text></svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function applyDynamicSiteIconAndManifest(iconSource) {
+      const finalIcon = iconSource || appData?.bankEmblemImage || localStorage.getItem('mirobyte_cached_emblem') || createDefaultEmblemDataUrl();
+
+      const favEl = document.getElementById('dynamicFavicon');
+      const appleEl = document.getElementById('dynamicAppleTouchIcon');
+      if (favEl) favEl.href = finalIcon;
+      if (appleEl) appleEl.href = finalIcon;
+
+      try {
+        if (currentManifestBlobUrl) URL.revokeObjectURL(currentManifestBlobUrl);
+        const manifestObj = {
+          name: "BANK OF MIROBYTE — Императорский Кибер-Банк (฿)",
+          short_name: "Mirobyte Bank",
+          description: "Государственная финансово-игровая экосистема валюты Байти (฿)",
+          start_url: window.location.origin + window.location.pathname,
+          display: "standalone",
+          background_color: "#020604",
+          theme_color: "#05110c",
+          icons: [
+            { src: finalIcon, sizes: "192x192", type: finalIcon.startsWith('data:image/svg') ? "image/svg+xml" : "image/png", purpose: "any maskable" },
+            { src: finalIcon, sizes: "512x512", type: finalIcon.startsWith('data:image/svg') ? "image/svg+xml" : "image/png", purpose: "any maskable" }
+          ]
+        };
+        const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        currentManifestBlobUrl = URL.createObjectURL(blob);
+        const manifestLink = document.getElementById('dynamicManifestLink');
+        if (manifestLink) manifestLink.href = currentManifestBlobUrl;
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // SECTION 3: MIROBYTE CACHE & OPERATION LOCKS
+    // =========================================================================
     const MirobyteCache = (() => {
       const DB_NAME = 'MirobyteBankCacheDB';
       const STORE_NAME = 'snapshots';
@@ -3076,13 +3224,11 @@
       return { set, get };
     })();
 
-    // ========================================================
-    // ЗАЩИТА ОТ ДВОЙНОГО НАЖАТИЯ И ИДЕМПОТЕНТНОСТЬ
-    // ========================================================
     const activeOperationLocks = new Set();
     const processedOperationIds = new Set();
 
     async function withOperationLock(lockKey, buttonEl, asyncFn) {
+      if (guardDemoReadOnly()) return;
       const key = String(lockKey || 'global_op');
       if (activeOperationLocks.has(key)) return;
       activeOperationLocks.add(key);
@@ -3111,6 +3257,279 @@
       }
     }
 
+    // =========================================================================
+    // SECTION 4: DEMO MODE (READ-ONLY) & ANALYTICS STATS TRACKER
+    // =========================================================================
+    let isDemoMode = false;
+    const DEMO_USER_LOGIN = 'Гость_Комиссии';
+
+    function createDemoGuestProfile() {
+      const now = getServerTime();
+      return {
+        username: DEMO_USER_LOGIN,
+        balance: 285000,
+        isAdmin: false,
+        isSuperAdmin: false,
+        isOwner: false,
+        registeredAt: 'Демо-сессия 2026',
+        customStatus: 'Гостевой Инспектор Комиссии (Read-Only)',
+        cardTheme: 'emerald',
+        avatarFrame: 'imperial_gold',
+        ownedFrames: ['imperial_gold', 'emerald_crown'],
+        ownedTitles: ['title_boyar'],
+        ownedCards: ['emerald', 'builtin_ruby'],
+        portfolio: { SHRM: 45, MGLD: 20, MINT: 15 },
+        portfolioMeta: {
+          SHRM: { avgBuyPrice: 118, lastTradeMs: now - 60000 },
+          MGLD: { avgBuyPrice: 245, lastTradeMs: now - 60000 },
+          MINT: { avgBuyPrice: 176, lastTradeMs: now - 60000 }
+        },
+        businesses: {
+          demo_slot_1: {
+            typeId: 'chip_forge',
+            level: 6,
+            condition: 88,
+            lastCollected: now - 4200 * 1000,
+            openedAt: now - 86400000 * 5
+          },
+          demo_slot_2: {
+            typeId: 'crypto_manufactory',
+            level: 4,
+            condition: 42,
+            lastCollected: now - 7200 * 1000,
+            openedAt: now - 86400000 * 3
+          },
+          demo_slot_3: {
+            typeId: 'imperial_datacenter',
+            level: 8,
+            condition: 95,
+            lastCollected: now - 5400 * 1000,
+            openedAt: now - 86400000 * 2
+          }
+        },
+        realEstate: {
+          re_sherman_penthouse: { count: 1, status: 'active', prepEndsAt: now - 3600000, lastCollected: now - 3600000 }
+        },
+        inventory: [
+          {
+            id: 'art_starry_night',
+            category: 'art',
+            title: '«Звёздная ночь»',
+            desc: 'Винсент ван Гог (1889) • Демо-экспонат',
+            artwork: 'https://commons.wikimedia.org/wiki/Special:FilePath/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg?width=600',
+            boughtFrom: 'ИМПЕРАТОРСКИЙ ЭРМИТАЖ',
+            price: 120000000,
+            boughtAt: '2026'
+          },
+          {
+            id: 'car_porshe_911_gt3',
+            category: 'garage',
+            title: 'Porshe 911 GT3 MiroRS',
+            desc: 'Трековый спорткар • Демо-образец',
+            artwork: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+            boughtFrom: 'АВТОСАЛОН МИРОБАЙТ',
+            price: 6000000,
+            boughtAt: '2026'
+          }
+        ],
+        polygonBoosters: { shield: 2, radar: 3 },
+        stats: {
+          income: {
+            crafts: 194500,
+            stocks: 68200,
+            polygon: 42800,
+            transfersIn: 115000
+          },
+          expense: {
+            craftsUpgradeAndSupply: 92400,
+            stocksInvest: 51300,
+            transfersOut: 34000
+          }
+        }
+      };
+    }
+
+    function guardDemoReadOnly() {
+      if (isDemoMode) {
+        showToast('Демо-режим предназначен только для обзора интерфейса. Войдите в аккаунт для выполнения операций', 'info');
+        return true;
+      }
+      return false;
+    }
+
+    function enterDemoMode() {
+      isDemoMode = true;
+      currentUser = DEMO_USER_LOGIN;
+      document.getElementById('demoModeActiveBanner')?.classList.remove('hidden');
+      navigateRoute('/');
+      renderCurrentView();
+      showToast('Включён гостевой Демо-обзор (Read-Only). Все вкладки и аналитика доступны для просмотра!', 'info');
+    }
+
+    function exitDemoModeToLogin() {
+      isDemoMode = false;
+      currentUser = null;
+      document.getElementById('demoModeActiveBanner')?.classList.add('hidden');
+      navigateRoute('/');
+      renderCurrentView();
+    }
+
+    // Автоматическая запись статистики доходов и расходов игрока в БД (stats/income/... и stats/expense/...)
+    async function recordPlayerFinancialStat(username, group, category, amount) {
+      if (isDemoMode || !username) return;
+      const cleanAmt = Math.round(Number(amount || 0));
+      if (!Number.isSafeInteger(cleanAmt) || cleanAmt <= 0) return;
+      const uKey = normalizeLogin(username);
+      const statRef = db.ref(`bankData/users/${uKey}/stats/${group}/${category}`);
+      try {
+        await runTransaction(statRef, (cur) => Math.round(Number(cur || 0)) + cleanAmt);
+      } catch (e) {}
+    }
+
+    function renderPlayerAnalyticsDashboard(u) {
+      if (!u) return;
+      const inc = u.stats?.income || {};
+      const exp = u.stats?.expense || {};
+
+      let incCrafts = Math.round(Number(inc.crafts || 0));
+      let incStocks = Math.round(Number(inc.stocks || 0));
+      let incPolygon = Math.round(Number(inc.polygon || 0));
+      let incTransfers = Math.round(Number(inc.transfersIn || 0));
+
+      let expCrafts = Math.round(Number(exp.craftsUpgradeAndSupply || 0));
+      let expStocks = Math.round(Number(exp.stocksInvest || 0));
+      let expTransfers = Math.round(Number(exp.transfersOut || 0));
+
+      // Если у старого аккаунта ещё не накопились поля stats, дополняем историей из его транзакций
+      const hasAnyStats = (incCrafts + incStocks + incPolygon + incTransfers + expCrafts + expStocks + expTransfers) > 0;
+      if (!hasAnyStats && Array.isArray(appData.transactions)) {
+        const uLow = u.username.toLowerCase();
+        appData.transactions.forEach(t => {
+          const amt = Math.round(Number(t.amount || 0));
+          if (amt <= 0) return;
+          const fromLow = String(t.from || '').toLowerCase();
+          const toLow = String(t.to || '').toLowerCase();
+          if (toLow === uLow) {
+            if (fromLow.includes('промысл') || fromLow.includes('аренд') || fromLow.includes('рента')) incCrafts += amt;
+            else if (fromLow.includes('биржа')) incStocks += amt;
+            else if (fromLow.includes('полигон') || fromLow.includes('терминал') || fromLow.includes('золотодобыча')) incPolygon += amt;
+            else incTransfers += amt;
+          } else if (fromLow === uLow) {
+            if (toLow.includes('промысл')) expCrafts += amt;
+            else if (toLow.includes('биржа')) expStocks += amt;
+            else expTransfers += amt;
+          }
+        });
+      }
+
+      const totalIncome = incCrafts + incStocks + incPolygon + incTransfers;
+      const totalExpense = expCrafts + expStocks + expTransfers;
+      const totalTurnover = totalIncome + totalExpense;
+      const netFlow = totalIncome - totalExpense;
+
+      const netBadge = document.getElementById('analyticsNetCashflowBadge');
+      if (netBadge) {
+        netBadge.innerText = `Чистый поток: ${netFlow >= 0 ? '+' : ''}${netFlow.toLocaleString()} ฿`;
+        netBadge.className = `px-2.5 py-1 rounded-full bg-bank-darkest border ${netFlow >= 0 ? 'border-emerald-500/50 text-emerald-300' : 'border-rose-500/50 text-rose-300'} text-[10px] sm:text-xs font-mono font-bold`;
+      }
+
+      const totTurnEl = document.getElementById('analyticsTotalTurnoverText');
+      const totIncEl = document.getElementById('analyticsTotalIncomeVal');
+      const totExpEl = document.getElementById('analyticsTotalExpenseVal');
+      if (totTurnEl) totTurnEl.innerText = totalTurnover > 999999 ? `${(totalTurnover / 1000000).toFixed(1)}M ฿` : `${totalTurnover.toLocaleString()} ฿`;
+      if (totIncEl) totIncEl.innerText = `+${totalIncome.toLocaleString()} ฿`;
+      if (totExpEl) totExpEl.innerText = `-${totalExpense.toLocaleString()} ฿`;
+
+      const incItems = [
+        { label: 'Боярские Промыслы', val: incCrafts, color: 'bg-emerald-400', icon: 'fa-industry' },
+        { label: 'Биржа акций', val: incStocks, color: 'bg-bank-gold', icon: 'fa-chart-line' },
+        { label: 'Кибер-Полигон', val: incPolygon, color: 'bg-purple-400', icon: 'fa-shuttle-space' },
+        { label: 'Входящие переводы', val: incTransfers, color: 'bg-sky-400', icon: 'fa-arrow-down-long' }
+      ];
+
+      const expItems = [
+        { label: 'Прокачка и снабжение промыслов', val: expCrafts, color: 'bg-amber-500', icon: 'fa-screwdriver-wrench' },
+        { label: 'Инвестиции в акции', val: expStocks, color: 'bg-rose-400', icon: 'fa-coins' },
+        { label: 'Исходящие переводы', val: expTransfers, color: 'bg-pink-500', icon: 'fa-paper-plane' }
+      ];
+
+      const incListEl = document.getElementById('analyticsIncomeBreakdownList');
+      if (incListEl) {
+        incListEl.innerHTML = incItems.map(item => {
+          const pct = totalIncome > 0 ? Math.round((item.val / totalIncome) * 100) : 0;
+          return `
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-emerald-100 flex items-center gap-1.5"><i class="fa-solid ${item.icon} text-[10px] text-emerald-400"></i>${item.label}</span>
+                <span class="font-mono font-bold text-emerald-300">+${item.val.toLocaleString()} ฿ <span class="text-[9px] text-emerald-500">(${pct}%)</span></span>
+              </div>
+              <div class="h-1.5 w-full bg-black rounded-full overflow-hidden">
+                <div class="h-full ${item.color}" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const expListEl = document.getElementById('analyticsExpenseBreakdownList');
+      if (expListEl) {
+        expListEl.innerHTML = expItems.map(item => {
+          const pct = totalExpense > 0 ? Math.round((item.val / totalExpense) * 100) : 0;
+          return `
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-emerald-100 flex items-center gap-1.5"><i class="fa-solid ${item.icon} text-[10px] text-rose-400"></i>${item.label}</span>
+                <span class="font-mono font-bold text-rose-300">-${item.val.toLocaleString()} ฿ <span class="text-[9px] text-rose-400/70">(${pct}%)</span></span>
+              </div>
+              <div class="h-1.5 w-full bg-black rounded-full overflow-hidden">
+                <div class="h-full ${item.color}" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Отрисовка круговой диаграммы на Canvas
+      const donutCanvas = document.getElementById('playerAnalyticsDonutCanvas');
+      if (donutCanvas) {
+        const ctx = donutCanvas.getContext('2d');
+        const w = donutCanvas.width, h = donutCanvas.height;
+        const cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 10;
+        ctx.clearRect(0, 0, w, h);
+        ctx.lineWidth = 12;
+
+        if (totalTurnover <= 0) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.strokeStyle = '#1a4735';
+          ctx.stroke();
+        } else {
+          const segments = [
+            { val: incCrafts, color: '#10b981' },
+            { val: incStocks, color: '#e6c875' },
+            { val: incPolygon, color: '#a855f7' },
+            { val: incTransfers, color: '#38bdf8' },
+            { val: expCrafts, color: '#f59e0b' },
+            { val: expStocks, color: '#fb7185' },
+            { val: expTransfers, color: '#ec4899' }
+          ].filter(s => s.val > 0);
+
+          let startAngle = -Math.PI / 2;
+          segments.forEach(seg => {
+            const sliceAngle = (seg.val / totalTurnover) * (Math.PI * 2);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
+            ctx.strokeStyle = seg.color;
+            ctx.stroke();
+            startAngle += sliceAngle;
+          });
+        }
+      }
+    }
+
+    // =========================================================================
+    // SECTION 5: DEFAULT CATALOGS & APPLICATION STATE
+    // =========================================================================
     const DEFAULT_BUSINESS_CATALOG = [
       { id: 'chip_forge', name: 'Кузница микросхем', tier: '1. Малое предприятие', icon: 'fa-microchip', baseCost: 150, baseHourly: 22, desc: 'Пайка кремниевых плат и базовых кристаллов Миробайта' },
       { id: 'traffic_guild', name: 'Торговая Гильдия Трафика', tier: '2. Купеческая артель', icon: 'fa-network-wired', baseCost: 650, baseHourly: 85, desc: 'Магистральные оптоволоконные караваны и купеческие шлюзы' },
@@ -3138,6 +3557,7 @@
         return { ...def, ...saved, id: def.id, name: saved.name || def.name, baseCost: Number(saved.baseCost || def.baseCost), baseHourly: fixedHourly };
       });
     }
+
     const DEFAULT_SETTINGS = {
       economy: {
         startBalance: 50,
@@ -3162,12 +3582,10 @@
         hackConsolation: 25
       },
       shopPrices: {},
-      activeEvent: null
+      activeEvent: null,
+      appIcon: null
     };
 
-    // ========================================================
-    // КАТАЛОГИ: ИСКУССТВО, АВТОПАРК, НЕДВИЖИМОСТЬ (5%/Ч), КОСМОС (5%/Ч)
-    // ========================================================
     const LUXURY_ART_CATALOG = [
       { id: 'art_mona_lisa', category: 'art', title: '«Мона Лиза»', author: 'Леонардо да Винчи (1503)', info: 'Мировая оценка: ~$860 млн • Шедевр эпохи Возрождения (Public Domain)', price: 850000000, prestige: 8500, image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg?width=600' },
       { id: 'art_starry_night', category: 'art', title: '«Звёздная ночь»', author: 'Винсент ван Гог (1889)', info: 'Мировая оценка: ~$100+ млн • Постимпрессионизм (Public Domain)', price: 120000000, prestige: 1500, image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg?width=600' },
@@ -3216,9 +3634,9 @@
       { id: 'harvester_omega', title: '3. Планетарный Рудо-Комбайн «Титан»', durationMinutes: 30, cost: 1000000, minReturnPct: 45, maxReturnPct: 65, icon: 'fa-meteor', desc: 'Масштабная 30-минутная экспедиция (+45..65%)' }
     ];
 
-    // ========================================================
-    // GEMINI AI HELPER
-    // ========================================================
+    // =========================================================================
+    // SECTION 6: GEMINI AI, AUTHENTICATION & ATOMIC TRANSACTIONS
+    // =========================================================================
     async function callRoyalGeminiAI(userPrompt, systemPrompt) {
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
       const payload = {
@@ -3242,9 +3660,6 @@
       return null;
     }
 
-    // ========================================================
-    // SECURITY & AUTH HELPERS
-    // ========================================================
     const AUTH_RATE_LIMIT = { maxAttempts: 5, baseLockMs: 30000 };
 
     function getRateLimitState(scopeKey) {
@@ -3253,7 +3668,7 @@
     }
     function checkRateLimitAllowed(scopeKey) {
       const state = getRateLimitState(scopeKey);
-      const now = Date.now();
+      const now = getServerTime();
       if (state.lockUntil && now < state.lockUntil) {
         const waitSec = Math.ceil((state.lockUntil - now) / 1000);
         showToast(`Защита от перебора: подождите ${waitSec} сек.`, 'error');
@@ -3266,7 +3681,7 @@
       state.fails = (state.fails || 0) + 1;
       if (state.fails >= AUTH_RATE_LIMIT.maxAttempts) {
         const multiplier = Math.min(8, Math.pow(2, state.fails - AUTH_RATE_LIMIT.maxAttempts));
-        state.lockUntil = Date.now() + AUTH_RATE_LIMIT.baseLockMs * multiplier;
+        state.lockUntil = getServerTime() + AUTH_RATE_LIMIT.baseLockMs * multiplier;
       }
       try { sessionStorage.setItem(`mb_rl_${scopeKey}`, JSON.stringify(state)); } catch (e) {}
     }
@@ -3313,7 +3728,7 @@
       const salt = new Uint8Array(16);
       crypto.getRandomValues(salt);
       const saltBase64 = bytesToBase64(salt);
-      return { passwordHash: await derivePasswordHash(password, saltBase64), passwordSalt: saltBase64, passwordVersion: 2, updatedAt: Date.now() };
+      return { passwordHash: await derivePasswordHash(password, saltBase64), passwordSalt: saltBase64, passwordVersion: 2, updatedAt: serverTimestamp() };
     }
 
     function evaluatePasswordStrength(password, username = '') {
@@ -3421,10 +3836,11 @@
       });
     }
 
-    function newOperationId(prefix = 'MB') { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`; }
+    function newOperationId(prefix = 'MB') { return `${prefix}-${getServerTime()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`; }
     function validPositiveAmount(value, max = 1000000000000000) { return Number.isSafeInteger(value) && value > 0 && value <= max; }
 
     async function atomicBalanceChange(username, delta, options = {}) {
+      if (guardDemoReadOnly()) return false;
       const opId = options.operationId || null;
       if (opId && processedOperationIds.has(opId)) return false;
       const cleanDelta = Math.round(Number(delta || 0));
@@ -3432,7 +3848,7 @@
 
       const key = normalizeLogin(username);
       const ref = db.ref(`bankData/users/${key}/balance`);
-      const result = await ref.transaction(balance => {
+      const result = await runTransaction(ref, balance => {
         const current = Math.round(Number(balance || 0));
         if (!Number.isSafeInteger(current) || current < 0) return;
         if (options.requireFunds && current < Math.abs(cleanDelta)) return;
@@ -3445,20 +3861,23 @@
     }
 
     async function addTreasuryTaxOrProfit(amount) {
+      if (isDemoMode) return;
       const clean = Math.round(Number(amount || 0));
       if (!Number.isSafeInteger(clean) || clean <= 0) return;
-      await db.ref('bankData/bankReserve').transaction(v => Math.round(Number(v || 0)) + clean);
+      await runTransaction(db.ref('bankData/bankReserve'), v => Math.round(Number(v || 0)) + clean);
     }
 
     async function logSecurityEvent(title, details, level = 'info') {
+      if (isDemoMode) return;
       const id = newOperationId('SEC');
       await db.ref(`bankData/securityLogs/${id}`).set({
         id, title: String(title || '').slice(0, 120), details: String(details || '').slice(0, 300),
-        level, timestamp: new Date().toLocaleTimeString('ru-RU'), timestampMs: Date.now()
+        level, timestamp: new Date(getServerTime()).toLocaleTimeString('ru-RU'), timestampMs: serverTimestamp()
       });
     }
 
     function guardAdminAction(requireSuper = false) {
+      if (guardDemoReadOnly()) return false;
       const allowed = requireSuper
         ? (isCurrentUserSuperAdmin() || isCurrentUserOwner())
         : (isCurrentUserAdmin() || isCurrentUserSuperAdmin() || isCurrentUserOwner());
@@ -3470,9 +3889,9 @@
       return true;
     }
 
-    // ========================================================
-    // CATALOGS & STATE
-    // ========================================================
+    // =========================================================================
+    // SECTION 7: BANKNOTES, MARKET ASSETS & PRIVILEGES CONFIG
+    // =========================================================================
     const BANKNOTES_CONFIG = [
       { value: 1, titleRu: 'ОДИН БАЙТИ', titleEn: 'ONE BAITY', motif: 'Bausherman & Строительный мотив', description: 'Символизирует фундамент и развитие инфраструктуры', icon: 'fa-house-shield' },
       { value: 5, titleRu: 'ПЯТЬ БАЙТИ', titleEn: 'FIVE BAITY', motif: 'Классический Фасад Банка с Колоннами', description: 'Олицетворяет надежность Центрального Казначейства', icon: 'fa-building-columns' },
@@ -3546,7 +3965,7 @@
 
     function togglePhoneShellMode() {
       userPrefs.phoneShell = !userPrefs.phoneShell;
-      localStorage.setItem('mb_pref_phone_shell', String(userPrefs.phoneShell));
+    localStorage.setItem('mb_pref_phone_shell', String(userPrefs.phoneShell));
       document.body.classList.toggle('phone-shell-mode', userPrefs.phoneShell);
       showToast(userPrefs.phoneShell ? 'Включён мобильный контейнер (Phone Shell 480px)' : 'Включён широкоэкранный режим', 'info');
       setTimeout(() => {
@@ -3596,9 +4015,9 @@
       bankReserve: 5000000
     };
 
-    // ========================================================
-    // ХЕЛПЕРЫ ДИНАМИЧЕСКИХ ЦЕН И ИВЕНТОВ
-    // ========================================================
+    // =========================================================================
+    // SECTION 8: DYNAMIC SHOP PRICES, EVENTS & ROUTING
+    // =========================================================================
     function getDynamicShopPrice(itemId, defaultPrice, category = null) {
       const overrides = appData.settings?.shopPrices || {};
       const base = (overrides[itemId] !== undefined && overrides[itemId] !== null && !isNaN(Number(overrides[itemId])))
@@ -3651,19 +4070,18 @@
             business: { ...DEFAULT_SETTINGS.business, ...(cachedSettings.business || {}), catalog: mergeBusinessCatalogWithDefaults(cachedSettings.business?.catalog) },
             casino: { ...DEFAULT_SETTINGS.casino, ...(cachedSettings.casino || {}) },
             shopPrices: cachedSettings.shopPrices || {},
-            activeEvent: cachedSettings.activeEvent || null
+            activeEvent: cachedSettings.activeEvent || null,
+            appIcon: cachedSettings.appIcon || null
           };
         }
         renderBankEmblem();
+        applyDynamicSiteIconAndManifest(appData.settings?.appIcon || appData.bankEmblemImage);
         renderBanknotes();
         renderGlobalActiveEventBanner();
         requestRender();
       } catch (e) {}
     }
 
-    // ========================================================
-    // МАРШРУТИЗАЦИЯ (/, /earn, /club, /market, /admin)
-    // ========================================================
     function detectInitialSlashRoute() {
       const path = (window.location.pathname || '').toLowerCase();
       const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
@@ -3747,9 +4165,6 @@
       if (tabKey === 'casino') { populateAdminCasinoForm(); renderAdminSecurityLogs(); renderAdminTransactionsTable(); renderAdminAllMailsView(); }
     }
 
-    // ========================================================
-    // САНАЦИЯ И ЗАЩИТА КОТИРОВОК БИРЖИ ОТ СТАРЫХ НАКРУТОК
-    // ========================================================
     function sanitizeMarketAssetRecord(def, saved) {
       const minMean = Math.max(5, Number(def.minMeanPrice || def.meanPrice || 100));
       const maxAllowedMean = Math.round(minMean * 2.5);
@@ -3792,10 +4207,11 @@
       };
     }
 
-    // ========================================================
-    // FIREBASE REALTIME LISTENERS
-    // ========================================================
+    // =========================================================================
+    // SECTION 9: FIREBASE REALTIME LISTENERS & ICON SYNC
+    // =========================================================================
     renderBankEmblem();
+    applyDynamicSiteIconAndManifest(appData.bankEmblemImage);
     currentRoute = detectInitialSlashRoute();
 
     if (currentUser && cachedProfile) {
@@ -3833,20 +4249,22 @@
         db.ref(`bankData/users/${ownerKey}`).update({ isOwner: true, isAdmin: true, isSuperAdmin: true, isBlocked: false });
       }
       MirobyteCache.set('users', appData.users);
-      const savedUser = localStorage.getItem('mirobyte_active_user');
-      if (savedUser && findUser(savedUser)) {
-        const sessionUser = findUser(savedUser);
-        if (sessionUser.isBlocked && normalizeLogin(sessionUser.username) !== OWNER_USERNAME) {
+      if (!isDemoMode) {
+        const savedUser = localStorage.getItem('mirobyte_active_user');
+        if (savedUser && findUser(savedUser)) {
+          const sessionUser = findUser(savedUser);
+          if (sessionUser.isBlocked && normalizeLogin(sessionUser.username) !== OWNER_USERNAME) {
+            currentUser = null;
+            localStorage.removeItem('mirobyte_active_user');
+            localStorage.removeItem('mirobyte_cached_profile');
+          } else {
+            currentUser = sessionUser.username;
+          }
+        } else if (savedUser) {
           currentUser = null;
           localStorage.removeItem('mirobyte_active_user');
           localStorage.removeItem('mirobyte_cached_profile');
-        } else {
-          currentUser = sessionUser.username;
         }
-      } else if (savedUser) {
-        currentUser = null;
-        localStorage.removeItem('mirobyte_active_user');
-        localStorage.removeItem('mirobyte_cached_profile');
       }
       updateOnlineIndicator(true);
       requestRender();
@@ -3863,11 +4281,39 @@
         business: { ...DEFAULT_SETTINGS.business, ...(val.business || {}), catalog: mergeBusinessCatalogWithDefaults(val.business?.catalog) },
         casino: { ...DEFAULT_SETTINGS.casino, ...(val.casino || {}) },
         shopPrices: val.shopPrices || {},
-        activeEvent: val.activeEvent || null
+        activeEvent: val.activeEvent || null,
+        appIcon: val.appIcon || null
       };
+      if (val.appIcon) {
+        appData.bankEmblemImage = val.appIcon;
+        localStorage.setItem('mirobyte_cached_emblem', val.appIcon);
+      }
       MirobyteCache.set('settings', appData.settings);
+      renderBankEmblem();
+      applyDynamicSiteIconAndManifest(appData.settings.appIcon || appData.bankEmblemImage);
       renderGlobalActiveEventBanner();
       requestRender();
+    });
+
+    // Дополнительные слушатели для settings/appIcon и config/icon (согласно ТЗ)
+    db.ref('settings/appIcon').on('value', (snap) => {
+      const iconVal = snap.val();
+      if (iconVal) {
+        appData.bankEmblemImage = iconVal;
+        localStorage.setItem('mirobyte_cached_emblem', iconVal);
+        renderBankEmblem();
+        applyDynamicSiteIconAndManifest(iconVal);
+      }
+    });
+
+    db.ref('config/icon').on('value', (snap) => {
+      const iconVal = snap.val();
+      if (iconVal) {
+        appData.bankEmblemImage = iconVal;
+        localStorage.setItem('mirobyte_cached_emblem', iconVal);
+        renderBankEmblem();
+        applyDynamicSiteIconAndManifest(iconVal);
+      }
     });
 
     db.ref('bankData/securityLogs').limitToLast(40).on('value', (snap) => {
@@ -3900,13 +4346,15 @@
       MirobyteCache.set('banknoteImages', appData.banknoteImages);
       if (currentRoute === '/' && activeTabName === 'banknotes') renderBanknotes();
     });
+
     db.ref('bankData/cardDesigns').on('value', (snap) => {
       appData.cardDesigns = snap.val() || {};
       MirobyteCache.set('cardDesigns', appData.cardDesigns);
       if (isCurrentUserAdmin() && currentRoute === '/admin') { renderTreasuryCardDesigns(); populateAdminShopPriceEditor(); }
     });
+
     db.ref('bankData/bankEmblemImage').on('value', (snap) => {
-      appData.bankEmblemImage = snap.val() || null;
+      appData.bankEmblemImage = snap.val() || appData.settings?.appIcon || null;
       if (appData.bankEmblemImage) {
         localStorage.setItem('mirobyte_cached_emblem', appData.bankEmblemImage);
         MirobyteCache.set('bankEmblemImage', appData.bankEmblemImage);
@@ -3915,6 +4363,7 @@
         MirobyteCache.set('bankEmblemImage', null);
       }
       renderBankEmblem();
+      applyDynamicSiteIconAndManifest(appData.bankEmblemImage);
     });
 
     db.ref('bankData/bankReserve').on('value', (snap) => {
@@ -3923,12 +4372,12 @@
       const statRes = document.getElementById('statBankReserve');
       if (statRes) statRes.innerText = `${Math.round(appData.bankReserve).toLocaleString()} ฿`;
     });
+
     db.ref('bankData/customMoneySupply').on('value', (snap) => {
       appData.customMoneySupply = snap.val() !== undefined ? snap.val() : null;
       if (currentRoute === '/admin') renderAdminView();
     });
 
-    // 9. Market Assets с авто-починкой сломанных после дюпа цен
     db.ref('bankData/marketAssets').on('value', (snap) => {
       const val = snap.val();
       if (val && typeof val === 'object') {
@@ -3944,10 +4393,10 @@
           }
         });
         appData.marketAssets = merged;
-        if (Object.keys(repairUpdates).length > 0) {
+        if (Object.keys(repairUpdates).length > 0 && !isDemoMode) {
           db.ref().update(repairUpdates);
         }
-      } else {
+      } else if (!isDemoMode) {
         db.ref('bankData/marketAssets').set(DEFAULT_MARKET_ASSETS);
       }
       MirobyteCache.set('marketAssets', appData.marketAssets);
@@ -3963,6 +4412,7 @@
       MirobyteCache.set('marketListings', appData.marketListings);
       if (currentRoute === '/market') renderMarketListings();
     });
+
     db.ref('bankData/loans').on('value', (snap) => {
       appData.loans = snap.val() || {};
       if (currentRoute === '/earn') renderEarnAndLoansView();
@@ -3972,9 +4422,9 @@
     setInterval(() => { updateRealtimeBusinessAndHackCounters(); }, 1000);
     setInterval(() => { triggerMarketTick(false); }, 45000);
 
-    // ========================================================
-    // ГЛОБАЛЬНЫЕ ИВЕНТЫ И АУКЦИОН
-    // ========================================================
+    // =========================================================================
+    // SECTION 10: GLOBAL EVENTS & IMPERIAL AUCTION
+    // =========================================================================
     function renderGlobalActiveEventBanner() {
       const banner = document.getElementById('globalActiveEventBanner');
       if (!banner) return;
@@ -4018,10 +4468,10 @@
     function launchPresetBankEvent(presetKey) {
       if (!guardAdminAction(false)) return;
       const presets = {
-        art_boom: { active: true, type: 'art_boom', badge: '🎨 АУКЦИОННЫЙ БУМ', title: 'Скидка 20% на все Шедевры Живописи и Редкие Марки!', desc: 'Пополните коллекцию в разделе «Искусство»', startedAt: Date.now() },
-        gold_rush: { active: true, type: 'gold_rush', badge: '⛏️ ЗОЛОТАЯ ЛИХОРАДКА', title: '+50% к почасовому доходу всех предприятий «Боярские Промыслы»!', desc: 'Все корпорации приносят повышенную ренту', startedAt: Date.now() },
-        garage_expo: { active: true, type: 'garage_expo', badge: '🏎️ АВТОСАЛОН ИМПЕРИИ', title: 'Скидка 15% на Гиперкары, Лимузины, Джеты и Яхты!', desc: 'Распродажа в разделе «Автопарк»', startedAt: Date.now() },
-        financial_storm: { active: true, type: 'financial_storm', badge: '⚡ ФИНАНСОВЫЙ ШТОРМ', title: '0% налог Казны при сборе выручки Промыслов!', desc: 'Собирайте 100% прибыли без удержаний', startedAt: Date.now() }
+        art_boom: { active: true, type: 'art_boom', badge: '🎨 АУКЦИОННЫЙ БУМ', title: 'Скидка 20% на все Шедевры Живописи и Редкие Марки!', desc: 'Пополните коллекцию в разделе «Искусство»', startedAt: serverTimestamp() },
+        gold_rush: { active: true, type: 'gold_rush', badge: '⛏️ ЗОЛОТАЯ ЛИХОРАДКА', title: '+50% к почасовому доходу всех предприятий «Боярские Промыслы»!', desc: 'Все корпорации приносят повышенную ренту', startedAt: serverTimestamp() },
+        garage_expo: { active: true, type: 'garage_expo', badge: '🏎️ АВТОСАЛОН ИМПЕРИИ', title: 'Скидка 15% на Гиперкары, Лимузины, Джеты и Яхты!', desc: 'Распродажа в разделе «Автопарк»', startedAt: serverTimestamp() },
+        financial_storm: { active: true, type: 'financial_storm', badge: '⚡ ФИНАНСОВЫЙ ШТОРМ', title: '0% налог Казны при сборе выручки Промыслов!', desc: 'Собирайте 100% прибыли без удержаний', startedAt: serverTimestamp() }
       };
       const chosen = presets[presetKey];
       if (!chosen) return;
@@ -4041,7 +4491,7 @@
       if (!title) return showToast('Введите название лота!', 'error');
       const eventObj = {
         active: true, type: 'auction', badge: '🔨 АУКЦИОН', title: `Торги за лот: «${title}»`,
-        desc: 'Победитель получит артефакт в Сокровищницу', lotTitle: title, startBid, currentBid: startBid, highestBidder: null, startedAt: Date.now()
+        desc: 'Победитель получит артефакт в Сокровищницу', lotTitle: title, startBid, currentBid: startBid, highestBidder: null, startedAt: serverTimestamp()
       };
       db.ref('bankData/settings/activeEvent').set(eventObj).then(() => showToast(`Аукцион «${title}» открыт!`, 'success'));
     }
@@ -4102,7 +4552,7 @@
         inv.unshift({
           id: newOperationId('AUCLOT'), category: 'bazaar', title: `🏆 [Аукцион] ${ev.lotTitle}`,
           desc: `Выиграно на торгах за ${winBid.toLocaleString()} ฿`, artwork: generateRoyalArtSvgDataUrl('crown', ev.lotTitle),
-          boughtFrom: 'ИМПЕРАТОРСКИЙ АУКЦИОН', price: winBid, boughtAt: new Date().toLocaleDateString('ru-RU')
+          boughtFrom: 'ИМПЕРАТОРСКИЙ АУКЦИОН', price: winBid, boughtAt: new Date(getServerTime()).toLocaleDateString('ru-RU')
         });
         await db.ref(`bankData/users/${wKey}/inventory`).set(inv);
         await addTreasuryTaxOrProfit(winBid);
@@ -4111,9 +4561,6 @@
       showToast(`🏆 Лот вручён победителю @${ev.highestBidder}!`, 'success');
     }
 
-    // ========================================================
-    // РЕДАКТОР ЦЕН В АДМИН-ПАНЕЛИ
-    // ========================================================
     function getAllShopConfigurableItems() {
       const items = [];
       PRIVILEGE_FRAMES_CATALOG.forEach(f => items.push({ id: f.id, filterKey: 'frames', group: 'Рамка', name: f.name, defaultPrice: f.price }));
@@ -4163,9 +4610,9 @@
       db.ref('bankData/settings/shopPrices').set(null).then(() => { populateAdminShopPriceEditor(); showToast('Все цены магазина сброшены!', 'info'); });
     }
 
-    // ========================================================
-    // БОЯРСКИЕ ПРОМЫСЛЫ, НЕДВИЖИМОСТЬ (5%/Ч) И КОСМОС (5%/Ч)
-    // ========================================================
+    // =========================================================================
+    // SECTION 11: BOYAR CRAFTS (/earn), WEAR & SUPPLY SYSTEM + ATOMIC ACTIONS
+    // =========================================================================
     function getBusinessCatalog() { return mergeBusinessCatalogWithDefaults(appData.settings?.business?.catalog); }
 
     function getBusinessUpgradeCost(bizConfig, currentLevel) {
@@ -4181,7 +4628,7 @@
       return sum;
     }
 
-    function getBusinessHourlyIncome(bizConfig, level) {
+    function getBusinessHourlyIncome(bizConfig, level, conditionPercent = 100) {
       const lvl = Math.max(0, Number(level || 0));
       if (lvl <= 0) return 0;
       let mult = Number(appData.settings?.business?.globalMultiplier || 1);
@@ -4195,7 +4642,28 @@
         const progress = (lvl - 1) / (MAX_BUSINESS_LEVEL - 1);
         rawHourly = baseHourly + (targetMaxHourly - baseHourly) * Math.pow(progress, 1.35);
       }
-      return Math.max(1, Math.round(rawHourly * mult));
+      // Механика износа: если condition < 50%, доходность снижается до 60% от номинала
+      const wearMultiplier = Number(conditionPercent ?? 100) < 50 ? 0.60 : 1.0;
+      return Math.max(1, Math.round(rawHourly * mult * wearMultiplier));
+    }
+
+    // Расчёт текущего состояния промысла с учётом серверного времени
+    function computeEffectiveSlotCondition(bData, nowMs) {
+      const baseCond = (bData && bData.condition !== undefined && bData.condition !== null) ? Number(bData.condition) : 100;
+      const lastCol = Number(bData?.lastCollected || nowMs);
+      const elapsedHours = Math.max(0, (nowMs - lastCol) / 3600000);
+      // Постепенный износ от работы (около 0.4% в час, до 10% за полный 24ч цикл)
+      const timeDecay = Math.min(10, Math.floor(elapsedHours * 0.42));
+      return Math.max(0, Math.min(100, Math.round(baseCond - timeDecay)));
+    }
+
+    // Стоимость обслуживания и снабжения слота промысла
+    function getSlotMaintenanceCost(bizConfig, level, currentCondition) {
+      const wearMissing = Math.max(0, 100 - Number(currentCondition ?? 100));
+      if (wearMissing <= 0) return 0;
+      const nominalHourly = getBusinessHourlyIncome(bizConfig, level, 100);
+      // Плата за снабжение пропорциональна уровню и степени износа (защита от гиперинфляции на 20 уровне)
+      return Math.max(10, Math.round(nominalHourly * 0.45 * (wearMissing / 20)));
     }
 
     function getBusinessUpgradeDurationMs(currentLevel) {
@@ -4241,8 +4709,8 @@
     const finalizingUpgradesSet = new Set();
 
     async function checkAndFinalizeCompletedUpgrades(userObj) {
-      if (!userObj || !userObj.businesses) return;
-      const now = Date.now(), uKey = normalizeLogin(userObj.username);
+      if (isDemoMode || !userObj || !userObj.businesses) return;
+      const now = getServerTime(), uKey = normalizeLogin(userObj.username);
       const slots = getUserBusinessSlotsEntries(userObj);
       for (const item of slots) {
         const endsAt = Number(item.data?.upgradeEndsAt || 0);
@@ -4262,14 +4730,18 @@
     function calculateUserPendingBusinessRevenue(userObj) {
       const slots = getUserBusinessSlotsEntries(userObj);
       if (slots.length === 0) return { totalRaw: 0, totalHourly: 0, perSlot: {}, ownedCount: 0 };
-      const now = Date.now(), maxMs = Number(appData.settings?.business?.maxStorageHours || 24) * 3600 * 1000;
+      const now = getServerTime(), maxMs = Number(appData.settings?.business?.maxStorageHours || 24) * 3600 * 1000;
       let totalRaw = 0, totalHourly = 0;
       const perSlot = {};
 
       slots.forEach(({ slotKey, cfg, data }) => {
         const lvl = Number(data.level || 1);
-        const hourly = getBusinessHourlyIncome(cfg, lvl);
+        const condition = computeEffectiveSlotCondition(data, now);
+        const isWornOut = condition < 50;
+        const hourly = getBusinessHourlyIncome(cfg, lvl, condition);
+        const nominalHourly = getBusinessHourlyIncome(cfg, lvl, 100);
         totalHourly += hourly;
+
         const lastCol = Number(data.lastCollected || now);
         const elapsedMs = Math.max(0, Math.min(maxMs, now - lastCol));
         const earned = (hourly / 3600000) * elapsedMs;
@@ -4279,19 +4751,69 @@
         const upgLeftMs = isUpgrading ? Math.max(0, upgEnd - now) : 0;
         const upgTotalMs = (upgEnd > upgStart && upgStart > 0) ? (upgEnd - upgStart) : getBusinessUpgradeDurationMs(lvl);
         const upgPct = isUpgrading ? Math.min(100, Math.max(0, ((now - upgStart) / Math.max(1, upgTotalMs)) * 100)) : 0;
+        const repairCost = getSlotMaintenanceCost(cfg, lvl, condition);
 
-        perSlot[slotKey] = { earned, hourly, fillPct, elapsedMs, isFull: elapsedMs >= maxMs, isUpgrading, upgLeftMs, upgPct };
+        perSlot[slotKey] = {
+          earned, hourly, nominalHourly, condition, isWornOut, repairCost,
+          fillPct, elapsedMs, isFull: elapsedMs >= maxMs, isUpgrading, upgLeftMs, upgPct
+        };
         totalRaw += earned;
       });
       return { totalRaw, totalHourly, perSlot, ownedCount: slots.length };
     }
 
-    // Расчёт ренты Недвижимости (5% в час)
+    // Атомарный ремонт и снабжение промысла через runTransaction
+    async function repairBusinessSlotCondition(slotKey, btnEl = null) {
+      return withOperationLock(`repair_biz_${slotKey}`, btnEl, async () => {
+        if (!currentUser) return showToast('Войдите в счёт!', 'error');
+        const u = findUser(currentUser);
+        if (!u || u.isBlocked) return;
+        const targetSlot = getUserBusinessSlotsEntries(u).find(s => s.slotKey === slotKey);
+        if (!targetSlot) return;
+
+        const { cfg, data } = targetSlot;
+        const now = getServerTime();
+        const curCond = computeEffectiveSlotCondition(data, now);
+        if (curCond >= 100) return showToast('Предприятие в идеальном состоянии (100%)!', 'info');
+
+        const lvl = Number(data.level || 1);
+        const cost = getSlotMaintenanceCost(cfg, lvl, curCond);
+        if ((u.balance || 0) < cost) return showToast(`Для снабжения и ремонта требуется ${cost.toLocaleString()} ฿!`, 'error');
+
+        const uKey = normalizeLogin(u.username);
+        const userRef = db.ref(`bankData/users/${uKey}`);
+        const txResult = await runTransaction(userRef, (userSnap) => {
+          if (!userSnap) return userSnap;
+          const bal = Math.round(Number(userSnap.balance || 0));
+          if (bal < cost) return;
+          if (!userSnap.businesses || !userSnap.businesses[slotKey]) return;
+          userSnap.balance = bal - cost;
+          userSnap.businesses[slotKey].condition = 100;
+          if (!userSnap.stats) userSnap.stats = {};
+          if (!userSnap.stats.expense) userSnap.stats.expense = {};
+          userSnap.stats.expense.craftsUpgradeAndSupply = Math.round(Number(userSnap.stats.expense.craftsUpgradeAndSupply || 0)) + cost;
+          return userSnap;
+        });
+
+        if (!txResult.committed) return showToast('Не удалось провести снабжение. Проверьте баланс!', 'error');
+        await addTreasuryTaxOrProfit(cost);
+
+        const opId = newOperationId('SUPPLY');
+        await db.ref(`bankData/transactions/${opId}`).set({
+          id: opId, from: u.username, to: 'СЛУЖБА СНАБЖЕНИЯ ПРОМЫСЛОВ', amount: cost,
+          comment: `Снабжение и ремонт «${cfg.name}» до 100%`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
+        });
+
+        showToast(`🔧 «${cfg.name}» снабжено и отремонтировано до 100% (-${cost.toLocaleString()} ฿)!`, 'success');
+        renderEarnAndLoansView();
+      });
+    }
+
     function calculateUserRealEstateRent(userObj) {
       if (!userObj || !userObj.realEstate || typeof userObj.realEstate !== 'object') {
         return { totalPending: 0, totalHourly: 0, perItem: {}, totalValuation: 0 };
       }
-      const now = Date.now(), maxMs = 24 * 3600 * 1000;
+      const now = getServerTime(), maxMs = 24 * 3600 * 1000;
       let totalPending = 0, totalHourly = 0, totalValuation = 0;
       const perItem = {};
 
@@ -4324,10 +4846,9 @@
       return { totalPending, totalHourly, perItem, totalValuation };
     }
 
-    // Расчёт ренты Космического Уровня (5% в час! Считает все купленные объекты cosmos из инвентаря)
     function calculateUserCosmicRent(userObj) {
       if (!userObj) return { totalPending: 0, totalHourly: 0, perItem: {}, totalValuation: 0 };
-      const now = Date.now(), maxMs = 24 * 3600 * 1000;
+      const now = getServerTime(), maxMs = 24 * 3600 * 1000;
       let totalPending = 0, totalHourly = 0, totalValuation = 0;
       const perItem = {};
 
@@ -4415,11 +4936,15 @@
         const lvl = Number(data.level || 1);
         const isMaxLevel = lvl >= MAX_BUSINESS_LEVEL;
         const nextCost = getBusinessUpgradeCost(cfg, lvl);
-        const curHourly = getBusinessHourlyIncome(cfg, lvl);
-        const nextHourly = getBusinessHourlyIncome(cfg, lvl + 1);
+        const info = calc.perSlot[slotKey] || { earned: 0, hourly: 0, condition: 100, isWornOut: false, repairCost: 0, fillPct: 0, isFull: false, isUpgrading: false, upgLeftMs: 0, upgPct: 0 };
+        const curHourly = info.hourly || getBusinessHourlyIncome(cfg, lvl, info.condition);
+        const nextHourly = getBusinessHourlyIncome(cfg, lvl + 1, 100);
         const nextDurationMs = getBusinessUpgradeDurationMs(lvl);
-        const info = calc.perSlot[slotKey] || { earned: 0, fillPct: 0, isFull: false, isUpgrading: false, upgLeftMs: 0, upgPct: 0 };
         const canAfford = (u.balance || 0) >= nextCost;
+
+        // Индикатор износа и снабжения слота
+        const condColor = info.condition < 50 ? 'text-rose-400' : (info.condition < 80 ? 'text-amber-300' : 'text-emerald-300');
+        const condBarColor = info.condition < 50 ? 'bg-rose-500' : (info.condition < 80 ? 'bg-amber-400' : 'bg-emerald-400');
 
         let actionButtonHtml = '';
         if (isMaxLevel && !info.isUpgrading) {
@@ -4446,7 +4971,7 @@
         }
 
         return `
-          <div class="p-3.5 sm:p-5 rounded-3xl bg-bank-surface/95 border border-emerald-500/60 shadow-lg guilloche-panel flex flex-col justify-between space-y-2.5">
+          <div class="p-3.5 sm:p-5 rounded-3xl bg-bank-surface/95 border ${info.isWornOut ? 'border-rose-500/80' : 'border-emerald-500/60'} shadow-lg guilloche-panel flex flex-col justify-between space-y-2.5">
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
                 <div onclick="openBusinessInspectorModal('${slotKey}')" class="cursor-pointer w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-bank-darkest border border-bank-gold/60 text-bank-gold flex items-center justify-center text-base sm:text-xl flex-shrink-0 shadow-md">
@@ -4456,6 +4981,7 @@
                   <div class="flex items-center gap-1 flex-wrap">
                     <span class="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-[8px] font-mono text-emerald-300 uppercase">#${idx + 1}</span>
                     <span class="px-1.5 py-0.5 rounded bg-bank-darkest border border-bank-gold/50 text-[9px] font-mono font-bold text-bank-gold">Ур. ${lvl}/${MAX_BUSINESS_LEVEL}</span>
+                    ${info.isWornOut ? `<span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500 text-[8px] font-mono font-bold text-rose-300 animate-pulse">⚠️ ИЗНОС (ДОХОД 60%)</span>` : ''}
                   </div>
                   <h4 class="font-royal font-black text-xs sm:text-base text-white mt-0.5 truncate">${escapeHtml(cfg.name)}</h4>
                 </div>
@@ -4468,9 +4994,27 @@
             <div class="p-2.5 rounded-2xl bg-bank-darkest/90 border border-bank-border space-y-1.5">
               <div class="flex items-center justify-between text-[11px]">
                 <span class="text-emerald-400/80">Доход:</span>
-                <span class="font-mono font-bold text-emerald-300">+${curHourly.toLocaleString()} ฿/ч</span>
+                <span class="font-mono font-bold ${info.isWornOut ? 'text-rose-300' : 'text-emerald-300'}">+${curHourly.toLocaleString()} ฿/ч ${info.isWornOut ? '(60%)' : ''}</span>
               </div>
               ${!isMaxLevel ? `<div class="flex items-center justify-between text-[10px]"><span class="text-emerald-400/70">На Ур. ${lvl + 1}:</span><span class="font-mono text-bank-gold">+${nextHourly.toLocaleString()} ฿/ч</span></div>` : ''}
+              
+              <!-- Полоса состояния (Износ и снабжение) -->
+              <div class="pt-1 border-t border-bank-border/60 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono">
+                  <span class="text-emerald-400/80"><i class="fa-solid fa-screwdriver-wrench text-[9px] mr-1 text-bank-gold"></i>Состояние снабжения:</span>
+                  <span id="bizCondText-${slotKey}" class="font-bold ${condColor}">${info.condition}%</span>
+                </div>
+                <div class="h-1.5 w-full bg-black rounded-full overflow-hidden">
+                  <div id="bizCondBar-${slotKey}" class="h-full ${condBarColor} transition-all" style="width: ${info.condition}%"></div>
+                </div>
+                ${info.condition < 100 ? `
+                  <button type="button" onclick="repairBusinessSlotCondition('${slotKey}', this)" class="mt-1 w-full py-1 px-2 rounded-xl ${info.isWornOut ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white font-black' : 'bg-bank-surface hover:bg-bank-card border border-bank-gold/40 text-bank-gold font-bold'} text-[10px] uppercase transition-all flex items-center justify-between">
+                    <span>🔧 Обслужить / Снабдить до 100%</span>
+                    <span class="font-mono">${info.repairCost.toLocaleString()} ฿</span>
+                  </button>
+                ` : ''}
+              </div>
+
               <div class="pt-1 border-t border-bank-border/60 space-y-1">
                 <div class="flex justify-between text-[10px] font-mono">
                   <span class="text-emerald-400">Касса:</span>
@@ -4512,8 +5056,8 @@
         grid.innerHTML = catalog.map(cfg => {
           const sameTypeCount = slots.filter(s => s.typeId === cfg.id).length;
           const cost = Math.round(Number(cfg.baseCost || 150));
-          const hourly = getBusinessHourlyIncome(cfg, 1);
-          const maxHourly20 = getBusinessHourlyIncome(cfg, MAX_BUSINESS_LEVEL);
+          const hourly = getBusinessHourlyIncome(cfg, 1, 100);
+          const maxHourly20 = getBusinessHourlyIncome(cfg, MAX_BUSINESS_LEVEL, 100);
           const canAfford = (u.balance || 0) >= cost;
 
           return `
@@ -4551,6 +5095,7 @@
       modal.classList.add('hidden'); modal.classList.remove('flex');
     }
 
+    // Атомарное открытие нового предприятия через runTransaction
     async function openNewBusinessInstance(typeId, btnEl = null) {
       return withOperationLock(`biz_open_${typeId}`, btnEl, async () => {
         if (!currentUser) return showToast('Войдите в свой счёт!', 'error');
@@ -4562,16 +5107,40 @@
         const cost = getBusinessUpgradeCost(cfg, 0);
         if ((u.balance || 0) < cost) return showToast(`Требуется ${cost.toLocaleString()} ฿.`, 'error');
 
-        const opId = newOperationId('BIZOPEN');
-        if (!await atomicBalanceChange(u.username, -cost, { requireFunds: true, operationId: opId })) return;
+        const uKey = normalizeLogin(u.username), now = getServerTime();
+        const slotKey = `slot_${now}_${Math.random().toString(36).slice(2, 5)}`;
+
+        const txResult = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+          if (!userSnap) return userSnap;
+          const bal = Math.round(Number(userSnap.balance || 0));
+          if (bal < cost) return;
+          const curSlots = userSnap.businesses ? Object.values(userSnap.businesses).filter(b => b && Number(b.level || 0) >= 1).length : 0;
+          if (curSlots >= MAX_USER_BUSINESSES) return;
+
+          userSnap.balance = bal - cost;
+          if (!userSnap.businesses) userSnap.businesses = {};
+          userSnap.businesses[slotKey] = {
+            typeId: cfg.id,
+            level: 1,
+            condition: 100,
+            lastCollected: now,
+            upgradeStartedAt: null,
+            upgradeEndsAt: null,
+            openedAt: now
+          };
+          if (!userSnap.stats) userSnap.stats = {};
+          if (!userSnap.stats.expense) userSnap.stats.expense = {};
+          userSnap.stats.expense.craftsUpgradeAndSupply = Math.round(Number(userSnap.stats.expense.craftsUpgradeAndSupply || 0)) + cost;
+          return userSnap;
+        });
+
+        if (!txResult.committed) return showToast('Не удалось открыть предприятие. Проверьте баланс и слоты!', 'error');
         await addTreasuryTaxOrProfit(cost);
 
-        const uKey = normalizeLogin(u.username), now = Date.now();
-        const slotKey = `slot_${now}_${Math.random().toString(36).slice(2, 5)}`;
-        await db.ref(`bankData/users/${uKey}/businesses/${slotKey}`).set({ typeId: cfg.id, level: 1, lastCollected: now, upgradeStartedAt: null, upgradeEndsAt: null, openedAt: now });
+        const opId = newOperationId('BIZOPEN');
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: u.username, to: 'ПАЛАТА ПРОМЫСЛОВ (КАЗНА)', amount: cost,
-          comment: `Открытие «${cfg.name}» (Ур. 1)`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          comment: `Открытие «${cfg.name}» (Ур. 1)`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         closeNewBusinessRegistryModal();
         showToast(`Корпорация «${cfg.name}» открыта!`, 'success');
@@ -4579,6 +5148,7 @@
       });
     }
 
+    // Атомарное улучшение предприятия через runTransaction
     async function upgradeBusinessSlot(slotKey, btnEl = null) {
       return withOperationLock(`biz_upgrade_${slotKey}`, btnEl, async () => {
         if (!currentUser) return;
@@ -4588,28 +5158,44 @@
         if (!targetSlot) return;
         const { cfg, data } = targetSlot;
         const curLevel = Number(data.level || 1);
+        const now = getServerTime();
         if (curLevel >= MAX_BUSINESS_LEVEL) return showToast('Достигнут максимальный 20-й уровень!', 'info');
-        if (data.upgradeEndsAt && Number(data.upgradeEndsAt) > Date.now()) return showToast('Уже идёт модернизация!', 'info');
+        if (data.upgradeEndsAt && Number(data.upgradeEndsAt) > now) return showToast('Уже идёт модернизация!', 'info');
 
         const cost = getBusinessUpgradeCost(cfg, curLevel);
         if ((u.balance || 0) < cost) return showToast(`Требуется ${cost.toLocaleString()} ฿.`, 'error');
 
         const calc = calculateUserPendingBusinessRevenue(u);
         const pendingThis = Math.floor(calc.perSlot[slotKey]?.earned || 0);
-        const opId = newOperationId('BIZUPG');
-        if (!await atomicBalanceChange(u.username, -cost, { requireFunds: true, operationId: opId })) return;
-        await addTreasuryTaxOrProfit(cost);
+        const taxPct = getEffectiveTaxPercent();
+        const taxAmt = pendingThis >= 1 ? Math.floor(pendingThis * (taxPct / 100)) : 0;
+        const netAmt = pendingThis >= 1 ? Math.max(0, pendingThis - taxAmt) : 0;
 
-        if (pendingThis >= 1) {
-          const taxPct = getEffectiveTaxPercent();
-          const taxAmt = Math.floor(pendingThis * (taxPct / 100));
-          const netAmt = Math.max(0, pendingThis - taxAmt);
-          if (netAmt > 0) await atomicBalanceChange(u.username, netAmt);
-          if (taxAmt > 0) await addTreasuryTaxOrProfit(taxAmt);
-        }
+        const uKey = normalizeLogin(u.username), durationMs = getBusinessUpgradeDurationMs(curLevel);
+        const txResult = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+          if (!userSnap) return userSnap;
+          const bal = Math.round(Number(userSnap.balance || 0));
+          if (bal < cost) return;
+          if (!userSnap.businesses || !userSnap.businesses[slotKey]) return;
 
-        const uKey = normalizeLogin(u.username), now = Date.now(), durationMs = getBusinessUpgradeDurationMs(curLevel);
-        await db.ref(`bankData/users/${uKey}/businesses/${slotKey}`).update({ lastCollected: now, upgradeStartedAt: now, upgradeEndsAt: now + durationMs });
+          userSnap.balance = bal - cost + netAmt;
+          userSnap.businesses[slotKey].lastCollected = now;
+          userSnap.businesses[slotKey].upgradeStartedAt = now;
+          userSnap.businesses[slotKey].upgradeEndsAt = now + durationMs;
+
+          if (!userSnap.stats) userSnap.stats = {};
+          if (!userSnap.stats.expense) userSnap.stats.expense = {};
+          userSnap.stats.expense.craftsUpgradeAndSupply = Math.round(Number(userSnap.stats.expense.craftsUpgradeAndSupply || 0)) + cost;
+          if (netAmt > 0) {
+            if (!userSnap.stats.income) userSnap.stats.income = {};
+            userSnap.stats.income.crafts = Math.round(Number(userSnap.stats.income.crafts || 0)) + netAmt;
+          }
+          return userSnap;
+        });
+
+        if (!txResult.committed) return showToast('Не удалось запустить модернизацию!', 'error');
+        await addTreasuryTaxOrProfit(cost + taxAmt);
+
         showToast(`Модернизация «${cfg.name}» до Ур. ${curLevel + 1} запущена!`, 'success');
         renderEarnAndLoansView();
       });
@@ -4623,14 +5209,15 @@
       if (!target) return;
       const { cfg, data } = target;
       const lvl = Number(data.level || 1);
-      const hourly = getBusinessHourlyIncome(cfg, lvl);
+      const cond = computeEffectiveSlotCondition(data, getServerTime());
+      const hourly = getBusinessHourlyIncome(cfg, lvl, cond);
       const totalInvested = calculateTotalBusinessInvestment(cfg, lvl);
       const refund = Math.max(1, Math.round(totalInvested * 0.50));
 
       document.getElementById('bizInspIconBox').innerHTML = `<i class="fa-solid ${cfg.icon}"></i>`;
       document.getElementById('bizInspTierBadge').innerText = cfg.tier;
       document.getElementById('bizInspTitle').innerText = cfg.name;
-      document.getElementById('bizInspLevel').innerText = `${lvl} / ${MAX_BUSINESS_LEVEL}`;
+      document.getElementById('bizInspLevel').innerText = `${lvl} / ${MAX_BUSINESS_LEVEL} (Состояние: ${cond}%)`;
       document.getElementById('bizInspHourly').innerText = `+${hourly.toLocaleString()} ฿/ч`;
       document.getElementById('bizInspTotalInvested').innerText = `${totalInvested.toLocaleString()} ฿`;
       document.getElementById('bizInspRefundAmount').innerText = `+${refund.toLocaleString()} ฿`;
@@ -4664,9 +5251,18 @@
         const taxPct = getEffectiveTaxPercent();
         const netPending = pendingThis > 0 ? Math.max(0, pendingThis - Math.floor(pendingThis * (taxPct / 100))) : 0;
 
-        const uKey = normalizeLogin(u.username), opId = newOperationId('BIZSELL');
-        await db.ref(`bankData/users/${uKey}/businesses/${slotKey}`).remove();
-        await atomicBalanceChange(u.username, refund + netPending, { operationId: opId });
+        const uKey = normalizeLogin(u.username);
+        const txResult = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+          if (!userSnap || !userSnap.businesses || !userSnap.businesses[slotKey]) return;
+          delete userSnap.businesses[slotKey];
+          userSnap.balance = Math.round(Number(userSnap.balance || 0)) + refund + netPending;
+          if (!userSnap.stats) userSnap.stats = {};
+          if (!userSnap.stats.income) userSnap.stats.income = {};
+          userSnap.stats.income.crafts = Math.round(Number(userSnap.stats.income.crafts || 0)) + refund + netPending;
+          return userSnap;
+        });
+
+        if (!txResult.committed) return;
         closeBusinessInspectorModal();
         showToast(`Предприятие продано! Возвращено +${(refund + netPending).toLocaleString()} ฿!`, 'success');
         renderEarnAndLoansView();
@@ -4715,7 +5311,6 @@
         });
       }
 
-      // Обновление космической ренты (5% в час) в реальном времени
       if (currentRoute === '/market' && currentMarketSubTab === 'cosmos') {
         const cosTotEl = document.getElementById('totalPendingCosmicRent');
         const cosHrEl = document.getElementById('totalCosmicHourlyBadge');
@@ -4755,8 +5350,9 @@
 
       if (currentRoute === '/club' && currentCasinoGame === 'mining') updateSpaceMiningLiveProgress(u);
 
+      const now = getServerTime();
       const lastHack = Number(u.lastTerminalHack || 0);
-      const diff = (lastHack + 24 * 3600 * 1000) - Date.now();
+      const diff = (lastHack + 24 * 3600 * 1000) - now;
       const dashTermTxt = document.getElementById('dashTerminalTimerText');
       if (diff <= 0) {
         if (dashTermTxt) dashTermTxt.innerText = 'Взлом шлюза!';
@@ -4770,6 +5366,7 @@
       }
     }
 
+    // Атомарный сбор выручки со всех предприятий с учётом износа (снижение condition на 6–8% за цикл)
     async function collectAllBusinessRevenue(btnEl = null) {
       const btn = btnEl || document.getElementById('collectAllBusinessBtn');
       return withOperationLock('collect_all_biz', btn, async () => {
@@ -4783,28 +5380,81 @@
         const taxPct = getEffectiveTaxPercent();
         const taxAmt = Math.floor(rawTotal * (taxPct / 100));
         const netAmt = Math.max(1, rawTotal - taxAmt);
-        const uKey = normalizeLogin(u.username), now = Date.now(), updates = {};
+        const uKey = normalizeLogin(u.username), now = getServerTime();
 
-        Object.keys(u.businesses || {}).forEach(slotKey => {
-          if (u.businesses[slotKey]?.level > 0) updates[`bankData/users/${uKey}/businesses/${slotKey}/lastCollected`] = now;
+        const txResult = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+          if (!userSnap || !userSnap.businesses) return;
+          userSnap.balance = Math.round(Number(userSnap.balance || 0)) + netAmt;
+          Object.keys(userSnap.businesses).forEach(slotKey => {
+            const b = userSnap.businesses[slotKey];
+            if (b && Number(b.level || 0) > 0) {
+              const curCond = computeEffectiveSlotCondition(b, now);
+              const nextCond = Math.max(10, curCond - 6);
+              b.condition = nextCond;
+              b.lastCollected = now;
+            }
+          });
+          if (!userSnap.stats) userSnap.stats = {};
+          if (!userSnap.stats.income) userSnap.stats.income = {};
+          userSnap.stats.income.crafts = Math.round(Number(userSnap.stats.income.crafts || 0)) + netAmt;
+          return userSnap;
         });
 
-        const opId = newOperationId('PROF');
-        await db.ref().update(updates);
-        await atomicBalanceChange(u.username, netAmt, { operationId: opId });
+        if (!txResult.committed) return;
         if (taxAmt > 0) await addTreasuryTaxOrProfit(taxAmt);
 
+        const opId = newOperationId('PROF');
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: 'БОЯРСКИЕ ПРОМЫСЛЫ', to: u.username, amount: netAmt,
           comment: `Выручка корпораций (Налог ${taxPct}% = ${taxAmt} ฿)`,
-          timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
-        showToast(`Выручка собрана: +${netAmt.toLocaleString()} ฿!`, 'success');
+        showToast(`Выручка собрана: +${netAmt.toLocaleString()} ฿! (Состояние оборудования снизилось)`, 'success');
       });
     }
-    // ========================================================
-    // МОДУЛЬ 2: ИМПЕРАТОРСКИЙ КИБЕР-ПОЛИГОН (/club)
-    // ========================================================
+
+    // =========================================================================
+    // SECTION 12: CYBER POLYGON (/club) & ANTI-CHEAT VALIDATION
+    // =========================================================================
+    let gameStartTime = 0;
+
+    function getPolygonServerDateKey() {
+      const d = new Date(getServerTime());
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    }
+
+    function getUserPolygonDailyEarned(userObj) {
+      if (!userObj) return 0;
+      const todayKey = getPolygonServerDateKey();
+      if (userObj.polygonDailyDate !== todayKey) return 0;
+      return Math.max(0, Math.round(Number(userObj.polygonDailyEarned || 0)));
+    }
+
+    async function checkAndRecordPolygonDailyProfit(username, netProfitAmount) {
+      if (isDemoMode || !username || netProfitAmount <= 0) return { allowed: true };
+      const uKey = normalizeLogin(username);
+      const todayKey = getPolygonServerDateKey();
+      let exceeded = false;
+
+      const txRes = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+        if (!userSnap) return userSnap;
+        const curDate = userSnap.polygonDailyDate || '';
+        const curEarned = curDate === todayKey ? Math.round(Number(userSnap.polygonDailyEarned || 0)) : 0;
+        if (curEarned + netProfitAmount > POLYGON_DAILY_EARN_LIMIT) {
+          exceeded = true;
+          return;
+        }
+        userSnap.polygonDailyDate = todayKey;
+        userSnap.polygonDailyEarned = curEarned + netProfitAmount;
+        return userSnap;
+      });
+
+      if (exceeded || !txRes.committed) {
+        return { allowed: false, message: `Достигнут суточный лимит заработка в Кибер-Полигоне (${POLYGON_DAILY_EARN_LIMIT.toLocaleString()} ฿)!` };
+      }
+      return { allowed: true };
+    }
+
     async function buyPolygonBooster(boosterType, btnEl = null) {
       return withOperationLock(`buy_booster_${boosterType}`, btnEl, async () => {
         if (!currentUser) return showToast('Войдите в счёт!', 'error');
@@ -4833,11 +5483,18 @@
     }
 
     function getValidatedCasinoBet() {
+      if (guardDemoReadOnly()) return null;
       if (!currentUser) { showToast('Войдите в счёт!', 'error'); return null; }
       const u = findUser(currentUser);
       if (!u || u.isBlocked) { showToast('Ваш счёт заблокирован!', 'error'); return null; }
       const cSet = appData.settings?.casino || DEFAULT_SETTINGS.casino;
       if (!cSet.enabled) { showToast('Кибер-Полигон закрыт по указу Императора!', 'error'); return null; }
+
+      const dailyEarned = getUserPolygonDailyEarned(u);
+      if (dailyEarned >= POLYGON_DAILY_EARN_LIMIT) {
+        showToast(`Дневной лимит заработка на Полигоне (${POLYGON_DAILY_EARN_LIMIT.toLocaleString()} ฿) исчерпан!`, 'error');
+        return null;
+      }
 
       const raw = parseInt(document.getElementById('casinoBetInput')?.value || '0', 10);
       const minBet = Number(cSet.minBet || 10);
@@ -4892,6 +5549,12 @@
       const balEl = document.getElementById('clubUserBalanceDisplay');
       if (balEl) balEl.innerText = `${(u.balance || 0).toLocaleString()} ฿`;
 
+      const dailyProfEl = document.getElementById('clubDailyProfitBadge');
+      if (dailyProfEl) {
+        const dailyVal = getUserPolygonDailyEarned(u);
+        dailyProfEl.innerText = `${dailyVal.toLocaleString()} / ${POLYGON_DAILY_EARN_LIMIT.toLocaleString()} ฿`;
+      }
+
       const limText = document.getElementById('clubMinMaxBetText');
       const limBadge = document.getElementById('clubBetLimitsBadge');
       if (limText) limText.innerText = `${(cSet.minBet || 10).toLocaleString()} – ${(cSet.maxBet || 50000).toLocaleString()} ฿`;
@@ -4925,7 +5588,7 @@
       renderSpaceMiningView();
     }
 
-    let minesState = { active: false, bet: 0, minesCount: 3, minePositions: [], revealed: [], defusedMines: [], hasShield: false, multiplier: 1.0, busy: false };
+    let minesState = { active: false, bet: 0, minesCount: 3, minePositions: [], revealed: [], defusedMines: [], hasShield: false, multiplier: 1.0, busy: false, startedAtServerMs: 0 };
 
     function calculateMinesNextMultiplier(minesCount, revealedSafeCount) {
       const edge = (100 - Number(appData.settings?.casino?.houseEdge || 6)) / 100;
@@ -5028,7 +5691,12 @@
             if (!positions.includes(r)) positions.push(r);
           }
 
-          minesState = { active: true, bet, minesCount, minePositions: positions, revealed: [], defusedMines: [], hasShield: hasShieldForRound, multiplier: 1.0, busy: false };
+          gameStartTime = getServerTime();
+          minesState = {
+            active: true, bet, minesCount, minePositions: positions,
+            revealed: [], defusedMines: [], hasShield: hasShieldForRound,
+            multiplier: 1.0, busy: false, startedAtServerMs: gameStartTime
+          };
           renderCasinoClubView();
           showToast(`Миссия начата! Пакет: ${bet} ฿${hasShieldForRound ? ' (🛡️ Щит активен)' : ''}`, 'info');
         } finally {
@@ -5060,6 +5728,7 @@
     }
 
     async function clickMinesTile(idx, isFromRadar = false) {
+      if (guardDemoReadOnly()) return;
       if (!minesState.active || minesState.busy || minesState.revealed.includes(idx) || minesState.defusedMines.includes(idx)) return;
       minesState.busy = true;
 
@@ -5103,24 +5772,48 @@
         const safeOpenedCount = minesState.revealed.filter(i => !minesState.minePositions.includes(i)).length;
         if (!minesState.active || safeOpenedCount === 0 || minesState.busy) return;
         minesState.busy = true;
-        const winAmt = Math.round(minesState.bet * minesState.multiplier);
-        minesState.active = false;
 
+        // Античит-валидация времени прохождения по серверному оффсету
+        const deltaTime = getServerTime() - Number(minesState.startedAtServerMs || gameStartTime || 0);
+        if (deltaTime < POLYGON_MIN_MINES_TIME_MS) {
+          minesState.active = false;
+          minesState.busy = false;
+          logSecurityEvent('Античит Кибер-Полигона (Speedhack)', `@${currentUser} попытался завершить Сапёр за ${deltaTime} мс`, 'warn');
+          renderMinesBoard(true);
+          return showToast('Античит Службы Безопасности: физически невозможная скорость прохождения! Начисление заблокировано.', 'error');
+        }
+
+        const winAmt = Math.round(minesState.bet * minesState.multiplier);
+        const netProfit = Math.max(0, winAmt - minesState.bet);
+
+        // Проверка суточного лимита заработка в Кибер-Полигоне
+        const dailyCheck = await checkAndRecordPolygonDailyProfit(currentUser, netProfit);
+        if (!dailyCheck.allowed) {
+          // Возвращаем только ставку без профита при превышении дневного лимита
+          await atomicBalanceChange(currentUser, minesState.bet, { operationId: newOperationId('MINESREF') });
+          minesState.active = false;
+          minesState.busy = false;
+          renderMinesBoard(true);
+          return showToast(dailyCheck.message, 'error');
+        }
+
+        minesState.active = false;
         try {
           const opId = newOperationId('MINESWIN');
           await atomicBalanceChange(currentUser, winAmt, { operationId: opId });
+          await recordPlayerFinancialStat(currentUser, 'income', 'polygon', netProfit > 0 ? netProfit : winAmt);
           if (winAmt >= minesState.bet * 4 || winAmt >= 2000) {
             logSecurityEvent('Крупная награда в Сапёре', `@${currentUser} получил ${winAmt} ฿ (x${minesState.multiplier.toFixed(2)})`, 'win');
           }
           showToast(`💎 Награда +${winAmt.toLocaleString()} ฿ (x${minesState.multiplier.toFixed(2)})!`, 'success');
         } finally {
           minesState.busy = false;
+          renderCasinoClubView();
           renderMinesBoard(true);
         }
       });
     }
 
-    // Космическая Золотодобыча в Кибер-Полигоне
     function renderSpaceMiningView() {
       const grid = document.getElementById('spaceMiningMissionsGrid');
       if (!grid || !currentUser) return;
@@ -5182,7 +5875,7 @@
       }
 
       box.classList.remove('hidden');
-      const now = Date.now();
+      const now = getServerTime();
       const leftMs = Math.max(0, Number(exp.endsAt || 0) - now);
       const totalMs = Math.max(1, Number(exp.endsAt || 0) - Number(exp.startedAt || 0));
       const pct = Math.min(100, Math.max(0, ((now - Number(exp.startedAt || 0)) / totalMs) * 100));
@@ -5222,6 +5915,11 @@
         if (!u || u.isBlocked) return;
         if (u.spaceExpedition && u.spaceExpedition.active) return showToast('Уже есть активная экспедиция!', 'info');
 
+        const dailyEarned = getUserPolygonDailyEarned(u);
+        if (dailyEarned >= POLYGON_DAILY_EARN_LIMIT) {
+          return showToast(`Дневной лимит заработка на Полигоне (${POLYGON_DAILY_EARN_LIMIT.toLocaleString()} ฿) исчерпан!`, 'error');
+        }
+
         const cfg = SPACE_MINING_CATALOG.find(m => m.id === missionId);
         if (!cfg) return;
         if ((u.balance || 0) < cfg.cost) return showToast(`Требуется ${cfg.cost.toLocaleString()} ฿.`, 'error');
@@ -5229,7 +5927,7 @@
         const opId = newOperationId('SPMIN');
         if (!await atomicBalanceChange(u.username, -cfg.cost, { requireFunds: true, operationId: opId })) return;
 
-        const now = Date.now(), durationMs = cfg.durationMinutes * 60 * 1000;
+        const now = getServerTime(), durationMs = cfg.durationMinutes * 60 * 1000;
         const pct = cfg.minReturnPct + Math.random() * (cfg.maxReturnPct - cfg.minReturnPct);
         const reward = Math.round(cfg.cost * (1 + pct / 100));
         const uKey = normalizeLogin(u.username);
@@ -5248,25 +5946,38 @@
         const u = findUser(currentUser);
         if (!u || !u.spaceExpedition || !u.spaceExpedition.active) return;
         const exp = u.spaceExpedition;
-        if (Date.now() < Number(exp.endsAt || 0)) return showToast('Корабль ещё в полёте!', 'info');
+        const now = getServerTime();
+
+        // Античит: проверка реальной длительности полёта по серверному времени
+        const minDurationMs = Math.max(60000, Number(exp.endsAt || 0) - Number(exp.startedAt || 0));
+        const deltaTime = now - Number(exp.startedAt || 0);
+        if (now < Number(exp.endsAt || 0) || deltaTime < minDurationMs - 2000) {
+          return showToast('Корабль ещё в полёте (проверка серверного времени)!', 'info');
+        }
 
         const reward = Math.max(1, Number(exp.reward || exp.cost || 1000));
+        const netProfit = Math.max(0, reward - Number(exp.cost || 0));
+        const dailyCheck = await checkAndRecordPolygonDailyProfit(u.username, netProfit);
+        if (!dailyCheck.allowed) {
+          showToast(dailyCheck.message, 'error');
+          return;
+        }
+
         const uKey = normalizeLogin(u.username), opId = newOperationId('SPGOLD');
         await db.ref(`bankData/users/${uKey}/spaceExpedition`).set(null);
         await atomicBalanceChange(u.username, reward, { operationId: opId });
+        await recordPlayerFinancialStat(u.username, 'income', 'polygon', netProfit > 0 ? netProfit : reward);
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: 'КОСМИЧЕСКАЯ ЗОЛОТОДОБЫЧА (/club)', to: u.username, amount: reward,
-          comment: `Добыча золота: ${exp.title}`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          comment: `Добыча золота: ${exp.title}`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(`✨ Золото разгружено: +${reward.toLocaleString()} ฿!`, 'success');
         renderCasinoClubView();
       });
     }
 
-    // ========================================================
-    // ЕЖЕДНЕВНЫЙ ВЗЛОМ ТЕРМИНАЛА
-    // ========================================================
-    let hackSession = { attemptsLeft: 3, winningNode: 0, finished: false, busy: false };
+    // Ежедневный взлом терминала с серверным временем и античитом
+    let hackSession = { attemptsLeft: 3, winningNode: 0, finished: false, busy: false, startedAtServerMs: 0 };
 
     function openTerminalHackModal() {
       if (!currentUser) return showToast('Войдите в счёт!', 'error');
@@ -5278,7 +5989,8 @@
       const rngLbl = document.getElementById('hackRewardRangeLabel');
       if (rngLbl) rngLbl.innerText = `${minR}–${maxR} ฿`;
 
-      const diff = (Number(u.lastTerminalHack || 0) + 24 * 3600 * 1000) - Date.now();
+      const now = getServerTime();
+      const diff = (Number(u.lastTerminalHack || 0) + 24 * 3600 * 1000) - now;
       const modal = document.getElementById('terminalHackModal');
       const coolEl = document.getElementById('hackCooldownNotice');
       const attEl = document.getElementById('hackAttemptsLeft');
@@ -5286,11 +5998,12 @@
 
       if (diff > 0) {
         hackSession.finished = true;
-        if (line1) line1.innerText = '> Шлюз заблокирован (1 раз в 24ч).';
+        if (line1) line1.innerText = '> Шлюз заблокирован (1 раз в 24ч по серверному времени).';
         if (coolEl) coolEl.classList.remove('hidden');
         for (let i = 0; i < 4; i++) { const b = document.getElementById(`hackNodeBtn${i}`); if (b) b.disabled = true; }
       } else {
-        hackSession = { attemptsLeft: 3, winningNode: Math.floor(Math.random() * 4), finished: false, busy: false };
+        gameStartTime = now;
+        hackSession = { attemptsLeft: 3, winningNode: Math.floor(Math.random() * 4), finished: false, busy: false, startedAtServerMs: now };
         if (line1) line1.innerText = '> Выберите один из 4 зашифрованных узлов...';
         if (attEl) attEl.innerText = '3';
         if (coolEl) coolEl.classList.add('hidden');
@@ -5319,6 +6032,13 @@
         const btn = document.getElementById(`hackNodeBtn${nodeIdx}`);
         if (!btn) return;
 
+        // Античит-валидация скорости взлома узла
+        const now = getServerTime();
+        const deltaTime = now - Number(hackSession.startedAtServerMs || gameStartTime || 0);
+        if (deltaTime < POLYGON_MIN_HACK_TIME_MS) {
+          return showToast('Античит: слишком быстрое нажатие на шлюз!', 'error');
+        }
+
         hackSession.busy = true;
         btn.disabled = true;
         hackSession.attemptsLeft--;
@@ -5335,20 +6055,28 @@
           hackSession.finished = true;
           btn.className = 'tap-btn p-3.5 rounded-2xl bg-emerald-600 text-black border-2 border-bank-gold flex flex-col items-center justify-center gap-1 shadow-[0_0_25px_rgba(16,185,129,0.9)]';
           const reward = Math.floor(minR + Math.random() * Math.max(10, maxR - minR));
+          const dailyCheck = await checkAndRecordPolygonDailyProfit(u.username, reward);
+          if (!dailyCheck.allowed) {
+            hackSession.busy = false;
+            return showToast(dailyCheck.message, 'error');
+          }
+
           const opId = newOperationId('HACK');
-          await db.ref(`bankData/users/${uKey}/lastTerminalHack`).set(Date.now());
+          await db.ref(`bankData/users/${uKey}/lastTerminalHack`).set(now);
           await atomicBalanceChange(u.username, reward, { operationId: opId });
+          await recordPlayerFinancialStat(u.username, 'income', 'polygon', reward);
           await db.ref(`bankData/transactions/${opId}`).set({
             id: opId, from: 'ТЕРМИНАЛ КАЗНЫ (ВЗЛОМ)', to: u.username, amount: reward,
-            comment: 'Успешный взлом защитного шлюза', timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+            comment: 'Успешный взлом защитного шлюза', timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
           });
           if (line1) line1.innerText = `> ДОСТУП ПОЛУЧЕН! Переведено +${reward} ฿!`;
           showToast(`🔓 ТЕРМИНАЛ ВЗЛОМАН! Грант +${reward} ฿!`, 'success');
         } else if (hackSession.attemptsLeft <= 0) {
           hackSession.finished = true;
           btn.className = 'tap-btn p-3.5 rounded-2xl bg-rose-950/70 border border-rose-500 text-rose-300 flex flex-col items-center justify-center gap-1';
-          await db.ref(`bankData/users/${uKey}/lastTerminalHack`).set(Date.now());
+          await db.ref(`bankData/users/${uKey}/lastTerminalHack`).set(now);
           await atomicBalanceChange(u.username, consolation, { operationId: newOperationId('HACKCONS') });
+          await recordPlayerFinancialStat(u.username, 'income', 'polygon', consolation);
           if (line1) line1.innerText = `> Защита сработала. Бонус +${consolation} ฿!`;
           showToast(`Утешительный бонус: +${consolation} ฿!`, 'info');
         } else {
@@ -5359,9 +6087,9 @@
       });
     }
 
-    // ========================================================
-    // МОДУЛЬ 4: АДМИН-ПАНЕЛЬ (/admin)
-    // ========================================================
+    // =========================================================================
+    // SECTION 13: ADMIN PANEL (/admin)
+    // =========================================================================
     function setAdminUserFilter(filterKey) {
       adminUserFilter = filterKey;
       ['all', 'magnates', 'admins', 'blocked'].forEach(k => {
@@ -5457,11 +6185,11 @@
       if (!guardAdminAction(false)) return;
       const u = findUser(username);
       if (!u) return;
-      const uKey = normalizeLogin(u.username), updates = {};
+      const uKey = normalizeLogin(u.username), updates = {}, now = getServerTime();
       let count = 0;
 
       Object.entries(u.businesses || {}).forEach(([slotKey, bData]) => {
-        if (bData && Number(bData.upgradeEndsAt || 0) > Date.now()) {
+        if (bData && Number(bData.upgradeEndsAt || 0) > now) {
           updates[`bankData/users/${uKey}/businesses/${slotKey}/level`] = Math.min(MAX_BUSINESS_LEVEL, Number(bData.level || 1) + 1);
           updates[`bankData/users/${uKey}/businesses/${slotKey}/upgradeStartedAt`] = null;
           updates[`bankData/users/${uKey}/businesses/${slotKey}/upgradeEndsAt`] = null;
@@ -5469,9 +6197,9 @@
         }
       });
       Object.entries(u.realEstate || {}).forEach(([reId, rData]) => {
-        if (rData && Number(rData.prepEndsAt || 0) > Date.now()) {
-          updates[`bankData/users/${uKey}/realEstate/${reId}/prepEndsAt`] = Date.now() - 1000;
-          updates[`bankData/users/${uKey}/realEstate/${reId}/lastCollected`] = Date.now() - 1000;
+        if (rData && Number(rData.prepEndsAt || 0) > now) {
+          updates[`bankData/users/${uKey}/realEstate/${reId}/prepEndsAt`] = now - 1000;
+          updates[`bankData/users/${uKey}/realEstate/${reId}/lastCollected`] = now - 1000;
           count++;
         }
       });
@@ -5482,13 +6210,13 @@
 
     async function adminFinishAllUpgradesNow() {
       if (!guardAdminAction(false)) return;
-      const updates = {};
+      const updates = {}, now = getServerTime();
       let totalFinished = 0;
       Object.values(appData.users || {}).forEach(u => {
         if (!u) return;
         const uKey = normalizeLogin(u.username);
         Object.entries(u.businesses || {}).forEach(([slotKey, bData]) => {
-          if (bData && Number(bData.upgradeEndsAt || 0) > Date.now()) {
+          if (bData && Number(bData.upgradeEndsAt || 0) > now) {
             updates[`bankData/users/${uKey}/businesses/${slotKey}/level`] = Math.min(MAX_BUSINESS_LEVEL, Number(bData.level || 1) + 1);
             updates[`bankData/users/${uKey}/businesses/${slotKey}/upgradeStartedAt`] = null;
             updates[`bankData/users/${uKey}/businesses/${slotKey}/upgradeEndsAt`] = null;
@@ -5496,9 +6224,9 @@
           }
         });
         Object.entries(u.realEstate || {}).forEach(([reId, rData]) => {
-          if (rData && Number(rData.prepEndsAt || 0) > Date.now()) {
-            updates[`bankData/users/${uKey}/realEstate/${reId}/prepEndsAt`] = Date.now() - 1000;
-            updates[`bankData/users/${uKey}/realEstate/${reId}/lastCollected`] = Date.now() - 1000;
+          if (rData && Number(rData.prepEndsAt || 0) > now) {
+            updates[`bankData/users/${uKey}/realEstate/${reId}/prepEndsAt`] = now - 1000;
+            updates[`bankData/users/${uKey}/realEstate/${reId}/lastCollected`] = now - 1000;
             totalFinished++;
           }
         });
@@ -5556,12 +6284,13 @@
         for (const u of Object.values(appData.users || {})) {
           if (!u || u.isBlocked) continue;
           await atomicBalanceChange(u.username, amt, { operationId: newOperationId('GGRANT') });
+          await recordPlayerFinancialStat(u.username, 'income', 'transfersIn', amt);
           addSystemMessage(u.username, 'Императорский Грант', `Вам начислено +${amt.toLocaleString()} ฿!`);
         }
         const txId = newOperationId('GRANT');
         await db.ref(`bankData/transactions/${txId}`).set({
           id: txId, from: 'ИМПЕРАТОРСКАЯ КАЗНА', to: 'ВСЕМ ГРАЖДАНАМ', amount: amt,
-          comment: 'Глобальная раздача грантов', timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          comment: 'Глобальная раздача грантов', timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(`Всем начислено по +${amt.toLocaleString()} ฿!`, 'success');
       });
@@ -5684,9 +6413,9 @@
       db.ref('bankData/securityLogs').set(null).then(() => showToast('Логи очищены!', 'info'));
     }
 
-    // ========================================================
-    // ТЕЛЕГРАФ И АНТИ-ДЮП БИРЖА АКЦИЙ
-    // ========================================================
+    // =========================================================================
+    // SECTION 14: TELEGRAPH & ATOMIC STOCK EXCHANGE (/market)
+    // =========================================================================
     const OLD_RUS_DICTIONARY = [
       { reg: /\bпривет\b/gi, rep: 'челом бью да здравия желаю' },
       { reg: /\bздравствуй(те)?\b/gi, rep: 'многая лета вам, бояре' },
@@ -6003,7 +6732,6 @@
       canvas.ontouchmove = (ev) => { if (ev.touches && ev.touches[0]) handlePointer(ev.touches[0].clientX); };
     }
 
-    // Сбалансированная формула средней цены с жёстким потолком 2.5x от minMeanPrice
     function computeGrowingAssetMeanPrice(minMeanPrice, totalSharesBought) {
       const base = Math.max(5, Number(minMeanPrice || 100));
       const maxMean = Math.round(base * 2.5);
@@ -6013,7 +6741,7 @@
       return Math.min(maxMean, base + growth);
     }
 
-    // ПОЛНОСТЬЮ ЗАЩИЩЁННАЯ ОТ ДЮПА ФУНКЦИЯ ТОРГОВЛИ НА БИРЖЕ
+    // АТОМАРНАЯ ТОРГОВЛЯ НА БИРЖЕ АКЦИЙ ЧЕРЕЗ runTransaction
     async function executeAssetTrade(mode, btnEl = null) {
       return withOperationLock(`asset_trade_${mode}_${selectedMarketAssetId}`, btnEl, async () => {
         if (!currentUser) return showToast('Войдите в счёт для торговли на Бирже!', 'error');
@@ -6027,9 +6755,8 @@
         }
 
         const uKey = normalizeLogin(u.username);
-        const curOwned = Math.max(0, Number((u.portfolio && u.portfolio[asset.id]) || 0));
+        const now = getServerTime();
         const meta = (u.portfolioMeta && u.portfolioMeta[asset.id]) || {};
-        const now = Date.now();
 
         if (meta.lastTradeMs && (now - Number(meta.lastTradeMs)) < TRADE_COOLDOWN_MS) {
           const waitSec = Math.ceil((TRADE_COOLDOWN_MS - (now - Number(meta.lastTradeMs))) / 1000);
@@ -6046,62 +6773,94 @@
         const opId = newOperationId('MKT');
 
         if (mode === 'buy') {
-          if (curOwned + qty > MAX_HOLDINGS_PER_ASSET) {
-            return showToast(`Лимит портфеля: максимум ${MAX_HOLDINGS_PER_ASSET} акций ${asset.id} в одни руки (у вас уже ${curOwned} шт.)!`, 'error');
-          }
           const totalCost = Math.round(qty * curPrice);
-          if ((u.balance || 0) < totalCost) return showToast(`Недостаточно Байти! Требуется ${totalCost.toLocaleString()} ฿.`, 'error');
-          if (!await atomicBalanceChange(u.username, -totalCost, { requireFunds: true, operationId: opId })) return;
+          let failReason = '';
 
-          const prevAvg = Number(meta.avgBuyPrice || curPrice);
-          const newAvgBuyPrice = Math.round(((curOwned * prevAvg) + (qty * curPrice)) / (curOwned + qty));
+          const userTx = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+            if (!userSnap) return userSnap;
+            const bal = Math.round(Number(userSnap.balance || 0));
+            const curOwned = Math.max(0, Number(userSnap.portfolio?.[asset.id] || 0));
+            if (curOwned + qty > MAX_HOLDINGS_PER_ASSET) {
+              failReason = `Лимит портфеля: максимум ${MAX_HOLDINGS_PER_ASSET} акций ${asset.id} в одни руки!`;
+              return;
+            }
+            if (bal < totalCost) {
+              failReason = `Недостаточно Байти! Требуется ${totalCost.toLocaleString()} ฿.`;
+              return;
+            }
+            const prevAvg = Number(userSnap.portfolioMeta?.[asset.id]?.avgBuyPrice || curPrice);
+            const newAvgBuyPrice = Math.round(((curOwned * prevAvg) + (qty * curPrice)) / (curOwned + qty));
 
-          await db.ref(`bankData/users/${uKey}/portfolio/${asset.id}`).set(curOwned + qty);
-          await db.ref(`bankData/users/${uKey}/portfolioMeta/${asset.id}`).set({ avgBuyPrice: newAvgBuyPrice, lastTradeMs: now });
+            userSnap.balance = bal - totalCost;
+            if (!userSnap.portfolio) userSnap.portfolio = {};
+            userSnap.portfolio[asset.id] = curOwned + qty;
+            if (!userSnap.portfolioMeta) userSnap.portfolioMeta = {};
+            userSnap.portfolioMeta[asset.id] = { avgBuyPrice: newAvgBuyPrice, lastTradeMs: now };
 
-          const nextSharesBought = curSharesBought + qty;
-          const nextMean = Math.min(maxAllowedMean, Math.max(minMean, Math.round(curMean + minMean * 0.0005 * qty)));
-          const nextPrice = Math.min(maxAllowedPrice, Math.max(minAllowedPrice, Math.round(nextMean * (1 + Math.min(0.03, qty * 0.00015)))));
-          const nextHist = [...(asset.history || []).slice(-(MAX_CHART_POINTS - 1)), nextPrice];
+            if (!userSnap.stats) userSnap.stats = {};
+            if (!userSnap.stats.expense) userSnap.stats.expense = {};
+            userSnap.stats.expense.stocksInvest = Math.round(Number(userSnap.stats.expense.stocksInvest || 0)) + totalCost;
+            return userSnap;
+          });
 
-          await db.ref(`bankData/marketAssets/${asset.id}`).update({
-            minMeanPrice: minMean, totalSharesBought: nextSharesBought, meanPrice: nextMean, prevPrice: curPrice, price: nextPrice, history: nextHist
+          if (!userTx.committed) return showToast(failReason || 'Сделка покупки отклонена.', 'error');
+
+          await runTransaction(db.ref(`bankData/marketAssets/${asset.id}`), (aSnap) => {
+            const cur = aSnap || asset;
+            const cShares = Math.max(0, Number(cur.totalSharesBought || 0)) + qty;
+            const cMean = Math.min(maxAllowedMean, Math.max(minMean, Math.round(Number(cur.meanPrice || minMean) + minMean * 0.0005 * qty)));
+            const cPrice = Math.min(maxAllowedPrice, Math.max(minAllowedPrice, Math.round(cMean * (1 + Math.min(0.03, qty * 0.00015)))));
+            const cHist = [...(cur.history || []).slice(-(MAX_CHART_POINTS - 1)), cPrice];
+            return { ...cur, minMeanPrice: minMean, totalSharesBought: cShares, meanPrice: cMean, prevPrice: curPrice, price: cPrice, history: cHist };
           });
 
           await db.ref(`bankData/transactions/${opId}`).set({
             id: opId, from: u.username, to: `БИРЖА МИРОБАЙТ (${asset.id})`, amount: totalCost,
-            comment: `Покупка ${qty} шт. «${asset.name}» по ${curPrice} ฿`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+            comment: `Покупка ${qty} шт. «${asset.name}» по ${curPrice} ฿`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
           });
-          showToast(`Куплено ${qty} шт. ${asset.id} (в портфеле: ${curOwned + qty}/${MAX_HOLDINGS_PER_ASSET})!`, 'success');
+          showToast(`Куплено ${qty} шт. ${asset.id}!`, 'success');
         } else {
-          if (curOwned < qty) return showToast(`У вас только ${curOwned} шт. актива ${asset.id}!`, 'error');
-
-          // Сразу снижаем среднюю норму и цену вниз ПЕРЕД расчётом выплаты
-          const nextSharesBought = Math.max(0, curSharesBought - qty);
           const nextMean = Math.min(maxAllowedMean, Math.max(minMean, Math.round(curMean - minMean * 0.0006 * qty)));
           const droppedPrice = Math.min(maxAllowedPrice, Math.max(minAllowedPrice, Math.round(nextMean * (1 - Math.min(0.035, qty * 0.0002)))));
-
-          // Ограничение максимальной цены выкупа относительно avgBuyPrice (+35% потолок от дюпа)
           const userAvgBuy = Math.max(minAllowedPrice, Number(meta.avgBuyPrice || minMean));
           const effectiveUnitSellPrice = Math.min(droppedPrice, Math.round(userAvgBuy * 1.35), maxAllowedPrice);
-
           const grossPayout = Math.round(qty * effectiveUnitSellPrice);
           const taxAmt = Math.max(1, Math.round(grossPayout * ASSET_SELL_TAX_RATE));
           const netPayout = Math.max(1, grossPayout - taxAmt);
 
-          await db.ref(`bankData/users/${uKey}/portfolio/${asset.id}`).set(curOwned - qty);
-          await db.ref(`bankData/users/${uKey}/portfolioMeta/${asset.id}`).update({ lastTradeMs: now });
-          await atomicBalanceChange(u.username, netPayout, { operationId: opId });
+          let failReason = '';
+          const userTx = await runTransaction(db.ref(`bankData/users/${uKey}`), (userSnap) => {
+            if (!userSnap) return userSnap;
+            const curOwned = Math.max(0, Number(userSnap.portfolio?.[asset.id] || 0));
+            if (curOwned < qty) {
+              failReason = `У вас только ${curOwned} шт. актива ${asset.id}!`;
+              return;
+            }
+            userSnap.portfolio[asset.id] = curOwned - qty;
+            if (!userSnap.portfolioMeta) userSnap.portfolioMeta = {};
+            if (!userSnap.portfolioMeta[asset.id]) userSnap.portfolioMeta[asset.id] = {};
+            userSnap.portfolioMeta[asset.id].lastTradeMs = now;
+            userSnap.balance = Math.round(Number(userSnap.balance || 0)) + netPayout;
+
+            if (!userSnap.stats) userSnap.stats = {};
+            if (!userSnap.stats.income) userSnap.stats.income = {};
+            userSnap.stats.income.stocks = Math.round(Number(userSnap.stats.income.stocks || 0)) + netPayout;
+            return userSnap;
+          });
+
+          if (!userTx.committed) return showToast(failReason || 'Сделка продажи отклонена.', 'error');
           await addTreasuryTaxOrProfit(taxAmt);
 
-          const nextHist = [...(asset.history || []).slice(-(MAX_CHART_POINTS - 1)), droppedPrice];
-          await db.ref(`bankData/marketAssets/${asset.id}`).update({
-            minMeanPrice: minMean, totalSharesBought: nextSharesBought, meanPrice: nextMean, prevPrice: curPrice, price: droppedPrice, history: nextHist
+          await runTransaction(db.ref(`bankData/marketAssets/${asset.id}`), (aSnap) => {
+            const cur = aSnap || asset;
+            const cShares = Math.max(0, Number(cur.totalSharesBought || 0) - qty);
+            const cHist = [...(cur.history || []).slice(-(MAX_CHART_POINTS - 1)), droppedPrice];
+            return { ...cur, minMeanPrice: minMean, totalSharesBought: cShares, meanPrice: nextMean, prevPrice: curPrice, price: droppedPrice, history: cHist };
           });
 
           await db.ref(`bankData/transactions/${opId}`).set({
             id: opId, from: `БИРЖА МИРОБАЙТ (${asset.id})`, to: u.username, amount: netPayout,
-            comment: `Продажа ${qty} шт. «${asset.name}» (Налог Казны 10% = ${taxAmt.toLocaleString()} ฿)`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+            comment: `Продажа ${qty} шт. «${asset.name}» (Налог Казны 10% = ${taxAmt.toLocaleString()} ฿)`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
           });
           showToast(`Продано ${qty} шт. ${asset.id}! Чистая выплата: +${netPayout.toLocaleString()} ฿ (Налог 10%: ${taxAmt.toLocaleString()} ฿).`, 'success');
         }
@@ -6109,7 +6868,7 @@
     }
 
     function triggerMarketTick(isManual = false) {
-      if (!currentUser) return;
+      if (isDemoMode || !currentUser) return;
       if (!isManual && Math.random() < 0.45) return;
       const updates = {};
       const isStorm = appData.settings?.activeEvent?.active && appData.settings?.activeEvent?.type === 'financial_storm';
@@ -6187,9 +6946,10 @@
       if (badgeEl) badgeEl.innerText = '✨ Gemini AI';
       showToast('Прогноз Биржи обновлён!', 'success');
     }
-// ========================================================
-    // МУЛЬТИ-ПОКУПКА, ФОТО-ИНСПЕКТОР, ПРОДАЖА (-25% НАЛОГ), НЕДВИЖИМОСТЬ И КОСМОС (5%/Ч)
-    // ========================================================
+
+    // =========================================================================
+    // SECTION 15: LUXURY VAULT, REAL ESTATE & COSMOS (5%/H)
+    // =========================================================================
     function countUserOwnedAssetById(userObj, itemId) {
       if (!userObj) return 0;
       const inv = Array.isArray(userObj.inventory) ? userObj.inventory : [];
@@ -6240,7 +7000,6 @@
       document.getElementById('assetInspectorCountText').innerText = `${ownedCount} шт.`;
       document.getElementById('assetInspectorTotalValuation').innerText = `${(unitPrice * ownedCount).toLocaleString()} ฿`;
 
-      // Кнопка продажи 1 шт. с налогом 25% в Казну
       const sellBtn = document.getElementById('assetInspectorSellBtn');
       if (sellBtn) {
         if (ownedCount > 0) {
@@ -6286,13 +7045,12 @@
       modal.classList.add('hidden'); modal.classList.remove('flex');
     }
 
-    // УНИВЕРСАЛЬНАЯ ПРОДАЖА КАРТИН, МАШИН, НЕДВИЖИМОСТИ, КОСМОСА И ТОВАРОВ (75% ИГРОКУ / 25% В КАЗНУ)
     async function sellLuxuryOrVaultAsset(category, itemId, btnEl = null) {
       return withOperationLock(`sell_asset_${category}_${itemId}`, btnEl, async () => {
         if (!currentUser) return showToast('Войдите в счёт!', 'error');
         const u = findUser(currentUser);
         if (!u || u.isBlocked) return;
-        const uKey = normalizeLogin(u.username);
+        const uKey = normalizeLogin(u.username), now = getServerTime();
 
         if (category === 'realestate') {
           const reCfg = REAL_ESTATE_CATALOG.find(x => x.id === itemId);
@@ -6311,7 +7069,6 @@
           });
           if (!ok) return;
 
-          // Сразу собираем накопленную ренту перед уменьшением количества
           const reCalc = calculateUserRealEstateRent(u);
           const pendingRent = Math.floor(reCalc.perItem[itemId]?.earned || 0);
 
@@ -6319,7 +7076,7 @@
           if (curCount - 1 <= 0) {
             await db.ref(`bankData/users/${uKey}/realEstate/${itemId}`).remove();
           } else {
-            await db.ref(`bankData/users/${uKey}/realEstate/${itemId}`).update({ count: curCount - 1, lastCollected: Date.now() });
+            await db.ref(`bankData/users/${uKey}/realEstate/${itemId}`).update({ count: curCount - 1, lastCollected: now });
           }
 
           await atomicBalanceChange(u.username, netRefund + pendingRent, { operationId: opId });
@@ -6327,7 +7084,7 @@
           await db.ref(`bankData/transactions/${opId}`).set({
             id: opId, from: 'ПАЛАТА НЕДВИЖИМОСТИ (ВЫКУП 75%)', to: u.username, amount: netRefund + pendingRent,
             comment: `Продажа 1 ед. «${reCfg.title}» (Налог Казны 25% = ${taxAmt.toLocaleString()} ฿)`,
-            timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+            timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
           });
 
           showToast(`🏢 Продан 1 объект «${reCfg.title}»! Выплачено +${(netRefund + pendingRent).toLocaleString()} ฿ (Налог 25%: ${taxAmt.toLocaleString()} ฿).`, 'success');
@@ -6335,7 +7092,6 @@
           return;
         }
 
-        // Продажа из массива inventory (art, garage, cosmos, bazaar)
         const inv = Array.isArray(u.inventory) ? [...u.inventory] : [];
         const matchIndex = inv.findIndex(x => x && (x.id === itemId || x.title === itemId));
         if (matchIndex === -1) return showToast('Этот предмет не найден в вашей Сокровищнице!', 'error');
@@ -6357,12 +7113,11 @@
         });
         if (!ok) return;
 
-        // Если продаётся космический объект — начисляем накопленную по нему 5% ренту
         let cosmicBonusRent = 0;
         if (category === 'cosmos' || targetItem.category === 'cosmos') {
           const cosCalc = calculateUserCosmicRent(u);
           cosmicBonusRent = Math.floor(cosCalc.perItem[targetItem.id]?.earned || 0);
-          await db.ref(`bankData/users/${uKey}/cosmicRentLastCollected/${targetItem.id}`).set(Date.now());
+          await db.ref(`bankData/users/${uKey}/cosmicRentLastCollected/${targetItem.id}`).set(now);
         }
 
         inv.splice(matchIndex, 1);
@@ -6374,7 +7129,7 @@
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: 'КАЗНАЧЕЙСКИЙ ВЫКУП (75%)', to: u.username, amount: netRefund + cosmicBonusRent,
           comment: `Продажа «${targetItem.title}» (Налог 25% в Казну = ${taxAmt.toLocaleString()} ฿)`,
-          timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
 
         showToast(`💰 Продано «${targetItem.title}»! Получено +${(netRefund + cosmicBonusRent).toLocaleString()} ฿ (Налог 25%: ${taxAmt.toLocaleString()} ฿).`, 'success');
@@ -6634,8 +7389,8 @@
         const price = getDynamicShopPrice(item.id, item.price, 'realestate');
         if ((u.balance || 0) < price) return showToast(`Требуется ${price.toLocaleString()} ฿.`, 'error');
 
-        const uKey = normalizeLogin(u.username);
-        const curData = u.realEstate?.[reId] || { count: 0, status: 'idle', prepEndsAt: 0, lastCollected: Date.now() };
+        const uKey = normalizeLogin(u.username), now = getServerTime();
+        const curData = u.realEstate?.[reId] || { count: 0, status: 'idle', prepEndsAt: 0, lastCollected: now };
         const curCount = Number(curData.count || 0);
         const reCalc = calculateUserRealEstateRent(u);
         const pendingThis = Math.floor(reCalc.perItem[reId]?.earned || 0);
@@ -6643,15 +7398,17 @@
         const opId = newOperationId('REBUY');
         if (!await atomicBalanceChange(u.username, -price, { requireFunds: true, operationId: opId })) return;
         await addTreasuryTaxOrProfit(price);
-        if (pendingThis >= 1) await atomicBalanceChange(u.username, pendingThis);
+        if (pendingThis >= 1) {
+          await atomicBalanceChange(u.username, pendingThis);
+          await recordPlayerFinancialStat(u.username, 'income', 'crafts', pendingThis);
+        }
 
-        const now = Date.now();
         await db.ref(`bankData/users/${uKey}/realEstate/${reId}`).set({
           count: curCount + 1, status: curData.status || 'idle', prepEndsAt: curData.prepEndsAt || 0, lastCollected: now
         });
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: u.username, to: 'ПАЛАТА НЕДВИЖИМОСТИ (КАЗНА)', amount: price,
-          comment: `Покупка недвижимости: «${item.title}» (${curCount + 1} шт.)`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          comment: `Покупка недвижимости: «${item.title}» (${curCount + 1} шт.)`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(`🏢 «${item.title}» приобретён (${curCount + 1} шт.)!`, 'success');
         renderRealEstateShop();
@@ -6667,7 +7424,7 @@
         const rData = u.realEstate?.[reId];
         if (!rData || Number(rData.count || 0) <= 0) return;
 
-        const now = Date.now(), prepEndsAt = now + (item.prepMinutes || 10) * 60 * 1000;
+        const now = getServerTime(), prepEndsAt = now + (item.prepMinutes || 10) * 60 * 1000;
         await db.ref(`bankData/users/${normalizeLogin(u.username)}/realEstate/${reId}`).update({ status: 'active', prepEndsAt, lastCollected: prepEndsAt });
         showToast(`🔑 Подготовка «${item.title}» начата (${item.prepMinutes} мин)!`, 'success');
         renderRealEstateShop();
@@ -6683,7 +7440,7 @@
         const totalFloor = Math.floor(reCalc.totalPending);
         if (totalFloor < 1) return showToast('На счетах аренды ещё не накопился 1 ฿!', 'info');
 
-        const uKey = normalizeLogin(u.username), now = Date.now(), updates = {};
+        const uKey = normalizeLogin(u.username), now = getServerTime(), updates = {};
         Object.keys(u.realEstate || {}).forEach(reId => {
           if (u.realEstate[reId]?.status === 'active' && now >= Number(u.realEstate[reId]?.prepEndsAt || 0)) {
             updates[`bankData/users/${uKey}/realEstate/${reId}/lastCollected`] = now;
@@ -6693,16 +7450,16 @@
         const opId = newOperationId('RENT');
         await db.ref().update(updates);
         await atomicBalanceChange(u.username, totalFloor, { operationId: opId });
+        await recordPlayerFinancialStat(u.username, 'income', 'crafts', totalFloor);
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: 'АРЕНДА НЕДВИЖИМОСТИ (5%/Ч)', to: u.username, amount: totalFloor,
-          comment: 'Сбор арендной платы недвижимости', timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          comment: 'Сбор арендной платы недвижимости', timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(`🏢 Арендная плата собрана: +${totalFloor.toLocaleString()} ฿!`, 'success');
         renderRealEstateShop();
       });
     }
 
-    // Рендер вкладки №7: «Космический Уровень» с рентой 5% в час и продажей (-25% налог)
     function renderCosmicEmpireShop() {
       const grid = document.getElementById('cosmicEmpireCatalogGrid');
       if (!grid || !currentUser) return;
@@ -6758,7 +7515,6 @@
       }).join('');
     }
 
-    // Сбор ренты 5% в час со всех космических объектов игрока
     async function collectAllCosmicRent(btnEl = null) {
       return withOperationLock('collect_cosmic_rent', btnEl, async () => {
         if (!currentUser) return showToast('Войдите в счёт!', 'error');
@@ -6769,7 +7525,7 @@
         const totalFloor = Math.floor(cosCalc.totalPending);
         if (totalFloor < 1) return showToast('В межпланетной кассе ещё не накопился минимум 1 ฿!', 'info');
 
-        const uKey = normalizeLogin(u.username), now = Date.now(), updates = {};
+        const uKey = normalizeLogin(u.username), now = getServerTime(), updates = {};
         COSMIC_EMPIRE_CATALOG.forEach(cfg => {
           if (countUserOwnedAssetById(u, cfg.id) > 0) {
             updates[`bankData/users/${uKey}/cosmicRentLastCollected/${cfg.id}`] = now;
@@ -6780,9 +7536,10 @@
         const opId = newOperationId('COSRENT');
         await db.ref().update(updates);
         await atomicBalanceChange(u.username, totalFloor, { operationId: opId });
+        await recordPlayerFinancialStat(u.username, 'income', 'crafts', totalFloor);
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: 'КОСМИЧЕСКАЯ РЕНТА СУВЕРЕНИТЕТА (5%/Ч)', to: u.username, amount: totalFloor,
-          comment: 'Сбор ренты с космопортов, планет и звёздных систем', timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          comment: 'Сбор ренты с космопортов, планет и звёздных систем', timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
 
         showToast(`🪐 Космическая рента собрана: +${totalFloor.toLocaleString()} ฿!`, 'success');
@@ -6808,9 +7565,8 @@
 
         if ((u.balance || 0) < price) return showToast(`Требуется ${price.toLocaleString()} ฿.`, 'error');
 
-        // Если докупается космос — сразу фиксируем накопленную ренту перед увеличением множителя
         let bonusCosRent = 0;
-        const uKey = normalizeLogin(u.username), now = Date.now();
+        const uKey = normalizeLogin(u.username), now = getServerTime();
         if (category === 'cosmos') {
           const cosCalc = calculateUserCosmicRent(u);
           bonusCosRent = Math.floor(cosCalc.perItem[item.id]?.earned || 0);
@@ -6820,19 +7576,22 @@
         const opId = newOperationId('LUX');
         if (!await atomicBalanceChange(u.username, -price, { requireFunds: true, operationId: opId })) return;
         await addTreasuryTaxOrProfit(price);
-        if (bonusCosRent >= 1) await atomicBalanceChange(u.username, bonusCosRent);
+        if (bonusCosRent >= 1) {
+          await atomicBalanceChange(u.username, bonusCosRent);
+          await recordPlayerFinancialStat(u.username, 'income', 'crafts', bonusCosRent);
+        }
 
         curInv.unshift({
           id: item.id, instanceId: newOperationId('INST'), category, title: item.title,
           desc: item.author ? `${item.author} • ${item.info}` : `${item.subtitle} • ${item.info}`,
-          artwork: item.image, boughtFrom: treasuryName, price, prestige: item.prestige || 100, boughtAt: new Date().toLocaleDateString('ru-RU')
+          artwork: item.image, boughtFrom: treasuryName, price, prestige: item.prestige || 100, boughtAt: new Date(now).toLocaleDateString('ru-RU')
         });
         const nextPrestige = Number(u.prestigeScore || 0) + Number(item.prestige || 100);
         await db.ref(`bankData/users/${uKey}`).update({ inventory: curInv, prestigeScore: nextPrestige });
 
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: u.username, to: `${treasuryName} (КАЗНА)`, amount: price,
-          comment: `Покупка: «${item.title}» (${ownedCount + 1} шт.)`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          comment: `Покупка: «${item.title}» (${ownedCount + 1} шт.)`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(`🎉 «${item.title}» приобретён (в наличии: ${ownedCount + 1} шт.)!`, 'success');
         renderMarketView();
@@ -6860,7 +7619,7 @@
     }
 
     function equipAvatarFrame(frameId) {
-      if (!currentUser) return;
+      if (guardDemoReadOnly() || !currentUser) return;
       db.ref(`bankData/users/${normalizeLogin(currentUser)}/avatarFrame`).set(frameId === 'default' ? null : frameId).then(() => {
         showToast(frameId === 'default' ? 'Стандартная рамка возвращена.' : 'VIP-обводка применена!', 'info');
       });
@@ -6887,7 +7646,7 @@
     }
 
     function equipPrivilegeTitle(titleId) {
-      if (!currentUser) return;
+      if (guardDemoReadOnly() || !currentUser) return;
       const item = PRIVILEGE_TITLES_CATALOG.find(t => t.id === titleId);
       if (item) db.ref(`bankData/users/${normalizeLogin(currentUser)}/customStatus`).set(item.title).then(() => showToast(`Титул «${item.title}» установлен!`, 'success'));
     }
@@ -6939,7 +7698,7 @@
           const itemId = newOperationId('LOT');
           await db.ref(`bankData/marketListings/${itemId}`).set({
             id: itemId, seller: u.username, title, desc, price, artwork: artworkUrl,
-            createdAt: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+            createdAt: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
           });
           document.getElementById('marketItemTitle').value = '';
           document.getElementById('marketItemDesc').value = '';
@@ -7024,17 +7783,20 @@
         const opId = newOperationId('FAIR');
         if (!await atomicBalanceChange(buyer.username, -price, { requireFunds: true, operationId: opId })) return;
         await atomicBalanceChange(seller.username, price, { operationId: `${opId}_SELL` });
+        await recordPlayerFinancialStat(buyer.username, 'expense', 'transfersOut', price);
+        await recordPlayerFinancialStat(seller.username, 'income', 'transfersIn', price);
         await db.ref(`bankData/marketListings/${lotId}`).remove();
 
         const bKey = normalizeLogin(buyer.username);
         const curInv = Array.isArray(buyer.inventory) ? [...buyer.inventory] : [];
-        curInv.unshift({ id: lot.id, category: 'bazaar', title: lot.title, desc: lot.desc, artwork: lot.artwork, boughtFrom: seller.username, price, boughtAt: new Date().toLocaleDateString('ru-RU') });
+        curInv.unshift({ id: lot.id, category: 'bazaar', title: lot.title, desc: lot.desc, artwork: lot.artwork, boughtFrom: seller.username, price, boughtAt: new Date(getServerTime()).toLocaleDateString('ru-RU') });
         await db.ref(`bankData/users/${bKey}/inventory`).set(curInv);
         showToast(`«${lot.title}» куплен в Сокровищницу!`, 'success');
       });
     }
 
     function removeMarketListingItem(lotId) {
+      if (guardDemoReadOnly()) return;
       const lot = appData.marketListings[lotId];
       if (!lot) return;
       const isMy = currentUser && normalizeLogin(lot.seller) === normalizeLogin(currentUser);
@@ -7042,7 +7804,6 @@
       db.ref(`bankData/marketListings/${lotId}`).remove().then(() => showToast('Лот снят с Рынка.', 'info'));
     }
 
-    // Переключение вкладок-бланков в «Моей Барской Сокровищнице»
     function setVaultCategoryFilter(filterKey) {
       currentVaultFilter = filterKey || 'all';
       ['all', 'art', 'garage', 'realestate', 'cosmos', 'bazaar'].forEach(k => {
@@ -7129,9 +7890,9 @@
       }).join('');
     }
 
-    // ========================================================
-    // ПУБЛИЧНЫЙ ПРОФИЛЬ ИГРОКА С ВКЛАДКАМИ-БЛАНКАМИ
-    // ========================================================
+    // =========================================================================
+    // SECTION 16: PUBLIC PROFILE, LOANS & GEMINI ROYAL ADVISOR
+    // =========================================================================
     function switchPublicProfileTab(tabKey) {
       currentPubProfileTab = tabKey || 'art';
       ['art', 'garage', 'realestate', 'cosmos', 'business', 'bazaar'].forEach(k => {
@@ -7157,12 +7918,13 @@
         }
         luxGrid.innerHTML = slots.map(({ cfg, data }, i) => {
           const lvl = Number(data.level || 1);
-          const hr = getBusinessHourlyIncome(cfg, lvl);
+          const cond = computeEffectiveSlotCondition(data, getServerTime());
+          const hr = getBusinessHourlyIncome(cfg, lvl, cond);
           return `
             <div class="p-3 rounded-2xl bg-bank-darkest border border-emerald-500/40 flex items-center gap-2.5">
               <div class="w-10 h-10 rounded-xl bg-black border border-bank-gold/50 text-bank-gold flex items-center justify-center flex-shrink-0"><i class="fa-solid ${cfg.icon}"></i></div>
               <div class="min-w-0 flex-1">
-                <div class="text-[9px] font-mono text-emerald-400">Слот #${i + 1} • Уровень ${lvl}/20</div>
+                <div class="text-[9px] font-mono text-emerald-400">Слот #${i + 1} • Уровень ${lvl}/20 (${cond}%)</div>
                 <div class="font-royal font-bold text-xs text-white truncate">${escapeHtml(cfg.name)}</div>
                 <div class="text-[10px] font-mono text-bank-gold">+${hr.toLocaleString()} ฿ / час</div>
               </div>
@@ -7314,22 +8076,20 @@
       if (e.target && e.target.id === 'playerPublicProfileModal') closePlayerPublicProfileModal();
     }
 
-    // ========================================================
-    // ПОДРЯДЫ, ССУДЫ И GEMINI ЧАТ
-    // ========================================================
     async function executeEarnContract(type, reward, title, btnEl = null) {
       return withOperationLock(`earn_contract_${type}`, btnEl, async () => {
         if (!currentUser) return showToast('Войдите в счёт!', 'error');
-        const now = Date.now(), cooldownMs = 12000;
+        const now = getServerTime(), cooldownMs = 12000;
         if (now - lastEarnActionTime < cooldownMs) return showToast(`Подождите ${Math.ceil((cooldownMs - (now - lastEarnActionTime)) / 1000)} сек.!`, 'info');
         const u = findUser(currentUser);
         if (!u || u.isBlocked) return;
         lastEarnActionTime = now;
         const opId = newOperationId('WORK');
         if (!await atomicBalanceChange(u.username, reward, { operationId: opId })) return;
+        await recordPlayerFinancialStat(u.username, 'income', 'crafts', reward);
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: 'КАЗЁННЫЙ ПРОМЫСЕЛ (/earn)', to: u.username, amount: reward,
-          comment: `Подряд: ${title}`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: now
+          comment: `Подряд: ${title}`, timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(`Подряд «${title}» выполнен! +${reward} ฿`, 'success');
         renderEarnAndLoansView();
@@ -7352,7 +8112,7 @@
         if (!await atomicBalanceChange(target.username, principal, { operationId: loanId })) return;
         await db.ref(`bankData/loans/${loanId}`).set({
           id: loanId, borrower: target.username, principal, interestPct, totalRepay, reason,
-          issuedBy: currentUser, createdAt: new Date().toLocaleString('ru-RU'), status: 'active'
+          issuedBy: currentUser, createdAt: new Date(getServerTime()).toLocaleString('ru-RU'), status: 'active'
         });
         addSystemMessage(target.username, '📜 Долговая Расписка Казны', `Выдана ссуда +${principal.toLocaleString()} ฿. К возврату: ${totalRepay.toLocaleString()} ฿.`);
         document.getElementById('loanPrincipalAmount').value = ''; document.getElementById('loanNoteReason').value = '';
@@ -7421,7 +8181,7 @@
       modal.classList.remove('hidden'); modal.classList.add('flex');
       const box = document.getElementById('aiChatMessagesBox');
       if (box && box.children.length === 0) {
-        appendAiChatMessage('ai', `Челом бью, гражданин ${currentUser ? '@' + currentUser : 'Миробайта'}! Я — **Премудрый Дьяк** на базе **Google Gemini**. Подскажу по **Промыслам**, **Продаже картин и авто (-25% налог)**, **Ренте 5%/ч от Недвижимости и Космоса** и **Бирже Акций**!`);
+        appendAiChatMessage('ai', `Челом бью, гражданин ${currentUser ? '@' + currentUser : 'Миробайта'}! Я — **Премудрый Дьяк** на базе **Google Gemini**. Подскажу по **Промыслам (с системой износа и снабжения)**, **Продаже картин и авто (-25% налог)**, **Ренте 5%/ч от Недвижимости и Космоса** и **Бирже Акций**!`);
       }
     }
     function closeAiAssistantModal() {
@@ -7443,9 +8203,9 @@
       box.scrollTop = box.scrollHeight;
     }
     function askRoyalAiPreset(topic) {
-      if (topic === 'guide') appendAiChatMessage('ai', 'Навигация **BANK OF MIROBYTE**: **/** — Кошелёк, Сокровищница с бланками, Топ-20 и Законы; **/earn** — 10 Корпораций; **Боярский Торгъ** — 7 палат (включая Недвижимость и Космос с доходом **5%/час**).');
-      else if (topic === 'business') appendAiChatMessage('ai', 'В **«Боярских Промыслах» (/earn)** доступно до **10 предприятий** (разрешены одинаковые!). Любое предприятие можно продать за **50% от всех вложений**.');
-      else if (topic === 'club') appendAiChatMessage('ai', 'На **«Кибер-Полигоне» (/club)** доступны **Кибер-Сапёр 5×5** и **Космическая Золотодобыча** (экспедиции на 5, 15 и 30 минут).');
+      if (topic === 'guide') appendAiChatMessage('ai', 'Навигация **BANK OF MIROBYTE**: **/** — Кошелёк, Финансовая аналитика, Сокровищница с бланками, Топ-20 и Законы; **/earn** — 10 Корпораций; **Боярский Торгъ** — 7 палат (включая Недвижимость и Космос с доходом **5%/час**).');
+      else if (topic === 'business') appendAiChatMessage('ai', 'В **«Боярских Промыслах» (/earn)** доступно до **10 предприятий** (до 20 уровня). У каждого слота есть **Состояние снабжения (0–100%)**: если оно падает ниже 50%, доходность снижается до 60%, пока вы не проведёте снабжение!');
+      else if (topic === 'club') appendAiChatMessage('ai', 'На **«Кибер-Полигоне» (/club)** работают **Кибер-Сапёр 5×5** и **Космическая Золотодобыча** с античит-проверкой серверного времени и суточным лимитом заработка.');
       else if (topic === 'market') appendAiChatMessage('ai', 'Объекты **Недвижимости** и **Космоса** приносят **5% от цены в час**! Любую картину, машину или объект можно продать государству (75% вам, 25% налог в Казну). На Бирже лимит — 1 000 акций в одни руки.');
       else if (topic === 'audit') {
         if (!currentUser) return appendAiChatMessage('ai', 'Сперва войдите в счёт!');
@@ -7468,9 +8228,9 @@
       });
     }
 
-    // ========================================================
-    // QR-ПЛАТЕЖИ
-    // ========================================================
+    // =========================================================================
+    // SECTION 17: QR PAYMENTS & ATOMIC TRANSFERS
+    // =========================================================================
     function buildQrPaymentPayload(username, amount, comment) {
       const baseUrl = window.location.origin + window.location.pathname;
       const params = new URLSearchParams();
@@ -7681,10 +8441,13 @@
         const opId = newOperationId('QR');
         if (!await atomicBalanceChange(sender.username, -amt, { requireFunds: true, operationId: `${opId}_DEBIT` })) return showToast('Недостаточно Байти!', 'error');
         await atomicBalanceChange(recipient.username, amt, { operationId: `${opId}_CREDIT` });
+        await recordPlayerFinancialStat(sender.username, 'expense', 'transfersOut', amt);
+        await recordPlayerFinancialStat(recipient.username, 'income', 'transfersIn', amt);
+
         saveRecentRecipient(recipient.username);
         await db.ref(`bankData/transactions/${opId}`).set({
           id: opId, from: sender.username, to: recipient.username, amount: amt,
-          comment: `📱 [QR-Оплата]: ${comment}`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          comment: `📱 [QR-Оплата]: ${comment}`, timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         addSystemMessage(recipient.username, 'Поступление по QR', `Вам поступила QR-оплата +${amt.toLocaleString()} ฿ от @${sender.username}.`);
         closeQrModal();
@@ -7703,12 +8466,16 @@
         if (currentUser) { openQrModal('scan'); presentScannedQrResult({ to: payTo, amount, comment }); }
       } catch (e) {}
     }
-// ========================================================
-    // УМНЫЙ ПОИСК ПО ПОСЛЕДНИМ 15 ПОЛУЧАТЕЛЯМ И РЕЙТИНГ ТОП-20
-    // ========================================================
+
+    // =========================================================================
+    // SECTION 18: CORE UI HELPERS, LEADERBOARD & USER SETTINGS
+    // =========================================================================
     function findUser(login) {
       if (!login) return null;
       const clean = login.trim().toLowerCase();
+      if (isDemoMode && clean === DEMO_USER_LOGIN.toLowerCase()) {
+        return createDemoGuestProfile();
+      }
       if (appData.users[clean]) return appData.users[clean];
       const key = Object.keys(appData.users).find(k => k.toLowerCase() === clean);
       return key ? appData.users[key] : null;
@@ -7720,24 +8487,23 @@
     }
 
     function isCurrentUserOwner() {
-      if (!currentUser) return false;
+      if (isDemoMode || !currentUser) return false;
       const u = findUser(currentUser);
       return !!(u && (u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase()));
     }
     function isCurrentUserAdmin() {
-      if (!currentUser) return false;
+      if (isDemoMode || !currentUser) return false;
       const u = findUser(currentUser);
       return !!(u && (u.isAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase()));
     }
     function isCurrentUserSuperAdmin() {
-      if (!currentUser) return false;
+      if (isDemoMode || !currentUser) return false;
       const u = findUser(currentUser);
       return !!(u && (u.isSuperAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase()));
     }
 
-    // Сохранение и получение последних 15 получателей переводов/депеш
     function saveRecentRecipient(targetUsername) {
-      if (!currentUser || !targetUsername) return;
+      if (isDemoMode || !currentUser || !targetUsername) return;
       const cleanTarget = String(targetUsername).trim();
       if (normalizeLogin(cleanTarget) === normalizeLogin(currentUser)) return;
       const lsKey = `mb_recent_recipients_${normalizeLogin(currentUser)}`;
@@ -7775,7 +8541,6 @@
 
       let candidates = [];
       if (!query) {
-        // Если поле пустое — показываем только недавних получателей (или топ-10, если недавних ещё нет)
         const recentUsers = recentLogins.map(l => findUser(l)).filter(u => u && (isAdmin || !u.hiddenFromAll));
         if (recentUsers.length > 0) {
           candidates = recentUsers.slice(0, 15);
@@ -7786,7 +8551,6 @@
             .slice(0, 12);
         }
       } else {
-        // При вводе букв (например "ио" или "ios") ищем совпадения и ограничиваем 15 строками
         const allVisible = Object.values(appData.users || {}).filter(u => u && (isAdmin || !u.hiddenFromAll));
         const startsWith = [];
         const contains = [];
@@ -7840,7 +8604,7 @@
       const container = document.getElementById('bankEmblemContainer'), previewSmall = document.getElementById('currentEmblemPreviewSmall');
       if (!container) return;
       const defaultSvg = `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/><circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/><rect x="36" y="36" width="28" height="28" rx="6" fill="#05140d" stroke="#ffd700" stroke-width="2"/><text x="50" y="56" font-family="'Cinzel', serif" font-size="20" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text></svg>`;
-      const currentImg = appData.bankEmblemImage || localStorage.getItem('mirobyte_cached_emblem');
+      const currentImg = appData.settings?.appIcon || appData.bankEmblemImage || localStorage.getItem('mirobyte_cached_emblem');
       container.innerHTML = currentImg ? `<img src="${currentImg}" class="w-full h-full object-cover">` : defaultSvg;
       if (previewSmall) previewSmall.innerHTML = container.innerHTML;
     }
@@ -7853,11 +8617,18 @@
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          const canvas = document.getElementById('emblemCanvas'); canvas.width = 160; canvas.height = 160;
+          const canvas = document.getElementById('emblemCanvas'); canvas.width = 192; canvas.height = 192;
           const sSize = Math.min(img.width, img.height);
-          canvas.getContext('2d').drawImage(img, (img.width - sSize) / 2, (img.height - sSize) / 2, sSize, sSize, 0, 0, 160, 160);
-          const compressed = canvas.toDataURL('image/jpeg', 0.85);
-          db.ref('bankData/bankEmblemImage').set(compressed).then(() => showToast('Герб Банка обновлён!', 'success'));
+          canvas.getContext('2d').drawImage(img, (img.width - sSize) / 2, (img.height - sSize) / 2, sSize, sSize, 0, 0, 192, 192);
+          const compressed = canvas.toDataURL('image/png');
+          Promise.all([
+            db.ref('bankData/bankEmblemImage').set(compressed),
+            db.ref('bankData/settings/appIcon').set(compressed),
+            db.ref('settings/appIcon').set(compressed)
+          ]).then(() => {
+            applyDynamicSiteIconAndManifest(compressed);
+            showToast('Герб Банка и динамическая иконка сайта обновлены!', 'success');
+          });
         };
         img.src = e.target.result;
       };
@@ -7866,7 +8637,14 @@
 
     function handleResetBankEmblem() {
       if (!guardAdminAction(false)) return;
-      db.ref('bankData/bankEmblemImage').set(null).then(() => showToast('Эмблема сброшена на ฿!', 'info'));
+      Promise.all([
+        db.ref('bankData/bankEmblemImage').set(null),
+        db.ref('bankData/settings/appIcon').set(null),
+        db.ref('settings/appIcon').set(null)
+      ]).then(() => {
+        applyDynamicSiteIconAndManifest(null);
+        showToast('Эмблема и иконка сброшены на ฿!', 'info');
+      });
     }
 
     function applyCardThemeToDOM(themeKey, cardBgImage) {
@@ -7941,14 +8719,15 @@
 
     function renderCurrentView() {
       const authSec = document.getElementById('authSection'), appSec = document.getElementById('appContainer'), deniedSec = document.getElementById('adminAccessDeniedScreen'), mobileBottomNav = document.getElementById('mobileBottomNav');
-      if (!currentUser) {
+      if (!currentUser && !isDemoMode) {
         authSec.classList.remove('hidden'); appSec.classList.add('hidden');
         deniedSec?.classList.add('hidden'); mobileBottomNav?.classList.add('hidden');
+        document.getElementById('demoModeActiveBanner')?.classList.add('hidden');
         renderNavBarRight();
         return;
       }
 
-      const u = findUser(currentUser);
+      const u = isDemoMode ? createDemoGuestProfile() : findUser(currentUser);
       if (!u) {
         if (Object.keys(appData.users).length === 0 && cachedProfile) return;
         currentUser = null;
@@ -7960,14 +8739,18 @@
       }
 
       mobileBottomNav?.classList.remove('hidden');
-      const isAdmin = !!(u.isAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
-      const isSuperAdmin = !!(u.isSuperAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
-      const isOwner = !!(u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
+      document.getElementById('demoModeActiveBanner')?.classList.toggle('hidden', !isDemoMode);
+
+      const isAdmin = !isDemoMode && !!(u.isAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
+      const isSuperAdmin = !isDemoMode && !!(u.isSuperAdmin || u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
+      const isOwner = !isDemoMode && !!(u.isOwner || u.username.toLowerCase() === OWNER_USERNAME.toLowerCase());
       const hasAnyAdminRight = isAdmin || isSuperAdmin || isOwner;
 
-      cachedProfile = { username: u.username, balance: u.balance || 0, isAdmin, isSuperAdmin, isOwner, avatar: u.avatar || '', avatarFrame: u.avatarFrame || '', cardTheme: u.cardTheme || 'emerald', cardBgImage: u.cardBgImage || '', customStatus: u.customStatus || 'Полноправный гражданин' };
-      localStorage.setItem('mirobyte_cached_profile', JSON.stringify(cachedProfile));
-      MirobyteCache.set('activeProfile', cachedProfile);
+      if (!isDemoMode) {
+        cachedProfile = { username: u.username, balance: u.balance || 0, isAdmin, isSuperAdmin, isOwner, avatar: u.avatar || '', avatarFrame: u.avatarFrame || '', cardTheme: u.cardTheme || 'emerald', cardBgImage: u.cardBgImage || '', customStatus: u.customStatus || 'Полноправный гражданин' };
+        localStorage.setItem('mirobyte_cached_profile', JSON.stringify(cachedProfile));
+        MirobyteCache.set('activeProfile', cachedProfile);
+      }
 
       authSec.classList.add('hidden');
       ['slashBtn-admin', 'bNavBtn-admin'].forEach(id => document.getElementById(id)?.classList.toggle('hidden', !hasAnyAdminRight));
@@ -8030,13 +8813,19 @@
             <i class="fa-solid fa-bell text-xs sm:text-sm"></i>
             ${unread > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">${unread}</span>` : ''}
           </button>
-          <button onclick="openSettingsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/60 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0" title="Настройки"><i class="fa-solid fa-gear text-xs sm:text-sm"></i></button>
+          ${isDemoMode ? `
+            <button onclick="exitDemoModeToLogin()" class="px-2.5 h-8 sm:h-9 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-royal font-black text-[10px] uppercase flex items-center justify-center transition-all shadow-md flex-shrink-0" title="Выйти из Демо-режима">
+              Вход
+            </button>
+          ` : `
+            <button onclick="openSettingsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/60 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0" title="Настройки"><i class="fa-solid fa-gear text-xs sm:text-sm"></i></button>
+          `}
         </div>
       `;
     }
 
     function renderNavBarRight() {
-      if (!currentUser) { const box = document.getElementById('navBarRight'); if (box) box.innerHTML = ''; return; }
+      if (!currentUser && !isDemoMode) { const box = document.getElementById('navBarRight'); if (box) box.innerHTML = ''; return; }
       const u = findUser(currentUser);
       if (!u) return;
       renderNavBarRightDirect(u.username, u.balance, isCurrentUserAdmin() || isCurrentUserSuperAdmin(), u.avatar, getUnreadMessagesCount(u.username), u.avatarFrame);
@@ -8046,11 +8835,12 @@
       document.getElementById('userBalanceDisplay').innerText = (u.balance || 0).toLocaleString();
       document.getElementById('cardHolderText').innerText = u.username.toUpperCase();
       document.getElementById('cardRegisteredText').innerText = u.registeredAt || 'Основатель';
-      document.getElementById('cardRoleBadge').innerText = u.isOwner ? 'Владелец Банка' : (u.isSuperAdmin ? 'Главный Админ' : (u.isAdmin ? 'Казначей' : 'Гражданин'));
+      document.getElementById('cardRoleBadge').innerText = isDemoMode ? '👁 Демо-обзор' : (u.isOwner ? 'Владелец Банка' : (u.isSuperAdmin ? 'Главный Админ' : (u.isAdmin ? 'Казначей' : 'Гражданин')));
       document.getElementById('cardCustomStatus').innerText = `Титул: ${u.customStatus || 'Полноправный гражданин'}`;
 
       updatePortfolioBadgeOnCard(u);
       applyCardThemeToDOM(u.cardTheme || 'emerald', u.cardBgImage);
+      renderPlayerAnalyticsDashboard(u);
       renderUserInventoryVault(u);
       updateRealtimeBusinessAndHackCounters();
 
@@ -8088,7 +8878,6 @@
       }
     }
 
-    // ОПТИМИЗИРОВАННЫЙ РЕЙТИНГ: ТОЛЬКО ТОП-20 БОГАТЕЙШИХ ГРАЖДАН
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
       if (!tbody) return;
@@ -8183,7 +8972,7 @@
         frag.appendChild(card);
       });
       grid.innerHTML = '';
-      grid.appendChild(frag);
+      frag && grid.appendChild(frag);
     }
 
     function addAmountToTransferInput(val) {
@@ -8236,7 +9025,7 @@
     }
 
     async function promptDeleteMail(mailKey, originType) {
-      if (!mailKey) return;
+      if (guardDemoReadOnly() || !mailKey) return;
       const isEverywhere = await askRoyalConfirm({ title: 'Удаление телеграммы', message: 'Удалить эту депешу у всех участников или скрыть только у себя?', okText: 'У всех', cancelText: 'Только у меня', isDanger: true });
       if (isEverywhere) db.ref(`bankData/mailBox/${mailKey}`).remove().then(() => showToast('Депеша удалена!', 'info'));
       else db.ref(`bankData/mailBox/${mailKey}/${originType === 'sent' ? 'deletedBySender' : 'deletedByRecipient'}`).set(true).then(() => showToast('Депеша скрыта!', 'success'));
@@ -8352,9 +9141,9 @@
       const file = document.getElementById('newDesignImageFile')?.files?.[0];
       if (!name) return showToast('Введите название стиля!', 'error');
 
-      const designId = 'design_' + Date.now();
+      const designId = 'design_' + getServerTime();
       const saveDesignObj = (bgImg) => {
-        db.ref(`bankData/cardDesigns/${designId}`).set({ id: designId, name, theme, price, bgImage: bgImg || null, createdAt: Date.now() }).then(() => {
+        db.ref(`bankData/cardDesigns/${designId}`).set({ id: designId, name, theme, price, bgImage: bgImg || null, createdAt: serverTimestamp() }).then(() => {
           document.getElementById('newDesignName').value = '';
           showToast(`Стиль «${name}» добавлен!`, 'success');
         });
@@ -8398,6 +9187,7 @@
     }
 
     function openCardCustomizerModal() {
+      if (guardDemoReadOnly()) return;
       const grid = document.getElementById('citizenAvailableDesignsGrid');
       if (!grid) return;
       grid.innerHTML = '';
@@ -8433,7 +9223,7 @@
     }
 
     function selectCardTheme(themeKey, bgImage, themeName) {
-      if (!currentUser) return;
+      if (guardDemoReadOnly() || !currentUser) return;
       const uKey = normalizeLogin(currentUser);
       Promise.all([db.ref(`bankData/users/${uKey}/cardTheme`).set(themeKey), db.ref(`bankData/users/${uKey}/cardBgImage`).set(bgImage || null)]).then(() => {
         applyCardThemeToDOM(themeKey, bgImage);
@@ -8469,6 +9259,7 @@
         let actual = amt;
         if (treasuryMode === 'grant') {
           if (!await atomicBalanceChange(user.username, amt, { operationId: txId })) return;
+          await recordPlayerFinancialStat(user.username, 'income', 'transfersIn', amt);
         } else {
           actual = Math.min(Number(user.balance || 0), amt);
           if (actual <= 0 || !await atomicBalanceChange(user.username, -actual, { requireFunds: true, operationId: txId })) return showToast('Баланс уже 0 ฿!', 'error');
@@ -8479,7 +9270,7 @@
           id: txId, from: treasuryMode === 'grant' ? 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО' : user.username,
           to: treasuryMode === 'grant' ? user.username : 'КАЗНА БАНКА МИРОБАЙТ', amount: actual,
           comment: reason || (treasuryMode === 'grant' ? 'Государственная эмиссия' : 'Списание казначеем'),
-          timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(treasuryMode === 'grant' ? `+${actual.toLocaleString()} ฿ → @${user.username}!` : `Списано ${actual.toLocaleString()} ฿ у @${user.username}!`, 'success');
         document.getElementById('treasuryAmount').value = ''; document.getElementById('treasuryReason').value = '';
@@ -8495,6 +9286,7 @@
         let actual = Number(val);
         if (mode === 'grant') {
           if (!await atomicBalanceChange(user.username, actual, { operationId: txId })) return;
+          await recordPlayerFinancialStat(user.username, 'income', 'transfersIn', actual);
         } else {
           actual = Math.min(Number(user.balance || 0), actual);
           if (actual <= 0 || !await atomicBalanceChange(user.username, -actual, { requireFunds: true, operationId: txId })) return showToast('Баланс уже 0 ฿.', 'error');
@@ -8504,7 +9296,7 @@
           id: txId, from: mode === 'grant' ? 'ГОСУДАРСТВЕННОЕ КАЗНАЧЕЙСТВО' : user.username,
           to: mode === 'grant' ? user.username : 'КАЗНА БАНКА МИРОБАЙТ', amount: actual,
           comment: mode === 'grant' ? 'Быстрое начисление Казначея' : 'Быстрое списание Казначеем',
-          timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+          timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
         });
         showToast(mode === 'grant' ? `+${actual.toLocaleString()} ฿ → @${user.username}` : `-${actual.toLocaleString()} ฿ у @${user.username}`, mode === 'grant' ? 'success' : 'info');
       });
@@ -8601,6 +9393,7 @@
 
     async function processAuthForm(e) {
       e.preventDefault();
+      isDemoMode = false;
       const btn = document.getElementById('authSubmitBtn');
       return withOperationLock('auth_submit', btn, async () => {
         const u = document.getElementById('inputUsername').value.trim(), p = document.getElementById('inputPassword').value;
@@ -8632,11 +9425,11 @@
           const startBal = Number(appData.settings?.economy?.startBalance ?? 50);
           const passwordRecord = await createPasswordRecord(p);
           await db.ref(`bankSecurity/credentials/${key}`).set(passwordRecord);
-          const createResult = await db.ref(`bankData/users/${key}`).transaction(existingValue => {
+          const createResult = await runTransaction(db.ref(`bankData/users/${key}`), existingValue => {
             if (existingValue !== null) return;
             return {
               username: u, balance: isOwnerAcc ? 100000 : startBal, isAdmin: isOwnerAcc, isSuperAdmin: isOwnerAcc, isOwner: isOwnerAcc,
-              registeredAt: new Date().toLocaleDateString('ru-RU'),
+              registeredAt: new Date(getServerTime()).toLocaleDateString('ru-RU'),
               customStatus: isOwnerAcc ? 'Создатель и Владелец Банка' : 'Полноправный гражданин',
               cardTheme: 'emerald', isBlocked: false, hiddenFromAll: false
             };
@@ -8650,6 +9443,7 @@
       });
     }
 
+    // АТОМАРНЫЙ ПЕРЕВОД МЕЖДУ ИГРОКАМИ ЧЕРЕЗ runTransaction + ЗАПИСЬ В АНАЛИТИКУ
     async function executeTransfer(e) {
       e.preventDefault();
       const btn = document.getElementById('transferSubmitBtn');
@@ -8680,8 +9474,12 @@
         if (!await atomicBalanceChange(sender.username, -amt, { requireFunds: true, operationId: `${opId}_DEBIT` })) return showToast('Недостаточно Байти!', 'error');
         await atomicBalanceChange(recipient.username, amt, { operationId: `${opId}_CREDIT` });
 
+        await recordPlayerFinancialStat(sender.username, 'expense', 'transfersOut', amt);
+        await recordPlayerFinancialStat(recipient.username, 'income', 'transfersIn', amt);
+
         saveRecentRecipient(recipient.username);
-        const tx = { id: opId, from: sender.username, to: recipient.username, amount: amt, comment: comment || 'Перевод средств', timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now() };
+        const now = getServerTime();
+        const tx = { id: opId, from: sender.username, to: recipient.username, amount: amt, comment: comment || 'Перевод средств', timestamp: new Date(now).toLocaleString('ru-RU'), timestampMs: serverTimestamp() };
         await db.ref(`bankData/transactions/${tx.id}`).set(tx);
         addSystemMessage(recipient.username, 'Поступление перевода', `Вам поступил перевод +${amt.toLocaleString()} ฿ от @${sender.username}. ${tx.comment}`);
         showToast(`Переведено ${amt.toLocaleString()} ฿ → @${recipient.username}!`, 'success');
@@ -8714,14 +9512,13 @@
         if (!await atomicBalanceChange(sender.username, -cost, { requireFunds: true, operationId: mailId })) return;
         await addTreasuryTaxOrProfit(cost);
         saveRecentRecipient(recipient.username);
-        await db.ref(`bankData/mailBox/${mailId}`).set({ id: mailId, from: sender.username, to: recipient.username, text: txt, cost, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now() });
+        await db.ref(`bankData/mailBox/${mailId}`).set({ id: mailId, from: sender.username, to: recipient.username, text: txt, cost, timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp() });
         addSystemMessage(recipient.username, 'Новая телеграмма', `Вам пришла депеша от @${sender.username}.`);
         showToast(`Телеграмма отправлена!`, 'success');
         document.getElementById('mailRecipient').value = ''; document.getElementById('mailText').value = ''; calculateMailCost();
       });
     }
 
-    // ВЗЫСКАНИЕ ШТРАФА С ПРИНУДИТЕЛЬНОЙ ДОЛГОВОЙ РАСПИСКОЙ ПРИ НЕХВАТКЕ БАЛАНСА (СТАТЬЯ 4.1)
     async function executeStateFine(e) {
       e.preventDefault();
       const btn = document.getElementById('fineSubmitBtn');
@@ -8743,17 +9540,16 @@
           await addTreasuryTaxOrProfit(actualFine);
           await db.ref(`bankData/transactions/${txId}`).set({
             id: txId, from: user.username, to: 'КАЗНА БАНКА МИРОБАЙТ', amount: actualFine,
-            comment: `Штраф: ${reason}`, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now()
+            comment: `Штраф: ${reason}`, timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp()
           });
         }
 
-        // Если баланса не хватило — вешаем принудительную Долговую Расписку по Статье 4.1
         if (unpaidDebt > 0) {
           const loanId = newOperationId('FINELOAN');
           await db.ref(`bankData/loans/${loanId}`).set({
             id: loanId, borrower: user.username, principal: unpaidDebt, interestPct: 0, totalRepay: unpaidDebt,
             reason: `⚖️ Принудительный долг по штрафу (${reason})`, issuedBy: currentUser,
-            createdAt: new Date().toLocaleString('ru-RU'), status: 'active'
+            createdAt: new Date(getServerTime()).toLocaleString('ru-RU'), status: 'active'
           });
           addSystemMessage(user.username, '🚨 Принудительное Взыскание по Статье 4.1!', `Ваш баланс обнулён (списано ${actualFine.toLocaleString()} ฿), а на остаток штрафа (${unpaidDebt.toLocaleString()} ฿) оформлена принудительная Долговая Расписка!`);
           showToast(`Списано ${actualFine.toLocaleString()} ฿ + оформлен долг ${unpaidDebt.toLocaleString()} ฿ на @${user.username}!`, 'info');
@@ -8816,6 +9612,7 @@
     }
 
     function openSettingsModal() {
+      if (guardDemoReadOnly()) return;
       if (!currentUser) return;
       const u = findUser(currentUser);
       const prev = document.getElementById('settingsAvatarPreview');
@@ -8842,6 +9639,7 @@
     }
 
     function saveUserLocalPrefs() {
+      if (guardDemoReadOnly()) return;
       userPrefs.autoOldRus = !!document.getElementById('prefAutoOldRus')?.checked;
       userPrefs.showXYGrid = !!document.getElementById('prefShowXYGrid')?.checked;
       localStorage.setItem('mb_pref_auto_oldrus', String(userPrefs.autoOldRus));
@@ -8849,9 +9647,13 @@
       showToast('Настройки сохранены!', 'info');
     }
 
-    function triggerAvatarSelect() { document.getElementById('avatarFileInput')?.click(); }
+    function triggerAvatarSelect() {
+      if (guardDemoReadOnly()) return;
+      document.getElementById('avatarFileInput')?.click();
+    }
 
     function handleAvatarSelected(e) {
+      if (guardDemoReadOnly()) return;
       const file = e.target.files?.[0];
       e.target.value = '';
       if (!file || !currentUser) return;
@@ -8932,9 +9734,11 @@
     }
 
     function handleLogout() {
+      isDemoMode = false;
       currentUser = null;
       localStorage.removeItem('mirobyte_active_user');
       localStorage.removeItem('mirobyte_cached_profile');
+      document.getElementById('demoModeActiveBanner')?.classList.add('hidden');
       closeSettingsModal();
       navigateRoute('/');
       renderCurrentView();
@@ -8942,12 +9746,13 @@
     }
 
     function addSystemMessage(toUser, title, text) {
+      if (isDemoMode) return Promise.resolve();
       const id = newOperationId('MSG');
-      return db.ref(`bankData/messages/${id}`).set({ id, to: toUser, title, text, read: false, timestamp: new Date().toLocaleString('ru-RU'), timestampMs: Date.now() });
+      return db.ref(`bankData/messages/${id}`).set({ id, to: toUser, title, text, read: false, timestamp: new Date(getServerTime()).toLocaleString('ru-RU'), timestampMs: serverTimestamp() });
     }
 
     function getUnreadMessagesCount(username) {
-      if (!username) return 0;
+      if (!username || isDemoMode) return 0;
       const low = username.toLowerCase();
       return (appData.messages || []).filter(m => m.to && m.to.toLowerCase() === low && !m.read).length;
     }
@@ -8970,7 +9775,9 @@
               </div>
             `).join('');
       }
-      myMsgs.forEach(m => { if (!m.read && m._dbKey) db.ref(`bankData/messages/${m._dbKey}/read`).set(true); });
+      if (!isDemoMode) {
+        myMsgs.forEach(m => { if (!m.read && m._dbKey) db.ref(`bankData/messages/${m._dbKey}/read`).set(true); });
+      }
       document.getElementById('messagesModal').classList.remove('hidden');
       document.getElementById('messagesModal').classList.add('flex');
     }
@@ -8981,7 +9788,7 @@
     }
 
     function clearUserMessages() {
-      if (!currentUser) return;
+      if (guardDemoReadOnly() || !currentUser) return;
       const low = currentUser.toLowerCase(), updates = {};
       (appData.messages || []).forEach(m => { if (m.to && m.to.toLowerCase() === low && m._dbKey) updates[`bankData/messages/${m._dbKey}`] = null; });
       db.ref().update(updates).then(() => { closeMessagesModal(); showToast('Уведомления очищены!', 'info'); });
@@ -9035,6 +9842,10 @@
         runningBal = prevBal;
       }
 
+      if (nodes.length < 2) {
+        nodes.unshift({ bal: Math.max(0, runningBal - 5000) });
+      }
+
       const finalNodes = nodes.slice(-MAX_CHART_POINTS);
       const vals = finalNodes.map(n => n.bal);
       const minVal = Math.max(0, Math.floor(Math.min(...vals) * 0.9));
@@ -9043,7 +9854,7 @@
       const padL = 48, padR = 14, padT = 14, padB = 22;
       const plotW = w - padL - padR, plotH = h - padT - padB;
       const getX = (i) => padL + (i / Math.max(1, finalNodes.length - 1)) * plotW;
-      const getY = (v) => padT + plotH - ((v - minVal) / range) * plotH;
+    const getY = (v) => padT + plotH - ((v - minVal) / range) * plotH;
 
       ctx.beginPath();
       ctx.moveTo(getX(0), getY(finalNodes[0].bal));
