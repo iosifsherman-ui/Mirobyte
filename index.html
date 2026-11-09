@@ -149,7 +149,7 @@
       width: 100%;
       transform: translateX(-50%);
     }
-    body.phone-shell-mode #desktopSlashNavBar,
+    body.phone-shell-mode ,
     body.phone-shell-mode #desktopHomeTabsBar {
       display: none !important;
     }
@@ -450,6 +450,9 @@
             </button>
             <button onclick="navigateRoute('/club')" id="slashBtn-club" class="tap-btn px-3 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase tracking-wider transition-all bg-bank-surface text-purple-300 border border-purple-500/40 hover:bg-bank-card whitespace-nowrap flex items-center gap-1.5">
               <i class="fa-solid fa-shuttle-space"></i> Кибер-Полигон (/club)
+              <a href="./pants/index.html" id="slashBtn-pants" class="tap-btn px-3 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase tracking-wider transition-all bg-bank-surface text-emerald-300 border border-emerald-400/50 hover:bg-bank-card whitespace-nowrap flex items-center gap-1.5 shadow-md">
+  <i class="fa-solid fa-paw text-bank-gold"></i> Питомцы (/pants)
+            </a>
             </button>
             <button onclick="navigateRoute('/admin')" id="slashBtn-admin" class="hidden tap-btn px-3 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase tracking-wider transition-all bg-gradient-to-r from-purple-950 to-amber-950 text-bank-gold border border-bank-gold/70 hover:brightness-110 whitespace-nowrap flex items-center gap-1.5 shadow-md">
               <i class="fa-solid fa-crown"></i> Админ+ (/admin)
@@ -691,8 +694,24 @@
                     <p class="text-[9px] sm:text-[11px] text-bank-gold font-mono truncate">Экспедиции</p>
                   </div>
                 </div>
+                
                 <i class="fa-solid fa-chevron-right text-[10px] sm:text-xs text-purple-300 hidden sm:inline"></i>
               </div>
+                         <a href="./pants/index.html" class="cursor-pointer p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#06291c] via-[#0e241b] to-[#1a1405] border border-bank-gold/60 hover:border-emerald-400 transition-all shadow-xl flex items-center justify-between group col-span-2 lg:col-span-4">
+                <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                  <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-950 border border-bank-gold/70 text-bank-gold flex items-center justify-center text-base sm:text-xl shadow-md group-hover:scale-105 transition-transform flex-shrink-0">
+                    <i class="fa-solid fa-paw"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <span class="text-[8px] sm:text-[10px] font-mono uppercase tracking-wider text-emerald-400 block truncate">Стикерпаки • Крафт Карточек • Загон Дохода 24ч</span>
+                    <h4 class="font-royal font-black text-xs sm:text-base text-white truncate">Императорский Зоопарк и Коллекционные Карточки (/pants)</h4>
+                    <p class="text-[9px] sm:text-xs text-bank-gold font-mono truncate">Открывай стикерпаки, соединяй карточки в питомцев и получай пассивный доход в Байти (฿)!</p>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-bank-gold"></i>
+              </a>
+
+            </div>
             </div>
 
             <!-- Быстрые номиналы + Кнопка Взлома Терминала -->
@@ -2344,6 +2363,10 @@
           <i class="fa-solid fa-shuttle-space text-xs"></i>
           <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Полигон</span>
         </button>
+        <a href="./pants/index.html" id="bNavBtn-pants" class="flex-shrink-0 min-w-[58px] flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-emerald-300 hover:text-white transition-all">
+  <i class="fa-solid fa-paw text-xs text-bank-gold"></i>
+  <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Питомцы</span>
+        </a>
         <button onclick="navigateTab('mail')" id="bNavBtn-mail" class="flex-shrink-0 min-w-[56px] flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-emerald-400/80 hover:text-white transition-all">
           <i class="fa-solid fa-paper-plane text-xs"></i>
           <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Телеграф</span>
