@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#020604">
+  <title>BANK OF MIROBYTE — Императорский Зоопарк & Карточки (/pants)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Firebase SDK v8.10.1 (совместимо с ядром Банка) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bank: {
+              void: '#020604',
+              darkest: '#05110c',
+              dark: '#081c15',
+              surface: '#0d281e',
+              card: '#123528',
+              border: '#1a4735',
+              gold: '#e6c875',
+              'gold-bright': '#ffd700',
+              emerald: '#10b981',
+              sapphire: '#3b82f6',
+              neon: '#8b5cf6',
+              danger: '#ef4444'
+            }
+          },
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            inter: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background-color: #020604;
+      background-image:
+        radial-gradient(circle at 15% 12%, rgba(16, 185, 129, 0.11) 0%, transparent 42%),
+        radial-gradient(circle at 85% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 88%, rgba(230, 200, 117, 0.08) 0%, transparent 50%),
+        repeating-linear-gradient(45deg, rgba(16, 185, 129, 0.012) 0px, rgba(16, 185, 129, 0.012) 1px, transparent 1px, transparent 14px);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .font-royal { font-family: 'Cinzel', serif; }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #fff4d1 0%, #e6c875 50%, #b38827 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .guilloche-panel {
+      border: 1px solid #1a4735;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(16, 185, 129, 0.04);
+      backdrop-filter: blur(12px);
+    }
+    .guilloche-gold {
+      border: 1px solid rgba(230, 200, 117, 0.5);
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.14), inset 0 0 15px rgba(212, 175, 55, 0.06);
+      backdrop-filter: blur(12px);
+    }
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #1a4735 transparent; }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1a4735; border-radius: 9999px; }
+
+    /* Чёткая обрезка и оформление карточек по 5 редкостям */
+    .pet-card-frame {
+      aspect-ratio: 720 / 1000;
+      border-radius: 1.15rem;
+      overflow: hidden;
+      position: relative;
+      background: #05110c;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
+    }
+    .pet-card-frame:hover {
+      transform: translateY(-5px) scale(1.015);
+    }
+    .pet-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      display: block;
+      border-radius: 1.05rem;
+    }
+
+    /* Рамки и свечение для 5 уровней редкости */
+    .rarity-common {
+      border: 2px solid #22c55e;
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.25);
+    }
+    .rarity-rare {
+      border: 2px solid #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
+    }
+    .rarity-epic {
+      border: 2px solid #a855f7;
+      box-shadow: 0 0 24px rgba(168, 85, 247, 0.45);
+    }
+    .rarity-legendary {
+      border: 2px solid #ffd700;
+      box-shadow: 0 0 28px rgba(255, 215, 0, 0.55);
+    }
+    .rarity-secret {
+      border: 2px solid #c084fc;
+      box-shadow: 0 0 32px rgba(192, 132, 252, 0.7), 0 0 14px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Анимация живых вырезанных питомцев в загоне */
+    @keyframes petFloatAlive {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-7px) scale(1.03); }
+    }
+    .pet-pen-sprite-alive {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center bottom;
+      filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.85));
+      animation: petFloatAlive 3.4s ease-in-out infinite;
+    }
+    .pet-pen-sprite-dead {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center bottom;
+      filter: grayscale(100%) brightness(0.45) contrast(1.2);
+      opacity: 0.65;
+    }
+
+    /* Анимация открытия стикерпака */
+    @keyframes packPopReveal {
+      0% { transform: scale(0.4) rotateY(90deg); opacity: 0; }
+      70% { transform: scale(1.06) rotateY(-5deg); opacity: 1; }
+      100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+    }
+    .pack-reveal-anim {
+      animation: packPopReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .tap-btn { min-height: 38px; }
+  </style>
+</head>
+<body class="text-emerald-100 selection:bg-emerald-800 selection:text-white antialiased">
+
+  <!-- Тосты уведомлений -->
+  <div id="toastContainer" class="fixed top-16 right-3 z-[95] flex flex-col gap-1.5 max-w-xs sm:max-w-sm pointer-events-none"></div>
+
+  <div class="min-h-screen flex flex-col justify-between">
+    <!-- ШАПКА МОДУЛЯ ПИТОМЦЕВ -->
+    <header class="border-b border-bank-border bg-bank-darkest/95 backdrop-blur-md sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <a href="../index.htm" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-bank-surface hover:bg-bank-card border border-bank-gold/60 text-bank-gold flex items-center justify-center shadow-lg transition-all flex-shrink-0" title="Вернуться в Основной Банк (/)">
+            <i class="fa-solid fa-arrow-left text-xs sm:text-base"></i>
+          </a>
+          <div class="truncate">
+            <div class="flex items-center gap-1.5">
+              <span class="font-royal text-xs sm:text-lg font-black tracking-wider gold-gradient-text truncate">BANK OF MIROBYTE</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-bank-surface border border-bank-gold/40 text-[9px] sm:text-[10px] font-mono font-bold text-bank-gold">/pants</span>
+            </div>
+            <div class="text-[9px] sm:text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+              <span id="onlineDot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Императорский Зоопарк & Карточки</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Правый блок: Игрок, Баланс Байти, Доход Загона -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+          <div class="hidden sm:flex flex-col items-end px-3 py-1 rounded-xl bg-bank-surface border border-emerald-500/40">
+            <span class="text-[8px] uppercase text-emerald-400 font-mono">Доход Загона</span>
+            <span id="headerPenHourly" class="font-mono font-bold text-xs text-emerald-300">+0 ฿/ч</span>
+          </div>
+          <div class="flex flex-col items-end px-2.5 sm:px-3.5 py-1 rounded-xl bg-bank-surface border border-bank-gold/60">
+            <span id="headerUsername" class="text-[8px] sm:text-[9px] uppercase text-emerald-300 font-royal font-bold">@ГОСТЬ</span>
+            <span id="headerUserBalance" class="font-royal font-black text-xs sm:text-base text-bank-gold">0 ฿</span>
+          </div>
+          <a href="../index.htm" class="tap-btn px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-black text-[10px] sm:text-xs uppercase flex items-center gap-1 shadow-md">
+            <i class="fa-solid fa-building-columns"></i> <span class="hidden sm:inline">В Банк</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6 pb-24 md:pb-10 space-y-4 sm:space-y-6">
+
+      <!-- Предупреждение, если пользователь не авторизован в основном банке -->
+      <div id="unauthBanner" class="hidden p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-[#2b0810] via-[#1a0f08] to-[#081c15] border-2 border-bank-gold shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-black border border-bank-gold text-bank-gold flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <div>
+            <h3 class="font-royal font-black text-sm sm:text-base text-white">Вы не вошли в свой счёт Bank of Mirobyte</h3>
+            <p class="text-xs text-emerald-200/80">Войдите в свой аккаунт на главной странице банка, чтобы покупать стикерпаки, крафтить питомцев и получать доход в Байти (฿).</p>
+          </div>
+        </div>
+        <a href="../index.htm" class="tap-btn px-4 py-2 rounded-xl bg-bank-gold text-black font-royal font-black text-xs uppercase whitespace-nowrap shadow-lg">
+          Войти в Банк →
+        </a>
+      </div>
+
+      <!-- ПАНЕЛЬ СВОДКИ ЗАГОНА И КАССЫ ПИТОМЦЕВ (КАК В КОСМОСЕ) -->
+      <div class="p-3.5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#06241b] via-[#0c2e22] to-[#1d1605] border-2 border-bank-gold/70 shadow-2xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-400/50 text-emerald-300 text-[9px] sm:text-[10px] font-mono uppercase">
+              <i class="fa-solid fa-paw mr-1 text-bank-gold"></i> Касса Императорского Загона • Кормление раз в 24 часа
+            </span>
+            <span id="deadPetsWarningBadge" class="hidden px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-mono font-black uppercase animate-pulse">
+              💀 ЕСТЬ ПОГИБШИЕ ПИТОМЦЫ (ТРЕБУЕТСЯ ВОЗРОЖДЕНИЕ)
+            </span>
+          </div>
+          <div class="flex items-baseline gap-2.5 flex-wrap pt-1">
+            <span id="totalPendingPetsIncome" class="text-2xl sm:text-4xl font-royal font-black text-white font-mono">0.00</span>
+            <span class="text-base sm:text-xl font-royal font-bold text-bank-gold">฿</span>
+            <span id="totalPetsHourlyBadge" class="text-xs font-mono text-emerald-300 bg-emerald-950/90 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">+0 ฿ / час</span>
+            <span id="totalCardsAndPetsBadge" class="text-[11px] font-mono text-bank-gold bg-black/60 border border-bank-gold/40 px-2.5 py-0.5 rounded-full">Карточек: 0 • В загоне: 0</span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-emerald-300/80">
+            Открывайте стикерпаки → соединяйте <b>2 одинаковые карточки</b> в Крафте → заселяйте питомца в Загон! Не забывайте кормить раз в <b>24 часа</b>.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:flex items-center gap-2 flex-shrink-0">
+          <button onclick="switchPetsTab('food')" class="tap-btn px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-bank-darkest hover:bg-bank-card border border-bank-gold/60 text-bank-gold font-royal font-bold text-xs uppercase flex items-center justify-center gap-1.5 shadow-md">
+            🥕 Корм (<span id="quickTotalFoodCount">0</span>)
+          </button>
+          <button id="collectPetsIncomeBtn" onclick="collectAllPetsIncome(this)" class="tap-btn px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 hover:brightness-110 text-emerald-950 font-royal font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(16,185,129,0.4)] active:scale-95 transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-sack-dollar"></i> Собрать Байти
+          </button>
+        </div>
+      </div>
+
+      <!-- НАВИГАЦИЯ ПО РАЗДЕЛАМ МОДУЛЯ ПИТОМЦЕВ -->
+      <div class="flex overflow-x-auto no-scrollbar gap-1.5 sm:grid sm:grid-cols-3 lg:grid-cols-7 bg-bank-darkest/90 p-2 rounded-2xl border border-bank-gold/40 shadow-lg">
+        <button onclick="switchPetsTab('packs')" id="pTabBtn-packs" class="tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-bank-gold text-black shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-box-open"></i> 1. Стикерпаки
+        </button>
+        <button onclick="switchPetsTab('cards')" id="pTabBtn-cards" class="tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-bank-surface text-emerald-300 border border-bank-border hover:bg-bank-card flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-layer-group"></i> 2. Карточки & Крафт
+        </button>
+        <button onclick="switchPetsTab('pen')" id="pTabBtn-pen" class="tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-bank-surface text-emerald-300 border border-bank-border hover:bg-bank-card flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-Raw"></i> 🏡 3. Загон (24ч)
+        </button>
+        <button onclick="switchPetsTab('food')" id="pTabBtn-food" class="tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-bank-surface text-amber-300 border border-amber-500/40 hover:bg-bank-card flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-carrot"></i> 4. Лавка Корма
+        </button>
+        <button onclick="switchPetsTab('market')" id="pTabBtn-market" class="tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-bank-surface text-sky-300 border border-sky-500/40 hover:bg-bank-card flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-scale-balanced"></i> 5. Торговля (P2P)
+        </button>
+        <button onclick="switchPetsTab('top')" id="pTabBtn-top" class="tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-bank-surface text-purple-300 border border-purple-500/40 hover:bg-bank-card flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-trophy"></i> 6. Топ-20
+        </button>
+        <button onclick="switchPetsTab('admin')" id="pTabBtn-admin" class="hidden tap-btn flex-shrink-0 px-3 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase bg-gradient-to-r from-purple-950 to-amber-950 text-bank-gold border border-bank-gold/70 flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-crown"></i> 7. Админ+
+        </button>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 1: МАГАЗИН СТИКЕРПАКОВ                                      -->
+      <!-- =================================================================== -->
+      <section id="pTabView-packs" class="space-y-4 sm:space-y-6">
+        <div class="bg-bank-surface/95 border border-bank-gold/50 rounded-3xl p-4 sm:p-7 guilloche-gold space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-3">
+            <div>
+              <h2 class="font-royal text-base sm:text-2xl font-black text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-gift text-emerald-400"></i> Императорские Стикерпаки Карточек
+              </h2>
+              <p class="text-xs text-emerald-300/80 mt-0.5">Из каждого пака выпадает 1 коллекционная карточка случайной редкости. Соберите 2 одинаковые карточки, чтобы скрафтить живого питомца в Загон!</p>
+            </div>
+            <div id="dropOddsSummaryBadge" class="px-3 py-1.5 rounded-2xl bg-bank-darkest border border-bank-gold/40 text-[10px] sm:text-xs font-mono text-emerald-300">
+              Шансы: Обычн. 55% | Редк. 26% | Эпич. 12% | Легенд. 5% | Секрет. 2%
+            </div>
+          </div>
+
+          <div id="stickerPacksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 2: КОЛЛЕКЦИЯ КАРТОЧЕК И КРАФТ В ЖИВОТНОЕ                    -->
+      <!-- =================================================================== -->
+      <section id="pTabView-cards" class="hidden space-y-4 sm:space-y-6">
+        <!-- Блок быстрого крафта -->
+        <div class="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-[#09261c] via-[#131b38] to-[#241336] border-2 border-purple-400/70 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full bg-purple-950 border border-purple-400/50 text-purple-200 text-[10px] font-mono uppercase">
+              ✨ Алтарь Синтеза и Крафта Питомцев
+            </span>
+            <h3 class="font-royal text-sm sm:text-xl font-black text-white mt-1">Соединение Карточек → Живой Питомец в Загон</h3>
+            <p class="text-xs text-emerald-200/85 mt-0.5">
+              Соедините <b>2 одинаковые карточки</b> любого вида (или <b>3 любые карточки одной редкости</b>), чтобы получить самого питомца в ваш Загон для пассивного дохода!
+            </p>
+          </div>
+          <button onclick="craftAllReadyDuplicateCards(this)" class="tap-btn px-4 py-2.5 rounded-2xl bg-gradient-to-r from-bank-gold to-yellow-500 text-black font-royal font-black text-xs uppercase shadow-lg whitespace-nowrap">
+            ⚡ Скрафтить все доступные дубликаты
+          </button>
+        </div>
+
+        <!-- Фильтры по редкости и семейству -->
+        <div class="bg-bank-surface/95 border border-bank-border rounded-3xl p-4 sm:p-6 guilloche-panel space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-3">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              <button onclick="setCardRarityFilter('all')" id="cardFlt-all" class="px-3 py-1.5 rounded-xl bg-bank-gold text-black font-royal font-bold text-[10px] sm:text-xs uppercase">🌟 Все (20)</button>
+              <button onclick="setCardRarityFilter('common')" id="cardFlt-common" class="px-3 py-1.5 rounded-xl bg-bank-darkest border border-green-500/50 text-green-400 font-royal font-bold text-[10px] sm:text-xs uppercase">🟢 Обычные</button>
+              <button onclick="setCardRarityFilter('rare')" id="cardFlt-rare" class="px-3 py-1.5 rounded-xl bg-bank-darkest border border-blue-500/50 text-blue-400 font-royal font-bold text-[10px] sm:text-xs uppercase">🔵 Редкие</button>
+              <button onclick="setCardRarityFilter('epic')" id="cardFlt-epic" class="px-3 py-1.5 rounded-xl bg-bank-darkest border border-purple-500/50 text-purple-300 font-royal font-bold text-[10px] sm:text-xs uppercase">🟣 Эпические</button>
+              <button onclick="setCardRarityFilter('legendary')" id="cardFlt-legendary" class="px-3 py-1.5 rounded-xl bg-bank-darkest border border-yellow-400/60 text-yellow-300 font-royal font-bold text-[10px] sm:text-xs uppercase">🟡 Легендарные</button>
+              <button onclick="setCardRarityFilter('secret')" id="cardFlt-secret" class="px-3 py-1.5 rounded-xl bg-bank-darkest border border-fuchsia-400/60 text-fuchsia-300 font-royal font-bold text-[10px] sm:text-xs uppercase">🌌 Секретные</button>
+            </div>
+            <label class="inline-flex items-center gap-2 text-xs text-emerald-300 cursor-pointer">
+              <input type="checkbox" id="onlyOwnedCardsCheck" onchange="renderCardsInventory()" class="rounded bg-bank-darkest border-bank-border text-bank-gold focus:ring-0">
+              <span>Показать только выбитые мной</span>
+            </label>
+          </div>
+
+          <!-- Сетка карточек -->
+          <div id="cardsCatalogGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 3: ЗАГОН ПИТОМЦЕВ (ЖИВЫЕ PNG, ГОЛОД 24Ч, СМЕРТЬ И ДОХОД)    -->
+      <!-- =================================================================== -->
+      <section id="pTabView-pen" class="hidden space-y-4 sm:space-y-6">
+        <div class="bg-bank-surface/95 border-2 border-emerald-500/60 rounded-3xl p-4 sm:p-6 guilloche-panel space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-3">
+            <div>
+              <h2 class="font-royal text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                🏡 Мой Загон Питомцев (Зоопарк)
+              </h2>
+              <p class="text-xs text-emerald-300/80 mt-0.5">
+                Каждое животное нужно кормить минимум <b>раз в 24 часа</b>. Если таймер сытости упадёт до 00:00:00 — питомец засыпает/погибает и перестаёт приносить доход до возрождения!
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="feedAllPetsQuick(this)" class="tap-btn px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-royal font-black text-xs uppercase shadow-lg">
+                🥕 Покормить всех сразу
+              </button>
+            </div>
+          </div>
+
+          <div id="petsPenGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 4: МАГАЗИН КОРМА ПО РЕДКОСТЯМ                               -->
+      <!-- =================================================================== -->
+      <section id="pTabView-food" class="hidden space-y-4 sm:space-y-6">
+        <div class="bg-bank-surface/95 border border-amber-500/60 rounded-3xl p-4 sm:p-7 guilloche-gold space-y-4">
+          <div class="border-b border-bank-border pb-3">
+            <h2 class="font-royal text-base sm:text-2xl font-black text-bank-gold flex items-center gap-2">
+              <i class="fa-solid fa-carrot text-amber-400"></i> Императорская Лавка Корма (5 уровней сытости)
+            </h2>
+            <p class="text-xs text-emerald-300/85 mt-1">
+              Вы можете кормить <b>Легендарного</b> или <b>Секретного</b> питомца обычной дешёвой морковкой, но её потребуется много штук для полного насыщения на 24 часа. Либо купите профильный редкий/легендарный корм, который насыщает мгновенно 1 штукой!
+            </p>
+          </div>
+
+          <div id="foodShopGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 5: ТОРГОВАЯ ПЛОЩАДКА (МАРКЕТПЛЕЙС КАРТОЧЕК И КОРМА)         -->
+      <!-- =================================================================== -->
+      <section id="pTabView-market" class="hidden space-y-4 sm:space-y-6">
+        <div class="bg-bank-surface/95 border border-sky-500/50 rounded-3xl p-4 sm:p-6 guilloche-panel space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-3">
+            <div>
+              <h2 class="font-royal text-base sm:text-xl font-black text-white flex items-center gap-2">
+                <i class="fa-solid fa-scale-balanced text-bank-gold"></i> Межпользовательская Торговая Площадка Карточек и Корма
+              </h2>
+              <p class="text-xs text-emerald-300/80">Выставляйте свои лишние карточки или запасы корма на продажу другим гражданам за Байти (комиссия Банка 5%)</p>
+            </div>
+            <span id="marketLotsCountBadge" class="px-3 py-1 rounded-full bg-bank-darkest border border-bank-gold/50 text-bank-gold font-mono text-xs font-bold">0 лотов</span>
+          </div>
+
+          <!-- Форма создания лота -->
+          <form onsubmit="handleCreatePetMarketLot(event)" class="p-3.5 sm:p-4 rounded-2xl bg-bank-darkest/90 border border-bank-gold/40 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+            <div class="sm:col-span-5">
+              <label class="block text-[10px] font-bold text-emerald-400 uppercase mb-1">Выберите вашу карточку или корм</label>
+              <select id="marketLotItemSelect" required class="tap-btn w-full bg-bank-surface border border-bank-border rounded-xl px-3 text-xs text-white font-semibold focus:outline-none"></select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] font-bold text-emerald-400 uppercase mb-1">Кол-во (шт.)</label>
+              <input type="number" id="marketLotQtyInput" min="1" max="100" value="1" required class="tap-btn w-full bg-bank-surface border border-bank-border rounded-xl px-3 text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[10px] font-bold text-emerald-400 uppercase mb-1">Цена за весь лот (฿)</label>
+              <input type="number" id="marketLotPriceInput" min="10" step="1" required placeholder="Напр.: 5000" class="tap-btn w-full bg-bank-surface border border-bank-gold/60 rounded-xl px-3 text-xs font-mono font-black text-bank-gold focus:outline-none">
+            </div>
+            <div class="sm:col-span-2">
+              <button type="submit" id="createPetLotBtn" class="tap-btn w-full bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-black rounded-xl text-xs uppercase shadow-md">
+                Выставить
+              </button>
+            </div>
+          </form>
+
+          <!-- Активные лоты -->
+          <div id="petsMarketLotsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 6: ТОП-20 ЗООПАРКОВ (С КЭШИРОВАНИЕМ LOCALSTORAGE)           -->
+      <!-- =================================================================== -->
+      <section id="pTabView-top" class="hidden space-y-4 sm:space-y-6">
+        <div class="bg-bank-surface/95 border border-purple-500/50 rounded-3xl p-4 sm:p-6 guilloche-panel space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border pb-3">
+            <div>
+              <h2 class="font-royal text-base sm:text-xl font-black text-bank-gold flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-400"></i> Золотой Рейтинг Императорских Зоопарков (Топ-20)
+              </h2>
+              <p class="text-xs text-emerald-300/80">Оптимизированный запрос `limitToLast(20)` + кэш в `localStorage` на 5 минут для экономии трафика Firebase</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="topCacheTimestampBadge" class="text-[10px] font-mono text-emerald-400">Кэш актуален</span>
+              <button onclick="loadTop20Players(true)" class="px-3 py-1.5 rounded-xl bg-bank-darkest hover:bg-bank-card border border-bank-gold/50 text-bank-gold text-xs font-bold">
+                <i class="fa-solid fa-rotate mr-1"></i> Обновить
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-bank-border text-emerald-400/70 uppercase text-[10px]">
+                  <th class="pb-2.5 px-2">#</th>
+                  <th class="pb-2.5 px-2">Гражданин</th>
+                  <th class="pb-2.5 px-2">Питомцев в загоне</th>
+                  <th class="pb-2.5 px-2">Карточек</th>
+                  <th class="pb-2.5 px-2 text-right">Доход Зоопарка / час</th>
+                </tr>
+              </thead>
+              <tbody id="petsTop20TableBody" class="divide-y divide-bank-border/40"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- ВКЛАДКА 7: АДМИН-ПАНЕЛЬ ЗООПАРКА (ТОЛЬКО ДЛЯ IOSIF / АДМИНОВ)       -->
+      <!-- =================================================================== -->
+      <section id="pTabView-admin" class="hidden space-y-4 sm:space-y-6">
+        <div class="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-[#1d092b] via-[#0b291e] to-[#1f1605] border-2 border-bank-gold shadow-2xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bank-border/70 pb-3">
+            <div>
+              <span class="px-2.5 py-0.5 rounded-full bg-bank-gold text-black font-royal font-black text-[10px] uppercase">👑 Управление Модулем Питомцев</span>
+              <h2 class="font-royal text-base sm:text-2xl font-black text-white mt-1">Админ-Панель Карточек, Шансов и Стикерпаков</h2>
+            </div>
+            <button onclick="resetPetsConfigToDefaults()" class="px-3 py-1.5 rounded-xl bg-rose-950 border border-rose-500/60 text-rose-200 text-xs font-bold uppercase">
+              Сбросить конфиг по умолчанию
+            </button>
+          </div>
+
+          <!-- Глобальная статистика карточек и питомцев у всех игроков -->
+          <div id="adminGlobalPetsStatsGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Настройка процентов выпадения (сумма = 100%) -->
+          <form onsubmit="saveAdminDropRates(event)" class="bg-bank-surface border border-bank-gold/50 rounded-3xl p-4 sm:p-6 guilloche-gold space-y-3">
+            <h3 class="font-royal text-sm sm:text-base font-bold text-bank-gold">
+              <i class="fa-solid fa-percent text-emerald-400 mr-1"></i> Настройка Шансов Выпадения Редкостей (%)
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+              <div><label class="block text-[10px] text-green-400 font-bold mb-1">Обычный %</label><input type="number" step="0.1" id="admRate_common" required class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white font-bold"></div>
+              <div><label class="block text-[10px] text-blue-400 font-bold mb-1">Редкий %</label><input type="number" step="0.1" id="admRate_rare" required class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white font-bold"></div>
+              <div><label class="block text-[10px] text-purple-300 font-bold mb-1">Эпический %</label><input type="number" step="0.1" id="admRate_epic" required class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white font-bold"></div>
+              <div><label class="block text-[10px] text-yellow-300 font-bold mb-1">Легендар. %</label><input type="number" step="0.1" id="admRate_legendary" required class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white font-bold"></div>
+              <div><label class="block text-[10px] text-fuchsia-300 font-bold mb-1">Секретный %</label><input type="number" step="0.1" id="admRate_secret" required class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white font-bold"></div>
+            </div>
+            <button type="submit" class="tap-btn w-full bg-gradient-to-r from-emerald-500 to-emerald-700 text-emerald-950 font-royal font-black rounded-xl text-xs uppercase">
+              Сохранить проценты выпадения
+            </button>
+          </form>
+
+          <!-- Настройка дохода в час и цены возрождения по редкостям -->
+          <form onsubmit="saveAdminRarityEconomy(event)" class="bg-bank-surface border border-bank-border rounded-3xl p-4 sm:p-6 guilloche-panel space-y-3">
+            <h3 class="font-royal text-sm sm:text-base font-bold text-bank-gold">
+              <i class="fa-solid fa-coins text-amber-400 mr-1"></i> Доход в час (฿/ч) и Штраф Возрождения (฿)
+            </h3>
+            <div id="adminRarityEconomyInputs" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
+            <button type="submit" class="tap-btn w-full bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-black rounded-xl text-xs uppercase">
+              Сохранить доходность и цены возрождения
+            </button>
+          </form>
+        </div>
+
+        <!-- Добавление новой карточки / питомца или изменение картинки из pants/img/ -->
+        <div class="bg-bank-surface border-2 border-purple-500/50 rounded-3xl p-4 sm:p-6 guilloche-panel space-y-4">
+          <h3 class="font-royal text-sm sm:text-base font-bold text-bank-gold">
+            <i class="fa-solid fa-plus-circle text-purple-400 mr-1"></i> Добавить / Отредактировать Карточку и Питомца (Путь в `pants/img/`)
+          </h3>
+          <form onsubmit="handleAdminSaveCardConfig(event)" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 items-end text-xs">
+            <div>
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">ID карточки</label>
+              <input type="text" id="admCardId" required placeholder="cat_cosmic_new" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white">
+            </div>
+            <div>
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">Название</label>
+              <input type="text" id="admCardName" required placeholder="Звёздный Барс" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white">
+            </div>
+            <div>
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">Семейство</label>
+              <select id="admCardFamily" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2 text-white">
+                <option value="hare">🐰 Зайцы</option>
+                <option value="cat">🐱 Коты</option>
+                <option value="hedgehog">🦔 Ёжики</option>
+                <option value="parrot">🦜 Попугаи</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">Редкость</label>
+              <select id="admCardRarity" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2 text-bank-gold font-bold">
+                <option value="common">🟢 Обычный</option>
+                <option value="rare">🔵 Редкий</option>
+                <option value="epic">🟣 Эпический</option>
+                <option value="legendary">🟡 Легендарный</option>
+                <option value="secret">🌌 Секретный</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">HP и Бонус Умения</label>
+              <div class="grid grid-cols-2 gap-1">
+                <input type="number" id="admCardHp" value="100" required placeholder="HP" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2 text-white">
+                <input type="number" id="admCardPower" value="50" required placeholder="Сила" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2 text-bank-gold">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">Название Умения</label>
+              <input type="text" id="admCardSkill" required placeholder="Космический прыжок" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">Путь к картинке карточки</label>
+              <input type="text" id="admCardImg" required value="img/card_cat_secret.png" class="tap-btn w-full bg-bank-darkest border border-bank-gold/50 rounded-xl px-2.5 text-emerald-200 font-mono text-[11px]">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] text-emerald-400 uppercase mb-1">Путь к вырезанному PNG питомца</label>
+              <input type="text" id="admPetImg" required value="img/pet_cat_secret.png" class="tap-btn w-full bg-bank-darkest border border-bank-gold/50 rounded-xl px-2.5 text-emerald-200 font-mono text-[11px]">
+            </div>
+            <div class="sm:col-span-2">
+              <button type="submit" class="tap-btn w-full bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-black rounded-xl text-xs uppercase shadow-lg">
+                💾 Сохранить карточку в БД
+              </button>
+            </div>
+          </form>
+
+          <!-- Создание или редактирование Стикерпака -->
+          <form onsubmit="handleAdminSaveStickerPack(event)" class="pt-3 border-t border-bank-border grid grid-cols-1 sm:grid-cols-5 gap-2.5 items-end text-xs">
+            <div>
+              <label class="block text-[10px] text-amber-300 uppercase mb-1">ID Стикерпака</label>
+              <input type="text" id="admPackId" required placeholder="pack_custom" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white">
+            </div>
+            <div>
+              <label class="block text-[10px] text-amber-300 uppercase mb-1">Название Пака</label>
+              <input type="text" id="admPackTitle" required placeholder="Королевский Пак" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2.5 text-white">
+            </div>
+            <div>
+              <label class="block text-[10px] text-amber-300 uppercase mb-1">Семейство (или all)</label>
+              <select id="admPackFamily" class="tap-btn w-full bg-bank-darkest border border-bank-border rounded-xl px-2 text-white">
+                <option value="all">🌟 Все семейства</option>
+                <option value="hare">🐰 Только Зайцы</option>
+                <option value="cat">🐱 Только Коты</option>
+                <option value="hedgehog">🦔 Только Ёжики</option>
+                <option value="parrot">🦜 Только Попугаи</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-amber-300 uppercase mb-1">Цена открытия (฿)</label>
+              <input type="number" id="admPackPrice" min="10" value="2500" required class="tap-btn w-full bg-bank-darkest border border-bank-gold rounded-xl px-2.5 text-bank-gold font-bold">
+            </div>
+            <div>
+              <button type="submit" class="tap-btn w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-royal font-black rounded-xl text-xs uppercase shadow-lg">
+                📦 Сохранить Стикерпак
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- МОДАЛЬНОЕ ОКНО: АНИМАЦИЯ ОТКРЫТИЯ СТИКЕРПАКА И ОСМОТР КАРТОЧКИ -->
+    <div id="cardRevealModal" onclick="if(event.target.id==='cardRevealModal') closeCardRevealModal()" class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-5">
+      <div class="bg-bank-surface border-2 border-bank-gold rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-[0_0_60px_rgba(230,200,117,0.35)] relative guilloche-gold text-center space-y-3.5 pack-reveal-anim">
+        <button onclick="closeCardRevealModal()" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center z-20">✕</button>
+        <div id="revealModalHeaderBadge" class="inline-block px-3 py-0.5 rounded-full bg-bank-darkest border border-bank-gold text-bank-gold font-royal font-black text-[10px] uppercase">
+          ✨ НОВАЯ КАРТОЧКА!
+        </div>
+        <div class="max-w-[260px] mx-auto">
+          <div id="revealCardFrameBox" class="pet-card-frame rarity-common">
+            <img id="revealCardImgEl" src="" alt="Card" class="pet-card-img">
+          </div>
+        </div>
+        <div class="space-y-1">
+          <h3 id="revealCardTitleEl" class="font-royal text-lg sm:text-xl font-black text-white">Название</h3>
+          <div id="revealCardStatsEl" class="text-xs font-mono text-bank-gold">HP 100 • Умение 50</div>
+          <p id="revealCardDescEl" class="text-[11px] text-emerald-300/85 leading-relaxed"></p>
+        </div>
+        <div id="revealModalActionsBox" class="pt-2 flex gap-2 justify-center">
+          <button onclick="closeCardRevealModal()" class="tap-btn px-6 py-2 rounded-xl bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-black text-xs uppercase shadow-lg">
+            Отлично!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ВЫБОР КОРМА ДЛЯ КОНКРЕТНОГО ПИТОМЦА -->
+    <div id="feedPetModal" onclick="if(event.target.id==='feedPetModal') closeFeedPetModal()" class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-5">
+      <div class="bg-bank-surface border-2 border-amber-400 rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl relative guilloche-gold space-y-3.5">
+        <button onclick="closeFeedPetModal()" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center">✕</button>
+        <div>
+          <span class="text-[10px] font-mono uppercase text-amber-300">Кормление питомца на 24 часа</span>
+          <h3 id="feedModalPetTitle" class="font-royal text-base sm:text-lg font-black text-white mt-0.5">Покормить питомца</h3>
+          <p id="feedModalPetSub" class="text-xs text-emerald-300/80"></p>
+        </div>
+        <div id="feedModalFoodOptions" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar pr-1"></div>
+      </div>
+    </div>
+
+    <!-- НИЖНЯЯ МОБИЛЬНАЯ ПАНЕЛЬ НАВИГАЦИИ -->
+    <nav class="fixed bottom-0 inset-x-0 z-40 flex md:hidden bg-bank-darkest/95 backdrop-blur-xl border-t border-bank-gold/40 shadow-[0_-10px_30px_rgba(0,0,0,0.85)]">
+      <div class="w-full px-1.5 py-1 flex items-center justify-around gap-1 overflow-x-auto no-scrollbar">
+        <a href="../index.htm" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-emerald-300">
+          <i class="fa-solid fa-building-columns text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Банк</span>
+        </a>
+        <button onclick="switchPetsTab('packs')" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-bank-gold">
+          <i class="fa-solid fa-box-open text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Паки</span>
+        </button>
+        <button onclick="switchPetsTab('cards')" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-emerald-300">
+          <i class="fa-solid fa-layer-group text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Крафт</span>
+        </button>
+        <button onclick="switchPetsTab('pen')" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-emerald-300">
+          <i class="fa-solid fa-paw text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Загон</span>
+        </button>
+        <button onclick="switchPetsTab('food')" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-amber-300">
+          <i class="fa-solid fa-carrot text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Корм</span>
+        </button>
+        <button onclick="switchPetsTab('market')" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-sky-300">
+          <i class="fa-solid fa-scale-balanced text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Рынок</span>
+        </button>
+        <button onclick="switchPetsTab('top')" class="flex-shrink-0 flex flex-col items-center justify-center py-1 px-2 rounded-xl text-purple-300">
+          <i class="fa-solid fa-trophy text-xs"></i>
+          <span class="text-[8px] font-royal font-bold uppercase mt-0.5">Топ-20</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Логика модуля питомцев -->
+  <script src="./pants.js"></script>
+</body>
+</html>
