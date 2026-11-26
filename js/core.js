@@ -185,6 +185,7 @@ export const state = {
   activeTabName: 'dashboard',
   currentRoute: '/',
   currentMarketSubTab: 'privileges',
+  currentAuctionSubMode: 'p2p',
   currentAdminSubTab: 'users',
   adminUserFilter: 'all',
   currentCasinoGame: 'mines',
@@ -765,7 +766,6 @@ export async function payTaxNoteInstallmentPart(noteId, payAll = false, btnEl = 
     requestRender();
   });
 }
-
 // -------------------------------------------------------------------------
 // 6. ЗАДАЧА 3: ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ 24Ч P2P-АУКЦИОН И СУД
 // -------------------------------------------------------------------------
@@ -932,25 +932,55 @@ export async function extractAssetFromSellerForCourt(sellerObj, assetCategory, a
   });
 }
 
+async function restoreAssetToSellerAfterFailedAuction(sellerObj, category, assetKey, extracted, origBusinessSlot = null) {
+  if (!sellerObj || !extracted) return;
+  const sKey = normalizeLogin(sellerObj.username);
+  if (category === 'business') {
+    const restoreData = origBusinessSlot ? cleanFirebaseObject(origBusinessSlot) : cleanFirebaseObject(extracted.payload);
+    await db.ref(`bankData/users/${sKey}/businesses/${assetKey}`).set(restoreData);
+  } else if (category === 'realestate') {
+    const reId = extracted.reId || assetKey;
+    await runTransaction(db.ref(`bankData/users/${sKey}/realEstate/${reId}`), (cur) => {
+      if (!cur) {
+        return cleanFirebaseObject({
+          count: 1,
+          status: extracted.payload?.status || 'active',
+          prepEndsAt: Number(extracted.payload?.prepEndsAt || 0),
+          lastCollected: Number(extracted.payload?.lastCollected || getServerTime())
+        });
+      }
+      return { ...cur, count: Number(cur.count || 0) + 1 };
+    });
+  } else {
+    await runTransaction(db.ref(`bankData/users/${sKey}/inventory`), (curInv) => {
+      const arr = Array.isArray(curInv) ? [...curInv] : [];
+      if (extracted.payload?.invItem) arr.unshift(cleanFirebaseObject(extracted.payload.invItem));
+      return cleanFirebaseObject(arr);
+    });
+  }
+}
+
 export async function createCourtTransferRecord(sellerName, buyerName, category, extracted, dealPrice) {
   const now = getServerTime();
   const durationMs = dealPrice > 0
     ? calculateCourtTransferDurationMs(category, extracted.level, extracted.valuation)
     : 5000; // Если возврат лота без ставок — 5 секунд
   const courtId = newOperationId('COURT');
+  const resolvedCategory = String(category || extracted?.category || 'bazaar');
 
   const record = cleanFirebaseObject({
     id: courtId,
-    seller: sellerName,
-    buyer: buyerName,
-    category,
-    title: extracted.title || 'Актив Империи',
+    seller: String(sellerName),
+    buyer: String(buyerName),
+    assetCategory: resolvedCategory,
+    category: resolvedCategory,
+    title: String(extracted.title || 'Актив Империи'),
     level: Number(extracted.level || 1),
     condition: Number(extracted.condition ?? 100),
     extractedData: extracted,
     dealPrice: Number(dealPrice || 0),
-    startedAtMs: now,
-    endsAtMs: now + durationMs,
+    startedAtMs: Number(now),
+    endsAtMs: Number(now + durationMs),
     status: 'in_court'
   });
 
@@ -1027,6 +1057,10 @@ export async function submitCreateP2PAuction(e) {
       return showToast('Проверьте выбранный актив и стартовую цену!', 'error');
     }
 
+    const origBusinessSlot = (category === 'business' && u.businesses?.[assetKey])
+      ? { ...u.businesses[assetKey] }
+      : null;
+
     const extracted = await extractAssetFromSellerForCourt(u, category, assetKey);
     if (!extracted) return showToast('Не удалось извлечь актив для аукциона! Обновите окно.', 'error');
 
@@ -1034,21 +1068,31 @@ export async function submitCreateP2PAuction(e) {
     const aucId = newOperationId('P2PAUC');
     const aucRecord = cleanFirebaseObject({
       id: aucId,
-      seller: u.username,
-      category,
-      title: extracted.title || 'Актив',
+      seller: String(u.username),
+      assetCategory: String(category),
+      category: String(category),
+      title: String(extracted.title || 'Актив'),
       level: Number(extracted.level || 1),
       condition: Number(extracted.condition ?? 100),
       extractedData: extracted,
-      startPrice,
-      currentBid: startPrice,
+      startPrice: Number(startPrice),
+      currentBid: Number(startPrice),
       highestBidder: null,
-      startedAtMs: now,
-      endsAtMs: now + 24 * 3600 * 1000,
+      startedAtMs: Number(now),
+      endsAtMs: Number(now + 24 * 3600 * 1000),
       status: 'active'
     });
 
-    await db.ref(`bankData/p2pAuctions/${aucId}`).set(aucRecord);
+    try {
+      await db.ref(`bankData/p2pAuctions/${aucId}`).set(aucRecord);
+    } catch (err) {
+      try {
+        await restoreAssetToSellerAfterFailedAuction(u, category, assetKey, extracted, origBusinessSlot);
+      } catch (restoreErr) {}
+      showToast('Ошибка публикации лота в базе данных. Актив возвращён.', 'error');
+      return;
+    }
+
     closeCreateP2PAuctionModal();
     openMarketDirect('p2pauction');
     showToast(`🔨 Лот «${extracted.title}» успешно выставлен на 24-часовой Аукцион со стартом ${formatBaity(startPrice)}!`, 'success');
@@ -1070,25 +1114,76 @@ export async function placeBidOnP2PAuction(aucId, btnEl = null) {
     if (!validPositiveAmount(bidAmt) || bidAmt < minNext) {
       return showToast(`Минимальная ставка: ${formatBaity(minNext)}!`, 'error');
     }
-    if ((u.balance || 0) < bidAmt) return showToast('Недостаточно Байти на балансе!', 'error');
 
-    const prevBidder = auc.highestBidder;
-    const prevAmt = Number(auc.currentBid || 0);
+    const uKey = normalizeLogin(u.username);
+    const freshBalSnap = await db.ref(`bankData/users/${uKey}/balance`).once('value');
+    const freshBal = Math.round(Number(freshBalSnap.val() ?? u.balance ?? 0));
+    if (freshBal < bidAmt) {
+      return showToast('Недостаточно Байти на балансе!', 'error');
+    }
+
+    const now = getServerTime();
+    let prevBidder = null;
+    let prevAmt = 0;
+    let lotTitle = auc.title || 'Лот';
+    let failReason = '';
+
+    const txRes = await runTransaction(db.ref(`bankData/p2pAuctions/${aucId}`), (cur) => {
+      if (!cur) return cur;
+      if (cur.status !== 'active' || now >= Number(cur.endsAtMs || 0)) {
+        failReason = 'Аукцион уже завершён!';
+        return;
+      }
+      if (normalizeLogin(cur.seller) === uKey) {
+        failReason = 'Нельзя делать ставки на собственный лот!';
+        return;
+      }
+      const curBid = Number(cur.currentBid || cur.startPrice || 0);
+      const requiredMin = cur.highestBidder ? Math.round(curBid * 1.05) : Number(cur.startPrice || 1);
+      if (bidAmt <= curBid || bidAmt < requiredMin) {
+        failReason = `Ставку уже перебили! Минимальная ставка: ${formatBaity(Math.max(curBid + 1, requiredMin))}`;
+        return;
+      }
+
+      prevBidder = cur.highestBidder || null;
+      prevAmt = Number(cur.currentBid || 0);
+      lotTitle = cur.title || lotTitle;
+
+      return {
+        ...cur,
+        currentBid: bidAmt,
+        highestBidder: u.username
+      };
+    });
+
+    if (!txRes.committed || !txRes.snapshot?.val()) {
+      return showToast(failReason || 'Аукцион недоступен или ставку успели перебить!', 'error');
+    }
+
     const opId = newOperationId('P2PBID');
-
-    if (!await atomicBalanceChange(u.username, -bidAmt, { requireFunds: true, operationId: opId })) return;
+    const debited = await atomicBalanceChange(u.username, -bidAmt, { requireFunds: true, operationId: opId });
+    if (!debited) {
+      await runTransaction(db.ref(`bankData/p2pAuctions/${aucId}`), (cur) => {
+        if (!cur || cur.highestBidder !== u.username || Number(cur.currentBid) !== bidAmt) return cur;
+        return {
+          ...cur,
+          currentBid: prevAmt,
+          highestBidder: prevBidder
+        };
+      });
+      return showToast('Недостаточно Байти на балансе! Ставка отменена.', 'error');
+    }
 
     if (prevBidder && prevAmt > 0) {
       await atomicBalanceChange(prevBidder, prevAmt, { operationId: `${opId}_REF` });
-      await addSystemMessage(prevBidder, `🔨 Ваша ставка на 24ч Аукционе перебита!`, `@${u.username} поставил ${formatBaity(bidAmt)} за лот «${auc.title}». Ваши ${formatBaity(prevAmt)} мгновенно возвращены на баланс.`);
+      await addSystemMessage(
+        prevBidder,
+        `🔨 Ваша ставка на 24ч Аукционе перебита!`,
+        `@${u.username} поставил ${formatBaity(bidAmt)} за лот «${lotTitle}». Ваши ${formatBaity(prevAmt)} мгновенно возвращены на баланс.`
+      );
     }
 
-    await db.ref(`bankData/p2pAuctions/${aucId}`).update({
-      currentBid: bidAmt,
-      highestBidder: u.username
-    });
-
-    showToast(`🔨 Ставка ${formatBaity(bidAmt)} на лот «${auc.title}» принята!`, 'success');
+    showToast(`🔨 Ставка ${formatBaity(bidAmt)} на лот «${lotTitle}» принята!`, 'success');
   });
 }
 
@@ -1173,13 +1268,14 @@ export async function checkAndFinalizeExpiredP2PAuctions() {
         await addTreasuryTaxOrProfit(fee);
         await recordPlayerFinancialStat(auc.seller, 'income', 'transfersIn', sellerNet);
 
-        await createCourtTransferRecord(auc.seller, auc.highestBidder, auc.category, auc.extractedData, winBid);
+        await createCourtTransferRecord(auc.seller, auc.highestBidder, auc.assetCategory || auc.category, auc.extractedData, winBid);
       } else {
-        await createCourtTransferRecord(auc.seller, auc.seller, auc.category, auc.extractedData, 0);
+        await createCourtTransferRecord(auc.seller, auc.seller, auc.assetCategory || auc.category, auc.extractedData, 0);
       }
     } catch (e) {}
   }
 }
+
 // -------------------------------------------------------------------------
 // 7. ТО АВТОМОБИЛЕЙ, ПРОМЫСЛЫ, НЕДВИЖИМОСТЬ, КОСМО-БАЗЫ И ПРОДАЖА АКТИВОВ
 // -------------------------------------------------------------------------
@@ -1222,7 +1318,7 @@ export async function serviceAllUserCars(btnEl = null) {
 
     inv.forEach(item => {
       if (item && item.category === 'garage') {
-        const c = getCarServiceCost(item, appData.settings, deviceNow);
+        const c = getCarCurrentCondition(item, deviceNow);
         if (c > 0) {
           totalCost += c;
           servicedCount++;
@@ -1465,7 +1561,6 @@ export async function upgradeBusinessSlot(slotKey, btnEl = null) {
     renderEarnAndLoansView();
   });
 }
-
 export function openBusinessInspectorModal(slotKey) {
   if (!state.currentUser) return;
   const u = findUser(state.currentUser);
@@ -1856,11 +1951,18 @@ export async function startMinesGame(btnEl = null) {
       }
 
       gameStartTime = getServerTime();
-      minesState = {
-        active: true, bet, minesCount, minePositions: positions,
-        revealed: [], defusedMines: [], hasShield: hasShieldForRound,
-        multiplier: 1.0, busy: false, startedAtServerMs: gameStartTime
-      };
+      Object.assign(minesState, {
+        active: true,
+        bet,
+        minesCount,
+        minePositions: positions,
+        revealed: [],
+        defusedMines: [],
+        hasShield: hasShieldForRound,
+        multiplier: 1.0,
+        busy: false,
+        startedAtServerMs: gameStartTime
+      });
       renderCasinoClubView();
       showToast(`Миссия начата! Пакет: ${formatBaity(bet)}${hasShieldForRound ? ' (🛡️ Щит активен)' : ''}`, 'info');
     } finally {
@@ -2193,7 +2295,12 @@ export function detectInitialSlashRoute() {
 }
 
 export function openMarketDirect(subTab) {
-  state.currentMarketSubTab = subTab || 'privileges';
+  if (subTab === 'bazaar') {
+    state.currentMarketSubTab = 'p2pauction';
+    state.currentAuctionSubMode = 'direct';
+  } else {
+    state.currentMarketSubTab = subTab || 'privileges';
+  }
   navigateRoute('/market');
   switchMarketSubTab(state.currentMarketSubTab);
 }
@@ -2234,29 +2341,61 @@ export function navigateTab(tabName) {
   if (tabName === 'banknotes') renderBanknotes();
 }
 
+export function switchAuctionSubMode(mode = 'p2p') {
+  const m = mode === 'direct' ? 'direct' : 'p2p';
+  state.currentAuctionSubMode = m;
+  const p2pView = document.getElementById('auctionSubView-p2p');
+  const dirView = document.getElementById('auctionSubView-direct');
+  const p2pBtn = document.getElementById('auctionSubModeBtn-p2p');
+  const dirBtn = document.getElementById('auctionSubModeBtn-direct');
+
+  if (p2pView) p2pView.classList.toggle('hidden', m !== 'p2p');
+  if (dirView) dirView.classList.toggle('hidden', m !== 'direct');
+
+  if (p2pBtn) {
+    p2pBtn.className = m === 'p2p'
+      ? 'tap-btn py-2 px-3 rounded-xl font-royal font-black text-[11px] sm:text-xs uppercase bg-bank-gold text-black shadow-md transition-all flex items-center justify-center gap-1.5'
+      : 'tap-btn py-2 px-3 rounded-xl font-royal font-bold text-[11px] sm:text-xs uppercase bg-bank-surface text-emerald-300 border border-bank-border hover:bg-bank-card transition-all flex items-center justify-center gap-1.5';
+  }
+  if (dirBtn) {
+    dirBtn.className = m === 'direct'
+      ? 'tap-btn py-2 px-3 rounded-xl font-royal font-black text-[11px] sm:text-xs uppercase bg-bank-gold text-black shadow-md transition-all flex items-center justify-center gap-1.5'
+      : 'tap-btn py-2 px-3 rounded-xl font-royal font-bold text-[11px] sm:text-xs uppercase bg-bank-surface text-emerald-300 border border-bank-border hover:bg-bank-card transition-all flex items-center justify-center gap-1.5';
+  }
+
+  if (m === 'p2p') renderP2PAuctionsView();
+  else renderMarketListings();
+}
+
 export function switchMarketSubTab(sub) {
-  state.currentMarketSubTab = sub;
-  ['exchange', 'privileges', 'art', 'garage', 'bazaar', 'realestate', 'cosmos', 'p2pauction'].forEach(k => {
+  if (sub === 'bazaar') {
+    state.currentMarketSubTab = 'p2pauction';
+    state.currentAuctionSubMode = 'direct';
+  } else {
+    state.currentMarketSubTab = sub;
+  }
+  const activeSub = state.currentMarketSubTab;
+
+  ['exchange', 'privileges', 'art', 'garage', 'realestate', 'cosmos', 'p2pauction'].forEach(k => {
     const view = document.getElementById(`mktSubView-${k}`);
     const btn = document.getElementById(`mktSubBtn-${k}`);
-    if (view) view.classList.toggle('hidden', k !== sub);
+    if (view) view.classList.toggle('hidden', k !== activeSub);
     if (btn) {
-      btn.className = k === sub
+      btn.className = k === activeSub
         ? 'tap-btn flex-shrink-0 px-2.5 py-2 rounded-2xl text-[10px] sm:text-[11px] font-royal font-bold uppercase bg-bank-gold text-black shadow-md transition-all flex items-center justify-center gap-1 whitespace-nowrap'
         : 'tap-btn flex-shrink-0 px-2.5 py-2 rounded-2xl text-[10px] sm:text-[11px] font-royal font-bold uppercase bg-bank-surface text-emerald-300 border border-bank-border hover:bg-bank-card transition-all flex items-center justify-center gap-1 whitespace-nowrap';
     }
   });
   updateDesktopAndMobileNavHighlights();
 
-  if (sub === 'exchange') {
+  if (activeSub === 'exchange') {
     setTimeout(() => { const sel = appData.marketAssets[state.selectedMarketAssetId]; if (sel) drawMarketXYChart(sel); }, 30);
-  } else if (sub === 'privileges') renderPrivilegeShop();
-  else if (sub === 'art') renderLuxuryArtShop();
-  else if (sub === 'garage') renderLuxuryGarageShop();
-  else if (sub === 'bazaar') renderMarketListings();
-  else if (sub === 'realestate') renderRealEstateShop();
-  else if (sub === 'cosmos') renderCosmicEmpireShop();
-  else if (sub === 'p2pauction') renderP2PAuctionsView();
+  } else if (activeSub === 'privileges') renderPrivilegeShop();
+  else if (activeSub === 'art') renderLuxuryArtShop();
+  else if (activeSub === 'garage') renderLuxuryGarageShop();
+  else if (activeSub === 'realestate') renderRealEstateShop();
+  else if (activeSub === 'cosmos') renderCosmicEmpireShop();
+  else if (activeSub === 'p2pauction') switchAuctionSubMode(state.currentAuctionSubMode || 'p2p');
 }
 
 export function switchAdminTab(tabKey) {
@@ -2276,7 +2415,6 @@ export function switchAdminTab(tabKey) {
   if (tabKey === 'business') { renderAdminBusinessConfigInputs(); renderAdminTopMagnates(); }
   if (tabKey === 'casino') { populateAdminCasinoForm(); renderAdminSecurityLogs(); renderAdminTransactionsTable(); renderAdminAllMailsView(); }
 }
-
 // Остальные функции Торга, Биржи, Почты, Настроек, QR и Админки
 export function selectMarketAsset(assetId) {
   if (!appData.marketAssets[assetId]) return;
@@ -3134,7 +3272,6 @@ export async function executeEarnContract(type, reward, title, btnEl = null) {
     renderEarnAndLoansView();
   });
 }
-
 // -------------------------------------------------------------------------
 // 10. GEMINI AI, ТЕЛЕГРАФ, ПЕРЕВОДЫ, АВТОРИЗАЦИЯ И НАСТРОЙКИ
 // -------------------------------------------------------------------------
@@ -3223,7 +3360,7 @@ export async function generateAiMarketForecast() {
   if (oracleEl) {
     oracleEl.innerText = aiText
       ? `📜 Gemini «Боярин-Аналитик»: «${aiText.replace(/^["«]|["»]$/g, '')}»`
-        : `📜 Боярин-Аналитик: «Актив ${sel.name} (${sel.id}) торгуется по ${sel.price} ฿ при норме ${sel.meanPrice || sel.price} ฿!»`;
+      : `📜 Боярин-Аналитик: «Актив ${sel.name} (${sel.id}) торгуется по ${sel.price} ฿ при норме ${sel.meanPrice || sel.price} ฿!»`;
   }
   if (badgeEl) badgeEl.innerText = '✨ Gemini AI';
   showToast('Прогноз Биржи обновлён!', 'success');
@@ -3699,7 +3836,6 @@ export function closeBanknoteModal() {
   document.getElementById('banknoteModal').classList.add('hidden');
   document.getElementById('banknoteModal').classList.remove('flex');
 }
-
 // -------------------------------------------------------------------------
 // 12. ФУНКЦИИ АДМИНКИ (/admin), КАЗНЫ И САНКЦИЙ
 // -------------------------------------------------------------------------
@@ -4269,7 +4405,6 @@ export function renderAdminLoansList() {
         </div>
       `).join('');
 }
-
 export function renderAdminTransactionsTable() {
   const tbody = document.getElementById('adminLiveTxBody');
   if (!tbody) return;
@@ -5089,8 +5224,8 @@ export function handleLogout() {
   state.currentUser = null;
   localStorage.removeItem('mirobyte_active_user');
   localStorage.removeItem('mirobyte_cached_profile');
-   document.getElementById('demoModeActiveBanner')?.classList.add('hidden');
-   closeSettingsModal();
+  document.getElementById('demoModeActiveBanner')?.classList.add('hidden');
+  closeSettingsModal();
   navigateRoute('/');
   renderCurrentView();
   showToast('Вы вышли из личного кабинета.', 'info');
@@ -5160,7 +5295,7 @@ export function togglePassVisibility(inputId, iconId) {
 }
 
 // -------------------------------------------------------------------------
-// 13. ГИДРАТАЦИЯ КЭША, СЛУШАТЕЛИ FIREBASE И ПРОБРОС В WINDOW
+// 13. ГИДРАЦИЯ КЭША, СЛУШАТЕЛИ FIREBASE И ПРОБРОС В WINDOW
 // -------------------------------------------------------------------------
 async function hydrateFromMirobyteCache() {
   try {
@@ -5201,7 +5336,7 @@ const CoreExport = {
   guardDemoReadOnly, isCurrentUserOwner, isCurrentUserAdmin, isCurrentUserSuperAdmin,
   getEffectiveTaxPercent, getBusinessCatalog, getUnreadMessagesCount,
   checkAndFinalizeCompletedUpgrades, getUserPolygonDailyEarned, clickMinesTile,
-  switchMarketSubTab, openPlayerPublicProfileModal, openBanknoteModal,
+  switchMarketSubTab, switchAuctionSubMode, openPlayerPublicProfileModal, openBanknoteModal,
   performLazyTelegraphCleanup, renderAdminUsersCompactCards, populateAdminShopPriceEditor,
   renderTreasuryCardDesigns, populateCalibrationForm, renderAdminLoansList,
   renderAdminBusinessConfigInputs, renderAdminTopMagnates, populateAdminCasinoForm,
@@ -5309,14 +5444,14 @@ db.ref('bankData/transactions').limitToLast(150).on('value', (snap) => {
   if (state.currentRoute === '/admin') renderAdminTransactionsTable();
 });
 
-db.ref('bankData/mailBox').on('value', (snap) => {
+db.ref('bankData/mailBox').limitToLast(100).on('value', (snap) => {
   appData.mailBox = snap.val() || {};
   performLazyTelegraphCleanup();
   if (state.activeTabName === 'mail' && state.currentRoute === '/') renderMailView();
   if (state.currentRoute === '/admin' && state.currentAdminSubTab === 'casino') renderAdminAllMailsView();
 });
 
-db.ref('bankData/messages').on('value', (snap) => {
+db.ref('bankData/messages').limitToLast(100).on('value', (snap) => {
   const val = snap.val() || {};
   appData.messages = Object.entries(val).map(([k, item]) => ({ ...item, _dbKey: k })).sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
   renderNavBarRight();
@@ -5438,7 +5573,7 @@ setInterval(() => { runDeviceTaxAndCarWearCycle(); }, 15000);
 
 // Глобальный проброс ВСЕХ функций в window для работы HTML onclick/onsubmit/oninput
 Object.assign(window, {
-  navigateRoute, navigateTab, openMarketDirect, switchMarketSubTab, switchAdminTab,
+  navigateRoute, navigateTab, openMarketDirect, switchMarketSubTab, switchAuctionSubMode, switchAdminTab,
   togglePhoneShellMode, toggleQuickAutoConvert, enterDemoMode, exitDemoModeToLogin,
   setAuthMode, processAuthForm, updateAuthPasswordStrength, updateSettingsPasswordStrength,
   togglePassVisibility, toggleProxySection, executeTransfer, stylizeTransferCommentAI,
