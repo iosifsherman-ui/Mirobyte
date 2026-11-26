@@ -211,7 +211,548 @@ export function requestRender() {
 export function updateDesktopAndMobileNavHighlights() {
   if (!Core) return;
   const { currentRoute, currentMarketSubTab, activeTabName } = Core.state;
-  const isTorgActive = currentRoute === '/market' && ['privileges', 'art', 'garage', 'bazaar', 'realestate', 'cosmos'].includes(currentMarketSubTab);
+  const isTorgActive = currentRoute === '/market' && ['privileges', 'art', 'garage', 'realestate', 'cosmos'].includes(currentMarketSubTab);
+  const isP2PAucActive = currentRoute === '/market' && currentMarketSubTab === 'p2pauction';
+  const isExchangeActive = currentRoute === '/market' && currentMarketSubTab === 'exchange';
+
+  const setSlashBtnStyle = (id, active, defaultBorder) => {
+    const btn = document.getElementById(id);
+    if (!btn || btn.classList.contains('hidden')) return;
+    btn.className = active
+      ? 'tap-btn px-3 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase tracking-wider transition-all bg-bank-gold text-black shadow-md whitespace-nowrap flex items-center gap-1.5'
+      : `tap-btn px-3 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-royal font-bold uppercase tracking-wider transition-all bg-bank-surface ${defaultBorder} hover:bg-bank-card whitespace-nowrap flex items-center gap-1.5`;
+  };
+
+  setSlashBtnStyle('slashBtn-home', currentRoute === '/', 'text-emerald-300 border border-bank-border');
+  setSlashBtnStyle('slashBtn-earn', currentRoute === '/earn', 'text-emerald-300 border border-emerald-500/30');
+  setSlashBtnStyle('slashBtn-torg', isTorgActive, 'text-amber-300 border border-amber-500/40');
+  setSlashBtnStyle('slashBtn-p2pauction', isP2PAucActive, 'text-rose-300 border border-rose-500/40');
+  setSlashBtnStyle('slashBtn-exchange', isExchangeActive, 'text-bank-gold border border-bank-gold/40');
+  setSlashBtnStyle('slashBtn-club', currentRoute === '/club', 'text-purple-300 border border-purple-500/40');
+
+  const mobileMap = {
+    dashboard: currentRoute === '/' && activeTabName === 'dashboard',
+    earn: currentRoute === '/earn',
+    torg: isTorgActive,
+    p2pauction: isP2PAucActive,
+    market: isExchangeActive,
+    club: currentRoute === '/club',
+    mail: currentRoute === '/' && activeTabName === 'mail',
+    leaderboard: currentRoute === '/' && activeTabName === 'leaderboard',
+    banknotes: currentRoute === '/' && activeTabName === 'banknotes',
+    rules: currentRoute === '/' && activeTabName === 'rules',
+    admin: currentRoute === '/admin'
+  };
+
+  Object.entries(mobileMap).forEach(([key, isActive]) => {
+    const btn = document.getElementById(`bNavBtn-${key}`);
+    if (!btn || btn.classList.contains('hidden')) return;
+    btn.className = isActive
+      ? 'flex-shrink-0 min-w-[54px] flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-black bg-bank-gold border border-bank-gold shadow-md transition-all'
+      : 'flex-shrink-0 min-w-[54px] flex flex-col items-center justify-center py-1 px-1.5 rounded-xl text-emerald-300/85 hover:text-white transition-all';
+  });
+}
+
+export function renderGlobalActiveEventBanner() {
+  const banner = document.getElementById('globalActiveEventBanner');
+  if (!banner || !Core) return;
+  const ev = Core.appData.settings?.activeEvent;
+  if (!ev || !ev.active) { banner.classList.add('hidden'); return; }
+
+  banner.classList.remove('hidden');
+  const iconEl = document.getElementById('globalEventIconBadge');
+  const titleEl = document.getElementById('globalEventTitleText');
+  const descEl = document.getElementById('globalEventDescText');
+  const actEl = document.getElementById('globalEventActionArea');
+
+  if (iconEl) iconEl.innerText = ev.badge || '🔥 ИВЕНТ';
+  if (titleEl) titleEl.innerText = ev.title || 'Императорское Событие';
+  if (descEl) descEl.innerText = ev.desc ? `• ${ev.desc}` : '';
+
+  if (actEl) {
+    if (ev.type === 'auction') {
+      const curBid = Number(ev.currentBid || ev.startBid || 1000);
+      const leader = ev.highestBidder ? `@${escapeHtml(ev.highestBidder)}` : 'Нет ставок';
+      actEl.innerHTML = `
+        <span class="px-2 py-0.5 rounded-lg bg-black/70 border border-bank-gold/50 text-[10px] font-mono text-bank-gold">
+          <b>${formatBaity(curBid)}</b> (${leader})
+        </span>
+        <button onclick="openImperialAuctionModal()" class="px-2.5 py-1 rounded-xl bg-bank-gold text-black font-royal font-black text-[10px] uppercase shadow-md">
+          🔨 Ставка
+        </button>
+      `;
+    } else if (ev.type === 'art_boom') {
+      actEl.innerHTML = `<button onclick="openMarketDirect('art')" class="px-2.5 py-1 rounded-xl bg-amber-400 text-black font-royal font-bold text-[10px] uppercase">🎨 В Галерею (-20%)</button>`;
+    } else if (ev.type === 'garage_expo') {
+      actEl.innerHTML = `<button onclick="openMarketDirect('garage')" class="px-2.5 py-1 rounded-xl bg-sky-400 text-black font-royal font-bold text-[10px] uppercase">🏎️ В Автопарк (-15%)</button>`;
+    } else if (ev.type === 'gold_rush') {
+      actEl.innerHTML = `<button onclick="navigateRoute('/earn')" class="px-2.5 py-1 rounded-xl bg-emerald-400 text-black font-royal font-bold text-[10px] uppercase">⛏️ В Промыслы (+50%)</button>`;
+    } else {
+      actEl.innerHTML = `<button onclick="openMarketDirect('exchange')" class="px-2.5 py-1 rounded-xl bg-purple-400 text-black font-royal font-bold text-[10px] uppercase">⚡ На Биржу</button>`;
+    }
+  }
+}
+
+// -------------------------------------------------------------------------
+// 3. ГЛАВНЫЙ РЕНДЕР ПРИЛОЖЕНИЯ И ДАШБОРДА
+// -------------------------------------------------------------------------
+export function renderCurrentView() {
+  if (!Core) return;
+  const authSec = document.getElementById('authSection');
+  const appSec = document.getElementById('appContainer');
+  const deniedSec = document.getElementById('adminAccessDeniedScreen');
+  const mobileBottomNav = document.getElementById('mobileBottomNav');
+
+  const currentUser = Core.state.currentUser;
+  const isDemoMode = Core.state.isDemoMode;
+  const currentRoute = Core.state.currentRoute;
+  const activeTabName = Core.state.activeTabName;
+
+  if (!currentUser && !isDemoMode) {
+    authSec?.classList.remove('hidden');
+    appSec?.classList.add('hidden');
+    deniedSec?.classList.add('hidden');
+    mobileBottomNav?.classList.add('hidden');
+    document.getElementById('demoModeActiveBanner')?.classList.add('hidden');
+    document.getElementById('taxDebtAlertBanner')?.classList.add('hidden');
+    renderNavBarRight();
+    return;
+  }
+
+  const u = isDemoMode ? Core.createDemoGuestProfile() : Core.findUser(currentUser);
+  if (!u) {
+    if (Object.keys(Core.appData.users).length === 0 && Core.state.cachedProfile) return;
+    Core.state.currentUser = null;
+    localStorage.removeItem('mirobyte_active_user');
+    localStorage.removeItem('mirobyte_cached_profile');
+    authSec?.classList.remove('hidden');
+    appSec?.classList.add('hidden');
+    renderNavBarRight();
+    return;
+  }
+
+  mobileBottomNav?.classList.remove('hidden');
+  document.getElementById('demoModeActiveBanner')?.classList.toggle('hidden', !isDemoMode);
+
+  const taxDecl = calculateUserTaxDeclaration(u, Core.appData.loans, Core.appData.settings, Core.getServerTime(), isDemoMode);
+  const debtBanner = document.getElementById('taxDebtAlertBanner');
+  const debtAlertTxt = document.getElementById('taxDebtAlertText');
+  if (debtBanner) {
+    debtBanner.classList.toggle('hidden', !taxDecl.isIncomeFrozen);
+    if (debtAlertTxt && taxDecl.isIncomeFrozen) {
+      debtAlertTxt.innerText = taxDecl.hasExpiredPromissoryNote
+        ? 'Истёк срок погашения Долговой расписки! Доходы заморожены — погасите остаток или отправьте декларацию.'
+        : `Истекли 72 часа на подачу налоговой декларации (${formatBaity(taxDecl.accumulatedTax)})! Доходы заморожены — оплатите налог или выпишите долговую расписку для разморозки!`;
+    }
+  }
+
+  const isAdmin = Core.isCurrentUserAdmin();
+  const isSuperAdmin = Core.isCurrentUserSuperAdmin();
+  const isOwner = Core.isCurrentUserOwner();
+  const hasAnyAdminRight = isAdmin || isSuperAdmin || isOwner;
+
+  if (!isDemoMode) {
+    const profileSnap = {
+      username: u.username,
+      balance: u.balance || 0,
+      isAdmin,
+      isSuperAdmin,
+      isOwner,
+      avatar: u.avatar || '',
+      avatarFrame: u.avatarFrame || '',
+      cardTheme: u.cardTheme || 'emerald',
+      cardBgImage: u.cardBgImage || '',
+      customStatus: u.customStatus || 'Полноправный гражданин'
+    };
+    Core.state.cachedProfile = profileSnap;
+    localStorage.setItem('mirobyte_cached_profile', JSON.stringify(profileSnap));
+    Core.MirobyteCache.set('activeProfile', profileSnap);
+  }
+
+  authSec?.classList.add('hidden');
+  ['slashBtn-admin', 'bNavBtn-admin'].forEach(id => document.getElementById(id)?.classList.toggle('hidden', !hasAnyAdminRight));
+
+  if (currentRoute === '/admin' && !hasAnyAdminRight) {
+    appSec?.classList.add('hidden');
+    deniedSec?.classList.remove('hidden');
+    renderNavBarRight();
+    return;
+  }
+
+  deniedSec?.classList.add('hidden');
+  appSec?.classList.remove('hidden');
+
+  const routeMap = {
+    '/': 'routeView-home',
+    '/earn': 'routeView-earn',
+    '/club': 'routeView-club',
+    '/market': 'routeView-market',
+    '/admin': 'routeView-admin'
+  };
+  Object.entries(routeMap).forEach(([rKey, domId]) => document.getElementById(domId)?.classList.toggle('hidden', rKey !== currentRoute));
+
+  updateDesktopAndMobileNavHighlights();
+  document.getElementById('ownerDelegationSection')?.classList.toggle('hidden', !isOwner);
+  document.getElementById('superAdminPanelInsideUsers')?.classList.toggle('hidden', !isSuperAdmin);
+
+  renderNavBarRight();
+  renderDashboard(u);
+
+  if (currentRoute === '/') {
+    if (activeTabName === 'leaderboard') renderLeaderboard();
+    if (activeTabName === 'banknotes') renderBanknotes();
+    if (activeTabName === 'mail') renderMailView();
+  } else if (currentRoute === '/earn') {
+    renderEarnAndLoansView();
+  } else if (currentRoute === '/club') {
+    renderCasinoClubView();
+  } else if (currentRoute === '/market') {
+    Core.switchMarketSubTab(Core.state.currentMarketSubTab);
+    renderMarketView();
+  } else if (currentRoute === '/admin' && hasAnyAdminRight) {
+    renderAdminView();
+  }
+}
+
+export function renderNavBarRight() {
+  const box = document.getElementById('navBarRight');
+  if (!box || !Core) return;
+  if (!Core.state.currentUser && !Core.state.isDemoMode) {
+    box.innerHTML = '';
+    return;
+  }
+  const u = Core.findUser(Core.state.currentUser);
+  if (!u) return;
+
+  const isAdmin = Core.isCurrentUserAdmin() || Core.isCurrentUserSuperAdmin();
+  const unread = Core.getUnreadMessagesCount(u.username);
+  const avatarHtml = u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs text-bank-gold"></i>`;
+  const frameClass = getAvatarFrameClass(u.avatarFrame);
+  const cornerEmoji = getAvatarFrameCornerEmoji(u.avatarFrame);
+
+  box.innerHTML = `
+    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+      <div class="flex items-center gap-1.5 cursor-pointer p-1 rounded-xl hover:bg-bank-card/50 transition-colors" onclick="openSettingsModal()" title="Настройки профиля">
+        <div class="relative flex-shrink-0">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${frameClass} overflow-hidden bg-black flex items-center justify-center">${avatarHtml}</div>
+          ${cornerEmoji ? `<span class="avatar-corner-badge">${cornerEmoji}</span>` : ''}
+        </div>
+        <div class="text-right hidden sm:block">
+          <div class="text-xs font-bold text-white font-royal flex items-center gap-1">
+            <span>${escapeHtml(u.username)}</span>
+            ${isAdmin ? '<i class="fa-solid fa-crown text-[10px] text-bank-gold"></i>' : ''}
+          </div>
+          <div class="text-[11px] font-mono text-bank-gold font-bold">${formatBaity(u.balance || 0)}</div>
+        </div>
+      </div>
+      <button onclick="openQrModal('myqr')" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/50 text-bank-gold hover:text-white flex items-center justify-center transition-all flex-shrink-0" title="Мой QR"><i class="fa-solid fa-qrcode text-xs sm:text-sm"></i></button>
+      <button onclick="openStatsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all flex-shrink-0" title="Аналитика XY"><i class="fa-solid fa-chart-simple text-xs sm:text-sm"></i></button>
+      <button onclick="openMessagesModal()" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-border text-emerald-400 hover:text-bank-gold flex items-center justify-center transition-all flex-shrink-0" title="Уведомления">
+        <i class="fa-solid fa-bell text-xs sm:text-sm"></i>
+        ${unread > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">${unread}</span>` : ''}
+      </button>
+      ${Core.state.isDemoMode ? `
+        <button onclick="exitDemoModeToLogin()" class="px-2.5 h-8 sm:h-9 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-royal font-black text-[10px] uppercase flex items-center justify-center transition-all shadow-md flex-shrink-0" title="Выйти из Демо-режима">
+          Вход
+        </button>
+      ` : `
+        <button onclick="openSettingsModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-bank-surface hover:bg-bank-card border border-bank-gold/60 text-bank-gold hover:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0" title="Настройки"><i class="fa-solid fa-gear text-xs sm:text-sm"></i></button>
+      `}
+    </div>
+  `;
+}
+
+export function updatePortfolioBadgeOnCard(u) {
+  const badge = document.getElementById('userPortfolioBadge');
+  if (!badge || !Core) return;
+  const val = calculateUserPortfolioValue(u, Core.appData.marketAssets, Core.appData.settings);
+  badge.innerHTML = `<i class="fa-solid fa-chart-line mr-1"></i>Активы: ${formatBaity(val)}`;
+}
+
+export function renderDashboard(u) {
+  if (!u || !Core) return;
+  document.getElementById('userBalanceDisplay').innerText = formatBaity(u.balance || 0);
+  document.getElementById('cardHolderText').innerText = u.username.toUpperCase();
+  document.getElementById('cardRegisteredText').innerText = u.registeredAt || 'Основатель';
+  document.getElementById('cardRoleBadge').innerText = Core.state.isDemoMode
+    ? '👁 Демо-обзор'
+    : (u.isOwner ? 'Владелец Банка' : (u.isSuperAdmin ? 'Главный Админ' : (u.isAdmin ? 'Казначей' : 'Гражданин')));
+  document.getElementById('cardCustomStatus').innerText = `Титул: ${u.customStatus || 'Полноправный гражданин'}`;
+
+  const wToggle = document.getElementById('walletBottomAutoConvertToggle');
+  const qBtn = document.getElementById('quickUnitModeBtn');
+  if (wToggle) wToggle.checked = !!Core.userPrefs.autoConvertUnits;
+  if (qBtn) qBtn.innerText = Core.userPrefs.autoConvertUnits ? 'Формат: K₿/M₿/G₿' : 'Формат: 1 000 ฿';
+
+  const taxBadge = document.getElementById('cardTaxStatusBadge');
+  if (taxBadge) {
+    const taxDecl = calculateUserTaxDeclaration(u, Core.appData.loans, Core.appData.settings, Core.getServerTime(), Core.state.isDemoMode);
+    if (taxDecl.isIncomeFrozen) {
+      taxBadge.innerHTML = `<span class="text-rose-400 animate-pulse cursor-pointer" onclick="navigateRoute('/earn')">❄️ Просрочка 72ч (${formatBaity(taxDecl.accumulatedTax)})</span>`;
+    } else if (taxDecl.activeTaxPromissoryNotes.length > 0) {
+      taxBadge.innerHTML = `<span class="text-amber-300 cursor-pointer" onclick="navigateRoute('/earn')">✍️ Расписка активна (Доход идёт)</span>`;
+    } else if (taxDecl.dailyBill.totalTax > 0) {
+      taxBadge.innerHTML = `<span class="cursor-pointer" onclick="navigateRoute('/earn')"><i class="fa-solid fa-clock text-[9px] text-bank-gold"></i> Декларация: ${formatCountdownHMS(taxDecl.timeLeftMs)}</span>`;
+    } else {
+      taxBadge.innerHTML = `<i class="fa-solid fa-shield-halved text-[9px] text-bank-gold"></i> Чист перед Казной`;
+    }
+  }
+
+  updatePortfolioBadgeOnCard(u);
+  applyCardThemeToDOM(u.cardTheme || 'emerald', u.cardBgImage);
+  renderP2PAndCourtStatusOnDashboard(u);
+  renderPlayerAnalyticsDashboard(u);
+  renderUserInventoryVault(u);
+  updateRealtimeBusinessAndHackCounters();
+
+  const avatarContainer = document.getElementById('cardAvatarContainer');
+  const cornerBadge = document.getElementById('cardAvatarCornerEmoji');
+  const frameClass = getAvatarFrameClass(u.avatarFrame);
+  const cornerEmoji = getAvatarFrameCornerEmoji(u.avatarFrame);
+
+  if (avatarContainer) {
+    avatarContainer.className = `w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${frameClass} overflow-hidden bg-black flex items-center justify-center shadow-lg cursor-pointer transition-all relative group flex-shrink-0`;
+    avatarContainer.innerHTML = u.avatar
+      ? `<img src="${u.avatar}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs"><i class="fa-solid fa-gear"></i></div>`
+      : `<i class="fa-solid fa-user-astronaut text-base sm:text-2xl text-bank-gold"></i><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs"><i class="fa-solid fa-gear"></i></div>`;
+  }
+
+  if (cornerBadge) {
+    if (cornerEmoji) { cornerBadge.innerText = cornerEmoji; cornerBadge.classList.remove('hidden'); }
+    else cornerBadge.classList.add('hidden');
+  }
+
+  const qBar = document.getElementById('quickDenominationsBar');
+  if (qBar && qBar.children.length === 0) {
+    const frag = document.createDocumentFragment();
+    BANKNOTES_CONFIG.forEach(n => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'px-2 py-1 bg-bank-darkest border border-bank-border rounded-lg text-[10px] sm:text-xs font-bold text-bank-gold hover:bg-bank-card transition-colors';
+      btn.innerText = `+${n.value} ฿`;
+      btn.onclick = () => {
+        const inp = document.getElementById('transferAmount');
+        inp.value = (parseInt(inp.value, 10) || 0) + n.value;
+        showToast(`+${n.value} ฿ добавлено к переводу`, 'info');
+      };
+      frag.appendChild(btn);
+    });
+    qBar.appendChild(frag);
+  }
+}// =========================================================================
+// FILE: js/ui.js
+// BANK OF MIROBYTE — Визуальный интерфейс, рендер DOM, графики и модалки
+// =========================================================================
+
+import {
+  MAX_CHART_POINTS,
+  MAX_USER_BUSINESSES,
+  MAX_BUSINESS_LEVEL,
+  MAX_HOLDINGS_PER_ASSET,
+  MAX_TRADE_QTY,
+  LUXURY_RESALE_TAX_RATE,
+  POLYGON_DAILY_EARN_LIMIT,
+  TAX_NOTE_INSTALLMENTS_COUNT,
+  DEFAULT_BUSINESS_CATALOG,
+  DEFAULT_SETTINGS,
+  LUXURY_ART_CATALOG,
+  LUXURY_GARAGE_CATALOG,
+  REAL_ESTATE_CATALOG,
+  COSMIC_EMPIRE_CATALOG,
+  COSMIC_BASE_TYPES,
+  SPACE_MINING_CATALOG,
+  BANKNOTES_CONFIG,
+  DEFAULT_MARKET_ASSETS,
+  PRIVILEGE_FRAMES_CATALOG,
+  PRIVILEGE_TITLES_CATALOG,
+  BUILTIN_PAID_CARDS_CATALOG,
+  CARD_THEMES,
+  normalizeLogin,
+  escapeHtml,
+  formatBaity as rawFormatBaity,
+  formatDurationHuman,
+  formatCountdownHMS,
+  getAvatarFrameClass,
+  getAvatarFrameCornerEmoji,
+  generateRoyalArtSvgDataUrl,
+  getDynamicShopPrice as mathGetDynamicShopPrice,
+  getRawSavedShopPrice as mathGetRawSavedShopPrice,
+  mergeBusinessCatalogWithDefaults,
+  getBusinessUpgradeCost,
+  calculateTotalBusinessInvestment,
+  getBusinessHourlyIncome,
+  computeEffectiveSlotCondition,
+  getBusinessUpgradeDurationMs,
+  getUserBusinessSlotsEntries,
+  countUserOwnedAssetById,
+  getCarCurrentCondition,
+  getCarServiceCost,
+  calculateUserDailyTaxBill,
+  calculateUserTaxDeclaration,
+  calculateUserPendingBusinessRevenue,
+  calculateUserRealEstateRent,
+  getCosmicBaseUpgradeCost,
+  getCosmicLocationHourlyYield,
+  calculateUserCosmicRent,
+  calculateUserPortfolioValue
+} from './math.js';
+
+// Ссылка на ядро (устанавливается из core.js при инициализации)
+let Core = null;
+export function bindCoreToUI(coreRef) {
+  Core = coreRef;
+}
+
+export function formatBaity(value, options = {}) {
+  const autoPref = Core ? !!Core.userPrefs.autoConvertUnits : false;
+  return rawFormatBaity(value, options, autoPref);
+}
+
+export function getDynamicShopPrice(itemId, defaultPrice, category = null) {
+  return mathGetDynamicShopPrice(Core?.appData?.settings, itemId, defaultPrice, category);
+}
+
+export function getRawSavedShopPrice(itemId, defaultPrice) {
+  return mathGetRawSavedShopPrice(Core?.appData?.settings, itemId, defaultPrice);
+}
+
+// -------------------------------------------------------------------------
+// 1. ТОСТЫ, ПОДТВЕРЖДЕНИЯ И ДИНАМИЧЕСКАЯ ИКОНКА PWA
+// -------------------------------------------------------------------------
+let currentManifestBlobUrl = null;
+
+export function createDefaultEmblemDataUrl() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="4"/><circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="3,3"/><rect x="30" y="30" width="40" height="40" rx="8" fill="#05140d" stroke="#ffd700" stroke-width="2.5"/><text x="50" y="58" font-family="Cinzel, serif" font-size="26" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+export function applyDynamicSiteIconAndManifest(iconSource) {
+  const finalIcon = iconSource || Core?.appData?.bankEmblemImage || localStorage.getItem('mirobyte_cached_emblem') || createDefaultEmblemDataUrl();
+  const favEl = document.getElementById('dynamicFavicon');
+  const appleEl = document.getElementById('dynamicAppleTouchIcon');
+  if (favEl) favEl.href = finalIcon;
+  if (appleEl) appleEl.href = finalIcon;
+
+  try {
+    if (currentManifestBlobUrl) URL.revokeObjectURL(currentManifestBlobUrl);
+    const manifestObj = {
+      name: "BANK OF MIROBYTE — Императорский Кибер-Банк (฿)",
+      short_name: "Mirobyte Bank",
+      description: "Государственная финансово-игровая экосистема валюты Байти (฿)",
+      start_url: window.location.origin + window.location.pathname,
+      display: "standalone",
+      background_color: "#020604",
+      theme_color: "#05110c",
+      icons: [
+        { src: finalIcon, sizes: "192x192", type: finalIcon.startsWith('data:image/svg') ? "image/svg+xml" : "image/png", purpose: "any maskable" },
+        { src: finalIcon, sizes: "512x512", type: finalIcon.startsWith('data:image/svg') ? "image/svg+xml" : "image/png", purpose: "any maskable" }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+    currentManifestBlobUrl = URL.createObjectURL(blob);
+    const manifestLink = document.getElementById('dynamicManifestLink');
+    if (manifestLink) manifestLink.href = currentManifestBlobUrl;
+  } catch (e) {}
+}
+
+export function updateOnlineIndicator(isOk) {
+  const dot = document.getElementById('cloudSyncIndicator');
+  const txt = document.getElementById('cloudStatusText');
+  if (!dot || !txt) return;
+  dot.className = isOk ? 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0' : 'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400 flex-shrink-0';
+  txt.innerText = isOk ? 'Кэш + Firebase Онлайн (฿)' : 'Офлайн Кэш (฿)';
+}
+
+export function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  const colors = {
+    success: 'bg-[#06291d] border-emerald-400 text-emerald-100',
+    error: 'bg-[#2b0810] border-rose-500 text-rose-100',
+    info: 'bg-[#081c15] border-bank-gold text-bank-gold'
+  };
+  const icons = {
+    success: 'fa-circle-check text-emerald-400',
+    error: 'fa-triangle-exclamation text-rose-400',
+    info: 'fa-circle-info text-bank-gold'
+  };
+  toast.className = `pointer-events-auto px-3.5 py-2.5 rounded-2xl border-2 shadow-2xl flex items-center gap-2 text-xs font-semibold transition-all duration-300 ${colors[type] || colors.info}`;
+  toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm flex-shrink-0"></i><span>${escapeHtml(message)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3400);
+}
+
+export function askRoyalConfirm({ title = 'Подтверждение операции', message = 'Вы уверены?', okText = 'Подтвердить', cancelText = 'Отмена', isDanger = false }) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('royalConfirmModal');
+    document.getElementById('royalConfirmTitle').innerText = title;
+    document.getElementById('royalConfirmMessage').innerText = message;
+    const okBtn = document.getElementById('royalConfirmOkBtn');
+    const cancelBtn = document.getElementById('royalConfirmCancelBtn');
+    okBtn.innerText = okText;
+    cancelBtn.innerText = cancelText;
+    okBtn.className = isDanger
+      ? 'tap-btn px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-800 text-white font-royal font-bold text-xs uppercase shadow-md'
+      : 'tap-btn px-4 py-1.5 rounded-xl bg-gradient-to-r from-bank-gold to-yellow-600 text-black font-royal font-bold text-xs uppercase shadow-md';
+
+    const cleanup = (result) => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  });
+}
+
+export function renderBankEmblem() {
+  const container = document.getElementById('bankEmblemContainer');
+  const previewSmall = document.getElementById('currentEmblemPreviewSmall');
+  if (!container) return;
+  const defaultSvg = `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="46" fill="#091f16" stroke="#e6c875" stroke-width="2"/><circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3"/><rect x="36" y="36" width="28" height="28" rx="6" fill="#05140d" stroke="#ffd700" stroke-width="2"/><text x="50" y="56" font-family="'Cinzel', serif" font-size="20" font-weight="900" fill="#e6c875" text-anchor="middle">฿</text></svg>`;
+  const currentImg = Core?.appData?.settings?.appIcon || Core?.appData?.bankEmblemImage || localStorage.getItem('mirobyte_cached_emblem');
+  container.innerHTML = currentImg ? `<img src="${currentImg}" class="w-full h-full object-cover">` : defaultSvg;
+  if (previewSmall) previewSmall.innerHTML = container.innerHTML;
+}
+
+export function applyCardThemeToDOM(themeKey, cardBgImage) {
+  const card = document.getElementById('citizenMainCard');
+  if (!card) return;
+  Object.values(CARD_THEMES).forEach(cls => cls.split(' ').forEach(c => card.classList.remove(c)));
+  if (cardBgImage) {
+    card.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.7)), url(${cardBgImage})`;
+  } else {
+    card.style.backgroundImage = '';
+    (CARD_THEMES[themeKey] || CARD_THEMES.emerald).split(' ').forEach(c => card.classList.add(c));
+  }
+}
+
+// -------------------------------------------------------------------------
+// 2. РОУТИНГ, НАВИГАЦИЯ И ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+// -------------------------------------------------------------------------
+let renderScheduled = false;
+export function requestRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    renderScheduled = false;
+    renderCurrentView();
+  });
+}
+
+export function updateDesktopAndMobileNavHighlights() {
+  if (!Core) return;
+  const { currentRoute, currentMarketSubTab, activeTabName } = Core.state;
+  const isTorgActive = currentRoute === '/market' && ['privileges', 'art', 'garage', 'realestate', 'cosmos'].includes(currentMarketSubTab);
   const isP2PAucActive = currentRoute === '/market' && currentMarketSubTab === 'p2pauction';
   const isExchangeActive = currentRoute === '/market' && currentMarketSubTab === 'exchange';
 
@@ -540,7 +1081,6 @@ export function renderDashboard(u) {
     qBar.appendChild(frag);
   }
 }
-
 // -------------------------------------------------------------------------
 // 4. ФИНАНСОВАЯ АНАЛИТИКА ИГРОКА (DONUT-ДИАГРАММА)
 // -------------------------------------------------------------------------
@@ -1045,7 +1585,6 @@ export function renderEarnAndLoansView() {
   const box = document.getElementById('citizenLoansContainer');
   if (!box) return;
 
-  // Формируем интерактивную карточку Налоговой Декларации (72ч) + Список Расписок с оплатой по частям
   let html = '';
 
   if (taxDecl.dailyBill.totalTax > 0) {
@@ -1087,7 +1626,6 @@ export function renderEarnAndLoansView() {
     `;
   }
 
-  // Вывод активных расписок с возможностью выплаты по частям (долям)
   taxDecl.activeTaxPromissoryNotes.forEach(note => {
     const totalParts = Number(note.installmentsTotal || TAX_NOTE_INSTALLMENTS_COUNT);
     const paidParts = Number(note.installmentsPaid || 0);
@@ -1121,7 +1659,6 @@ export function renderEarnAndLoansView() {
     `;
   });
 
-  // Прочие государственные ссуды/кредиты
   taxDecl.otherActiveLoans.forEach(l => {
     html += `
       <div class="p-2.5 rounded-2xl bg-bank-darkest border border-amber-500/50 flex items-center justify-between gap-2">
@@ -1330,7 +1867,6 @@ export function updateRealtimeBusinessAndHackCounters() {
     dashQuick.innerText = calc.isFrozenByDebt ? '❄️ Доход заморожен!' : `Касса: ${formatBaity(Math.floor(rawFloor))}`;
   }
 
-  // Живой таймер 72 часов для налоговой декларации
   const taxTimerEl = document.getElementById('earnTaxCountdownTimer');
   const taxAccEl = document.getElementById('earnAccumulatedTaxVal');
   if (taxTimerEl) taxTimerEl.innerText = formatCountdownHMS(calc.taxDecl.timeLeftMs);
@@ -1418,7 +1954,6 @@ export function updateRealtimeBusinessAndHackCounters() {
     if (modalNotice && !modalNotice.classList.contains('hidden')) modalNotice.innerText = `> Перезарядка шлюза: ${h}:${m}:${s}`;
   }
 }
-
 // -------------------------------------------------------------------------
 // 7. КИБЕР-ПОЛИГОН (/club — САПЁР И ЗОЛОТО АСТЕРОИДОВ)
 // -------------------------------------------------------------------------
@@ -1466,7 +2001,15 @@ export function renderCasinoClubView() {
     activeWrap.classList.toggle('hidden', !cSet.enabled);
   }
 
-  renderMinesBoard();
+  if (!Core.minesState.active) {
+    renderMinesBoard();
+  } else {
+    const radarBtn = document.getElementById('minesUseRadarBtn');
+    if (radarBtn) {
+      radarBtn.disabled = Core.minesState.busy || rdCount <= 0;
+      radarBtn.innerText = `📡 Радар (${rdCount})`;
+    }
+  }
   renderSpaceMiningView();
 }
 
@@ -1628,7 +2171,7 @@ export function updateSpaceMiningLiveProgress(u) {
 }
 
 // -------------------------------------------------------------------------
-// 8. БИРЖА АКЦИЙ (XY ГРАФИК) И БОЯРСКИЙ ТОРГЪ (8 ПАЛАТ)
+// 8. БИРЖА АКЦИЙ (XY ГРАФИК) И БОЯРСКИЙ ТОРГЪ (7 ПАЛАТ)
 // -------------------------------------------------------------------------
 let marketHoverIndex = null;
 
@@ -1745,10 +2288,12 @@ export function renderMarketView() {
   if (sub === 'privileges') renderPrivilegeShop();
   if (sub === 'art') renderLuxuryArtShop();
   if (sub === 'garage') renderLuxuryGarageShop();
-  if (sub === 'bazaar') renderMarketListings();
   if (sub === 'realestate') renderRealEstateShop();
   if (sub === 'cosmos') renderCosmicEmpireShop();
-  if (sub === 'p2pauction') renderP2PAuctionsView();
+  if (sub === 'p2pauction') {
+    if (Core.state.currentAuctionSubMode === 'direct') renderMarketListings();
+    else renderP2PAuctionsView();
+  }
 }
 
 export function updateTradeTotalCost() {
@@ -2070,7 +2615,6 @@ export function renderLuxuryGarageShop() {
     `;
   }).join('');
 }
-
 export function renderRealEstateShop() {
   const grid = document.getElementById('realEstateCatalogGrid');
   if (!grid || !Core || !Core.state.currentUser) return;
